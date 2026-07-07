@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>French Buddy · Ligne A1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Spline+Sans+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="m">F</div>
+      <h1>French&nbsp;Buddy</h1>
+      <span class="tag">Ligne A1 · Paris</span>
+    </div>
+    <div class="line">
+      <div class="rail"></div>
+      <div class="rail-done" id="railDone"></div>
+      <div class="ticks" id="ticks"></div>
+      <div class="train" id="train"></div>
+    </div>
+    <div class="line-meta">
+      <span id="stationLabel"></span>
+      <span id="weekLabel"></span>
+    </div>
+    <div class="stations" id="stations"></div>
+  </header>
+
+  <section class="station">
+    <div class="station-head">
+      <span class="station-num" id="stationNum"></span>
+      <h2 id="lessonTitle">—</h2>
+      <span class="dur" id="lessonDur"></span>
+    </div>
+    <div class="platform" id="platform"></div>
+    <div class="step" id="step"></div>
+  </section>
+</div>
+
+<div class="control">
+  <button class="next" id="nextBtn"></button>
+</div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

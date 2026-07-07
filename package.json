@@ -1,0 +1,15 @@
+{
+  "name": "french-buddy",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "audio": "node generate-audio.mjs"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
+}
