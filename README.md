@@ -1,7 +1,12 @@
 # French Buddy
 
 A data-driven Parisian French course. One rendering engine, lesson content as
-data, pre-generated Azure audio, no backend. Currently: Weeks 1–2 (Days 1–14).
+data, pre-generated Azure audio, no backend. Currently: Weeks 1–2 wired in,
+Week 3 written but not yet integrated (see STATE.md).
+
+> **Working on this with Claude?** Read `CLAUDE.md` (architecture, conventions,
+> decisions) and `STATE.md` (current status, next action) first — they're the
+> real source of truth, kept more current than this README's prose.
 
 ## Repo layout
 

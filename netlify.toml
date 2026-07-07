@@ -1,0 +1,18 @@
+# Pins the build so Netlify's behavior doesn't depend on UI settings that
+# could drift or get reset. Netlify auto-detects most of this, but explicit
+# beats implicit for a config that determines whether the site builds at all.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA-style fallback isn't needed — this is a single index.html with no
+# client-side router — but redirects are harmless to leave unset. If a
+# router is ever added, add:
+# [[redirects]]
+#   from = "/*"
+#   to = "/index.html"
+#   status = 200

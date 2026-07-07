@@ -27,6 +27,26 @@ fetch("audio/clips.json")
   .then(m => { AUDIO_CLIPS = m; })
   .catch(() => {});
 
+/* Browser-TTS voice caching. getVoices() is ASYNC in Chrome/Edge — on first
+   call it can return an empty or partial list (including cloud "Natural"
+   voices) before loading finishes, and that timing is inconsistent across
+   tabs/sessions/origins. Calling it fresh inside speak() and hoping it's
+   populated by then is what caused inconsistent voice quality (good in one
+   tab, default/robotic in another) with NO real audio files and NO server
+   involved either way — this was always the browser fallback, never the
+   Azure pipeline. Cache it properly instead. This still doesn't make the
+   fallback reliable across browsers/devices — it just removes this specific
+   bug. Running generate-audio.mjs remains the only way to get consistent
+   quality for every visitor. */
+let cachedVoices = [];
+function refreshVoices() {
+  if ("speechSynthesis" in window) cachedVoices = speechSynthesis.getVoices();
+}
+if ("speechSynthesis" in window) {
+  refreshVoices();
+  speechSynthesis.onvoiceschanged = refreshVoices;
+}
+
 function speak(text, key, btn, slow) {
   const mapKey = slow ? key + "_slow" : key;
   if (mapKey && AUDIO_CLIPS[mapKey]) {
@@ -34,10 +54,11 @@ function speak(text, key, btn, slow) {
     flash(btn); a.play(); return;
   }
   if (!("speechSynthesis" in window)) return;
+  if (!cachedVoices.length) refreshVoices(); /* one more attempt right before speaking */
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = "fr-FR"; u.rate = slow ? 0.6 : 0.9;
-  const fr = speechSynthesis.getVoices().find(v => v.lang && v.lang.startsWith("fr"));
+  const fr = cachedVoices.find(v => v.lang && v.lang.startsWith("fr"));
   if (fr) u.voice = fr;
   flash(btn, u);
   speechSynthesis.speak(u);
@@ -313,6 +334,5 @@ function advance() {
   }
 }
 
-if ("speechSynthesis" in window) speechSynthesis.onvoiceschanged = () => {};
 syncHeader();
 renderStep();
