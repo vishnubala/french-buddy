@@ -360,3 +360,79 @@ before that signal exists repeats the exact bulk-ambition failure mode this
 project exists to avoid (Section 8). If a future session proposes starting
 Block F without this having happened, point back here and push back, per the
 Project's standing instructions.
+
+---
+
+## 12. Operating manual for Claude Code (the local build agent)
+
+Earlier sessions ran in **claude.ai chat**: they reached this repo through a
+Filesystem bridge and could not run `npm`/`git` on the machine, so they
+validated builds on a *copied mirror* and wrote files through Filesystem tools.
+**You are different.** You run *on the machine*. That removes the mirror, the
+two-filesystem confusion, and the "can't run the build here" limitation. Use
+that directly — and keep the discipline that made those sessions safe.
+
+**12.1 Ground truth.** `STATE.md` is the living state; read it and this file at
+the start of every session. If `STATE.md`, this file's prose (e.g. the §2 file
+map or §5 cost figures may lag), and the actual working tree disagree, **trust
+the working tree and a real build**, then fix `STATE.md`. Verify by *running*
+things, never by trusting that an edit "should" work.
+
+**12.2 Commands.**
+- `npm run dev` — local server; use it to eyeball UI/interactions a headless
+  build can't (e.g. the level->week->day nav rendering and clicks).
+- `npm run build` — must pass with 0 errors before you consider code work done
+  or push.
+- `npm run preview` — serve the built `dist/` to sanity-check production output.
+- `npm run audio` — runs `generate-audio.mjs`, which auto-loads `.env` (see
+  12.5). Writes `public/audio/*.mp3` + `clips.json`. Content-hash cached, so
+  re-runs only regenerate changed clips.
+
+**12.3 Verification harness (create these in-repo; they previously existed only
+on the old mirror).** Add two small scripts and matching npm scripts, and run
+them after any content change:
+- `dryrun.mjs` — import `LESSONS`; assert every audio `key` is globally unique,
+  no `say`/`key` field is missing, and every `recall` `answer` index is within
+  range of its `opts`. Exit non-zero on any failure.
+- `counts.mjs` — per-week and total counts: lessons, clips (phonics pairs +
+  vocab items + 2x dialogue turns), and total `say` characters.
+These are the regression check that catches duplicate keys (which break both the
+audio pipeline and the SRS `ITEM_INDEX`) before they ship.
+
+**12.4 Git discipline (you own this now).**
+- Small, focused commits, imperative subject lines ("Add Week 5 content",
+  "Refactor nav into level/week/day hierarchy"). One logical change per commit.
+- A push to `main` auto-deploys (Netlify, and GitHub Pages via Actions). So
+  **only push when `npm run build` is green** and the tree is coherent.
+- **Never commit**: `.env`, `node_modules/`, `dist/` (all gitignored). **Do
+  commit**: `public/audio/*.mp3` + `clips.json` — generated locally, served
+  statically (§5). Deploys never generate audio; they only build.
+- No force-push, no rewriting shared history. If a secret is ever committed,
+  stop, tell the person, and rotate the key — don't quietly amend it away.
+
+**12.5 Secrets / .env.** Azure TTS credentials live in `.env` at the repo root
+(gitignored; template in `.env.example`). `generate-audio.mjs` auto-loads it.
+**Never** print the key, paste it into a commit/chat/log, or write it anywhere
+but `.env`. You can read `.env` and run the pipeline without the person ever
+typing the secret into a conversation — prefer that.
+
+**12.6 Process gates (from §7/§8/§11 — restated so they're not skipped).**
+- **One content unit per session.** One week of lessons, or one refactor — not
+  "let's finish several weeks." (§8.1)
+- **Native review is a hard gate** before any real learner sees this, and before
+  any B1/Block F drafting (§8.2, §11.5). Neural TTS reads wrong French
+  fluently, so listening review matters, not just reading.
+- **Honest scope**: A1 -> strong A2 only. B1/B2 are roadmap-only; the nav shows
+  them as greyed "a venir" tabs and must never imply the course delivers them.
+- **No new dependencies / no framework / no TypeScript** without a concrete
+  wall being hit (§3, §7). **No `if (lesson.day === N)` in `main.js`** (§2).
+
+**12.7 Wrap ritual.** End every substantive session by updating `STATE.md`
+(current phase, what changed, next literal action, any new open decision) and
+committing it. That file is what keeps the next session cheap — don't skip it
+because the person didn't explicitly ask.
+
+**12.8 Relationship to the claude.ai advisor.** The person still uses a
+claude.ai chat as an advisor/pair-thinker. Expect prompts that were reasoned
+out there to arrive here as concrete build instructions. When something is
+underspecified, the STATE.md "Next action" block is the most current intent.
