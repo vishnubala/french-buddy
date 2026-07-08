@@ -12,14 +12,15 @@ this conversation."
 
 ## [CURRENT PHASE]
 
-Content build, Block B (Weeks 3–5 of 12) · **Weeks 1–4 wired & building.**
-**Real Azure audio is now live** — the pipeline has been run for the first
-time, all 558 clips generated and committed, and the app plays them (verified
-in a real browser, not a mirror). Immediate next unit of work is **Week 5
-content**. **Native-speaker listening review of Weeks 1–4 is the hard gate
-before any real learner** (CLAUDE.md §8.2) — nothing above changes that;
-correct-*looking* audio existing is not the same as a human confirming it
-sounds right. Two standing gates still open (native review; one-week-at-a-time).
+Content build, Block B done (Weeks 3–5 of 12) · **Weeks 1–5 wired & building.**
+Week 5 (Days 29–35, l'heure & daily routine) drafted and wired this session —
+**text only, no audio yet** for those 7 lessons (Weeks 1–4's 558 clips are
+real Azure audio; Week 5 falls back to browser TTS until `npm run audio` is
+run again). Immediate next unit of work is **Week 6 content** (shopping &
+description, per curriculum-spec.md §3 Block C). **Native-speaker listening
+review of Weeks 1–5 is the hard gate before any real learner** (CLAUDE.md
+§8.2) — nothing above changes that. Two standing gates still open (native
+review; one-week-at-a-time).
 
 ---
 
@@ -32,12 +33,26 @@ sounds right. Two standing gates still open (native review; one-week-at-a-time).
   directions: `aller` + au/à la/aux, the imperative (tournez/continuez/prenez),
   the métro (direction/correspondance/sortie/Navigo), asking the way / being
   lost, prepositions of place (reusing the week-3 du/de la/des fusion), and the
-  arrondissements + rive gauche/droite with light ordinals. `src/lessons/
-  index.mjs` now imports WEEK4 and spreads it. **Verified against a real
-  `vite build`** (mirror of the repo — see build-runs-on-a-mirror note below):
-  10 modules transformed, no errors, all four weeks bundled. Passed the
-  audio-key/recall dry-run over the full 28-lesson set (below).
-  **Not native-reviewed.**
+  arrondissements + rive gauche/droite with light ordinals. **Not
+  native-reviewed.**
+- **Week 5 (Days 29–35) — drafted and wired this session.** Telling time
+  informally (et quart/et demie/moins le quart) and on the official 24h
+  clock; reflexive/pronominal verbs (se lever/se coucher/se réveiller/se
+  laver/s'habiller/se doucher); the irregular `faire` (+ sport/les
+  courses/la cuisine/le ménage); `être en train de` for right-now actions;
+  days of the week + a taste of months; Paris's fermeture culture (lunch
+  closures ~12h30–14h30, Sunday closures, the Louvre/Orsay's differing
+  weekday closures). `src/lessons/index.mjs` now imports WEEK5 and spreads
+  it. Verified for real (not a mirror): `npm run build` — 11 modules, 0
+  errors; `npm run dryrun` — 35 lessons, 522 unique audio keys, all recall
+  answers in range; `npm run counts` — 695 clips total, 137 for week 5
+  alone. Walked through Day 29 (phonics/vocab/dialogue/recall) and the Day
+  35 review (chained dialogue, 6-question recall, SRS step with 259 vocab
+  items now indexed, culture, wrap) live in a browser — no console errors,
+  nav/streak/completion all correct. **Audio NOT yet generated for Week
+  5** — falls back to browser TTS until `npm run audio` is run again (it's
+  additive/cache-safe: Weeks 1–4's clips won't be touched). **Not
+  native-reviewed.**
 - **Audio — RUN FOR REAL THIS SESSION (Open Decision #2 RESOLVED).** Person
   put a real Azure Speech key/region in `.env`; ran `npm run audio`. Generated
   558 clips (417 base + 141 `_slow`) across all 28 lessons, ~11,993 characters,
@@ -119,21 +134,29 @@ happened and what to watch for if a mirror-based workflow is ever used again.
 ## Next action (literal, ready to paste)
 
 Build is now handled by **Claude Code** (local agent; see CLAUDE.md §12).
-This session: ran the real Azure audio pipeline for the first time (558
-clips, all committed), found and fixed the `clips.json` JSON-format bug
-above, and verified real-clip playback live in a browser. The next content
-unit is **Week 5**. Native review of Weeks 1–4 (text AND the now-real audio)
-is still the hard gate before any real learner — nothing this session changes
-that.
+This session: drafted and wired **Week 5** (Days 29–35), verified with a real
+build/dryrun/counts plus a live browser walkthrough (see above). Week 5 has
+**no audio yet** — that's a separate side task (`npm run audio`), not done
+this session per the one-unit-per-session rule. The next content unit is
+**Week 6** (shopping & description — demonstratives ce/cet/cette/ces,
+adjective agreement/BAGS, quantities; per curriculum-spec.md §3 Block C).
+Native review of Weeks 1–5 (text and the Weeks 1–4 audio) is still the hard
+gate before any real learner.
 
 ```
-# NEXT — Week 5 content (ONE week only; review gate still open)
+# NEXT — Week 6 content (ONE week only; review gate still open)
 French Buddy. Read STATE.md and CLAUDE.md first.
-Draft Week 5 (Days 29-35: l'heure & daily routine — reflexive verbs se lever/
-se coucher, faire, etre en train de, 24h clock) against docs/curriculum-spec.md
-SS3. One week only. Flag that native review of Weeks 1-4 (text + audio) is
-still outstanding.
+Draft Week 6 (Days 36-42: shopping & description — demonstratives ce/cet/
+cette/ces, adjective agreement & placement (BAGS), beaucoup de/un peu de,
+clothes/colors/sizes vocab, les soldes vs markets vs supermarché) against
+docs/curriculum-spec.md SS3. One week only. Flag that native review of
+Weeks 1-5 (text + Weeks 1-4 audio) is still outstanding, and that Week 5
+still needs its own audio pass.
 ```
+
+Side task whenever convenient: run `npm run audio` again to generate Week
+5's clips (additive — Weeks 1–4's committed clips are untouched, cache-safe
+via manifest.json).
 
 ## Open decisions (need a person, not just a build step)
 
@@ -144,9 +167,9 @@ still outstanding.
    pipeline had a real bug (see gotchas above) that would have made every
    clip fall back to browser TTS even after running it — fixed and verified
    with a live browser check (network tab showed the actual mp3 loading).
-3. **When to get native review** — person will do Weeks 1–4 together "when the
-   right person is near." Accepted. Still the hard gate before real learners
-   and before any B1 (Block F) drafting.
+3. **When to get native review** — person will do Weeks 1–4 (now 1–5) together
+   "when the right person is near." Accepted. Still the hard gate before real
+   learners and before any B1 (Block F) drafting.
 4. **RESOLVED — audio discrepancy.** `speechSynthesis.getVoices()` race in
    `src/main.js`, fixed by caching voices via `onvoiceschanged`. Netlify never
    runs an audio step (confirmed via `netlify.toml`); both tests were the same
@@ -277,6 +300,32 @@ still outstanding.
   Weeks 1–4 is still the hard gate before any real learner (CLAUDE.md §8.2)
   — audio existing and sounding plausible to a non-native reviewer is not
   the same thing as that gate being satisfied.
+- **Session (Week 5 content drafted).** Drafted Days 29–35 (l'heure & daily
+  routine) against curriculum-spec.md §3 Block B: telling time both
+  informally (et quart/et demie/moins le quart, with the "counts down to
+  the next hour" trap flagged) and on the 24h clock; reflexive verbs
+  (se lever/se coucher family, including the e→è stem change and the
+  me/te/se → m'/t'/s' elision); the irregular faire (including the
+  faisons-as-schwa and faites-breaks-the-ez-pattern quirks); être en train
+  de for right-now actions (with the reflexive-pronoun-stays-matched-to-
+  subject note); days of the week + light month coverage; and Paris's
+  fermeture culture (lunch closures, Sunday, differing museum weekday
+  closures) as the week's Paris note. Wired into src/lessons/index.mjs.
+  Fixed a naming typo caught before commit (a vocab key had picked up a
+  copy-paste artifact, `d31_v_secoucherdoucher` instead of
+  `d31_v_sedoucher`). Verified for real: `npm run build` (11 modules, 0
+  errors), `npm run dryrun` (35 lessons, 522 unique keys, all recall
+  answers in range), `npm run counts` (695 clips/15,781 chars total, Week
+  5 alone: 137 clips). Walked through Day 29 (all step types) and Day 35's
+  review (chained dialogue, answered all 6 recall questions via the real
+  UI, confirmed the SRS step renders cleanly with 259 vocab items now
+  indexed, checked the streak/completion/next-week-teaser on wrap) live in
+  a browser — zero console errors. Confirmed Week 5 audio correctly falls
+  back to browser TTS (its clips aren't in clips.json yet — expected, not a
+  bug; a separate `npm run audio` run is the follow-up side task). One
+  content unit only, per CLAUDE.md §8.1 — did not start Week 6. Committed
+  and pushed. Native review of Weeks 1–5 remains the hard gate before any
+  real learner.
 
 ---
 
