@@ -9,6 +9,23 @@ import { completeLesson, isCompleted, registerItems, dueKeys, gradeItem } from "
 
 const CURRICULUM = { totalLessons: 84, weeks: 12 };
 
+/* ---- level / week / day hierarchy (data-driven from LESSONS) ------------
+   The course delivers A1 -> strong A2 only. B1 and B2 appear as greyed
+   "a venir" tabs: a roadmap tease, NOT a claim the course teaches them.
+   LIVE RULE (option b): a level tab is live iff it contains at least one
+   BUILT week (a week that has lessons in LESSONS). So today only A1 is live;
+   A2 lights up automatically the moment Week 8 exists -- no code change. */
+const LEVELS = [
+  { id: "A1", weeks: [1, 2, 3, 4, 5, 6, 7] },
+  { id: "A2", weeks: [8, 9, 10, 11, 12] },
+  { id: "B1", weeks: [13, 14, 15, 16, 17, 18] },
+  { id: "B2", weeks: [19, 20, 21, 22, 23, 24] },
+];
+const builtWeeks = new Set(LESSONS.map(L => L.week));
+const levelLive = lvl => lvl.weeks.some(w => builtWeeks.has(w));
+const levelOfWeek = w => LEVELS.find(l => l.weeks.includes(w)) || LEVELS[0];
+const firstLessonOfWeek = w => LESSONS.findIndex(L => L.week === w);
+
 /* Index every vocab item by audio key so the SRS can turn a due key
    back into a renderable card, regardless of which lesson it came from. */
 const ITEM_INDEX = {};
@@ -96,13 +113,56 @@ function syncHeader() {
   el("train").style.left = "calc(" + (frac * 100) + "% - 8px)";
   el("railDone").style.width = (frac * 100) + "%";
 
-  const st = el("stations"); st.innerHTML = "";
+  const tag = el("brandTag"); if (tag) tag.textContent = "Ligne " + levelOfWeek(lesson.week).id + " · Paris";
+  renderNav();
+}
+
+/* ---- hierarchical navigation: level tabs -> week pills -> day chips ----
+   Purely a function of the current lesson's week; no separate nav state.
+   Non-live levels and unbuilt weeks render as inert <div>s, so the control
+   can never point at content that doesn't exist yet. */
+function renderNav() {
+  const curLevel = levelOfWeek(lesson.week).id;
+
+  /* tier 1 — level tabs (A1/A2 live as built, B1/B2 greyed "à venir") */
+  const lv = el("levels"); lv.innerHTML = "";
+  LEVELS.forEach(L => {
+    const live = levelLive(L);
+    const b = document.createElement(live ? "button" : "div");
+    b.className = "level" + (live && L.id === curLevel ? " on" : "") + (live ? "" : " locked");
+    if (live) {
+      b.textContent = L.id;
+      b.onclick = () => {
+        if (L.id === curLevel) return;
+        const w = L.weeks.find(x => builtWeeks.has(x));
+        if (w != null) switchLesson(firstLessonOfWeek(w));
+      };
+    } else {
+      b.innerHTML = L.id + '<span class="av">à venir</span>';
+    }
+    lv.appendChild(b);
+  });
+
+  /* tier 2 — week pills for the current level (built active, unbuilt locked) */
+  const wkRow = el("weeks"); wkRow.innerHTML = "";
+  levelOfWeek(lesson.week).weeks.forEach(w => {
+    const built = builtWeeks.has(w);
+    const b = document.createElement(built ? "button" : "div");
+    b.className = "wk" + (w === lesson.week ? " on" : "") + (built ? "" : " locked");
+    b.innerHTML = "Sem " + w + (built ? "" : '<span class="lk">🔒</span>');
+    if (built) b.onclick = () => { if (w !== lesson.week) switchLesson(firstLessonOfWeek(w)); };
+    wkRow.appendChild(b);
+  });
+
+  /* tier 3 — day chips for the current week only */
+  const dy = el("days"); dy.innerHTML = "";
   LESSONS.forEach((L, i) => {
+    if (L.week !== lesson.week) return;
     const c = document.createElement("button");
     c.className = "chip" + (i === lessonIndex ? " on" : "");
     c.innerHTML = "Jour " + L.day + (isCompleted(L.day) ? '<span class="tickmark">✓</span>' : "");
     c.onclick = () => switchLesson(i);
-    st.appendChild(c);
+    dy.appendChild(c);
   });
 }
 

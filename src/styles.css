@@ -173,3 +173,24 @@
 .btn.bad:hover{background:var(--wrong);color:#fff}
 .chip .tickmark{color:var(--vert);margin-left:4px}
 .chip.on .tickmark{color:#9fdcc4}
+
+/* ---- hierarchical nav: level tabs -> week pills -> day chips ---- */
+.nav{display:flex;flex-direction:column;gap:9px}
+.levels{display:flex;gap:7px;flex-wrap:wrap;align-items:stretch}
+.level{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:13px;letter-spacing:.02em;
+  padding:7px 14px;border-radius:10px;border:1.5px solid var(--zinc-line);background:var(--paper-2);
+  color:var(--ink-soft);cursor:pointer;transition:all .12s ease}
+.level:hover:not(.locked):not(.on){border-color:var(--ink-soft)}
+.level.on{background:var(--ink);color:var(--paper-2);border-color:var(--ink)}
+.level.locked{border-style:dashed;background:transparent;color:var(--zinc);cursor:not-allowed}
+.level.locked .av{font-family:"Spline Sans Mono",monospace;font-weight:400;font-size:8.5px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--zinc);margin-left:6px;vertical-align:middle}
+.weeks{display:flex;gap:7px;flex-wrap:wrap}
+.wk{font-family:"Spline Sans Mono",monospace;font-size:11px;letter-spacing:.04em;padding:5px 12px;
+  border-radius:999px;border:1px solid var(--zinc-line);background:var(--paper-2);color:var(--ink-soft);
+  cursor:pointer;transition:all .12s ease}
+.wk:hover:not(.locked):not(.on){border-color:var(--ink-soft)}
+.wk.on{background:var(--vert);color:#fff;border-color:var(--vert)}
+.wk.locked{border-style:dashed;background:transparent;color:var(--zinc);cursor:not-allowed}
+.wk .lk{margin-left:4px;font-size:9px;opacity:.7}
+.days{display:flex;gap:8px;flex-wrap:wrap}
