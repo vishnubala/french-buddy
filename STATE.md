@@ -12,15 +12,16 @@ this conversation."
 
 ## [CURRENT PHASE]
 
-Content build, Block B done (Weeks 3–5 of 12) · **Weeks 1–5 wired & building.**
-Week 5 (Days 29–35, l'heure & daily routine) drafted and wired this session —
-**text only, no audio yet** for those 7 lessons (Weeks 1–4's 558 clips are
-real Azure audio; Week 5 falls back to browser TTS until `npm run audio` is
-run again). Immediate next unit of work is **Week 6 content** (shopping &
-description, per curriculum-spec.md §3 Block C). **Native-speaker listening
-review of Weeks 1–5 is the hard gate before any real learner** (CLAUDE.md
-§8.2) — nothing above changes that. Two standing gates still open (native
-review; one-week-at-a-time).
+Content build, Block C underway (Weeks 6–8 of 12) · **Weeks 1–6 wired &
+building — exactly half the 12-week arc.** Week 6 (Days 36–42, shopping &
+description) drafted and wired this session, and **all six built weeks now
+have real Azure audio** — the pipeline was re-run this session to cover
+Weeks 5–6 (829 clips total, 0 clips still on browser-TTS fallback).
+Immediate next unit of work is **Week 7 content** (home & neighborhood, per
+curriculum-spec.md §3 Block C). **Native-speaker listening review of Weeks
+1–6 is the hard gate before any real learner** (CLAUDE.md §8.2) — nothing
+above changes that. Two standing gates still open (native review;
+one-week-at-a-time).
 
 ---
 
@@ -53,6 +54,35 @@ review; one-week-at-a-time).
   5** — falls back to browser TTS until `npm run audio` is run again (it's
   additive/cache-safe: Weeks 1–4's clips won't be touched). **Not
   native-reviewed.**
+- **Week 6 (Days 36–42) — drafted and wired this session.** Demonstratives
+  (ce/cet/cette/ces); adjective agreement via colors (rouge, bleu/bleue,
+  vert/verte, noir/noire, blanc/blanche irregular, orange/invariable) and
+  BAGS placement (petit/grand/bon/mauvais/joli/jeune/vieux before the
+  noun — the spec's explicit adjective-liaison phonics target, covered
+  with three distinct liaison types: petit's t, bon's denasalized n,
+  grands's z); clothes and sizes (pantalon/robe/chemise/chaussures, je
+  fais du…, the -ille glide with ville/mille/tranquille as the exception);
+  quantity expressions (beaucoup de/un peu de/trop de/assez de/pas de —
+  always bare de, explicitly contrasted with week 3's du/de la/des); and
+  les soldes vs le marché vs le supermarché as the week's Paris note (the
+  twice-yearly regulated sale windows; no-haggling norm). `src/lessons/
+  index.mjs` now imports WEEK6 and spreads it. Verified for real: `npm run
+  build` — 12 modules, 0 errors; `npm run dryrun` — 42 lessons, 622 unique
+  audio keys, all recall answers in range; `npm run counts` — 829 clips/
+  19,126 chars total, 134 clips for week 6 alone. Walked through Day 36
+  (phonics/vocab/dialogue) and the Day 42 review (chained 7-turn dialogue,
+  all 6 recall questions answered through the real UI, SRS step with 307
+  vocab items now indexed, wrap/streak/stats) live in a browser — zero
+  console errors. **Not native-reviewed.**
+- **Audio for Weeks 5–6 — generated this session (optional side task, done).**
+  Ran `npm run audio` again: 271 new clips for Weeks 5–6's 14 lessons, 558
+  unchanged (Weeks 1–4 correctly untouched by the content-hash cache — the
+  cache worked exactly as designed). `public/audio/` now holds 829 clips
+  across all 42 lessons, committed. Verified in a real browser: `audio/
+  clips.json` includes both new weeks' keys, and a Week 6 phonics clip
+  (`d36_cepull`) loads the real mp3 (`206 Partial Content`) instead of
+  falling back to browser TTS. All 6 built weeks (1–6) now have real Azure
+  audio — none of the shipped content is still on browser-TTS fallback.
 - **Audio — RUN FOR REAL THIS SESSION (Open Decision #2 RESOLVED).** Person
   put a real Azure Speech key/region in `.env`; ran `npm run audio`. Generated
   558 clips (417 base + 141 `_slow`) across all 28 lessons, ~11,993 characters,
@@ -134,40 +164,36 @@ happened and what to watch for if a mirror-based workflow is ever used again.
 ## Next action (literal, ready to paste)
 
 Build is now handled by **Claude Code** (local agent; see CLAUDE.md §12).
-This session: drafted and wired **Week 5** (Days 29–35), verified with a real
-build/dryrun/counts plus a live browser walkthrough (see above). Week 5 has
-**no audio yet** — that's a separate side task (`npm run audio`), not done
-this session per the one-unit-per-session rule. The next content unit is
-**Week 6** (shopping & description — demonstratives ce/cet/cette/ces,
-adjective agreement/BAGS, quantities; per curriculum-spec.md §3 Block C).
-Native review of Weeks 1–5 (text and the Weeks 1–4 audio) is still the hard
-gate before any real learner.
+This session: drafted and wired **Week 6** (Days 36–42), verified with a
+real build/dryrun/counts plus a live browser walkthrough, then (as a quick
+optional follow-up) ran `npm run audio` again to generate real clips for
+both Weeks 5 and 6 — all six built weeks now have real Azure audio, zero
+browser-TTS fallback remaining. The next content unit is **Week 7** (home &
+neighborhood — possessives mon/ma/mes, regular -ir verbs like finir, more
+prepositions; per curriculum-spec.md §3 Block C). Native review of Weeks
+1–6 is still the hard gate before any real learner.
 
 ```
-# NEXT — Week 6 content (ONE week only; review gate still open)
+# NEXT — Week 7 content (ONE week only; review gate still open)
 French Buddy. Read STATE.md and CLAUDE.md first.
-Draft Week 6 (Days 36-42: shopping & description — demonstratives ce/cet/
-cette/ces, adjective agreement & placement (BAGS), beaucoup de/un peu de,
-clothes/colors/sizes vocab, les soldes vs markets vs supermarché) against
-docs/curriculum-spec.md SS3. One week only. Flag that native review of
-Weeks 1-5 (text + Weeks 1-4 audio) is still outstanding, and that Week 5
-still needs its own audio pass.
+Draft Week 7 (Days 43-49: home & neighborhood — possessives mon/ma/mes/
+ton/ta/tes/son/sa/ses etc., regular -ir verbs (finir family), more
+prepositions, rooms/furniture/le quartier vocab, un studio/au 3e etage/
+le gardien-la concierge as the Paris note) against docs/curriculum-spec.md
+SS3. One week only. Flag that native review of Weeks 1-6 is still
+outstanding.
 ```
-
-Side task whenever convenient: run `npm run audio` again to generate Week
-5's clips (additive — Weeks 1–4's committed clips are untouched, cache-safe
-via manifest.json).
 
 ## Open decisions (need a person, not just a build step)
 
 1. **GitHub Pages vs Netlify** — run both, or disable GH Pages? No cost either
    way; purely a "two URLs to keep straight" call.
-2. **RESOLVED — when to run the audio pipeline.** Run this session: 558 real
-   Azure clips generated and committed, `public/audio/` no longer empty. The
-   pipeline had a real bug (see gotchas above) that would have made every
-   clip fall back to browser TTS even after running it — fixed and verified
-   with a live browser check (network tab showed the actual mp3 loading).
-3. **When to get native review** — person will do Weeks 1–4 (now 1–5) together
+2. **RESOLVED — when to run the audio pipeline.** Run initially for Weeks
+   1–4 (558 clips), then again this session for Weeks 5–6 (271 more clips,
+   829 total). `public/audio/` holds real Azure audio for every built week;
+   the content-hash cache has now proven itself safe across two separate
+   runs (0 unwanted regeneration of earlier weeks' clips either time).
+3. **When to get native review** — person will do Weeks 1–4 (now 1–6) together
    "when the right person is near." Accepted. Still the hard gate before real
    learners and before any B1 (Block F) drafting.
 4. **RESOLVED — audio discrepancy.** `speechSynthesis.getVoices()` race in
@@ -326,6 +352,35 @@ via manifest.json).
   content unit only, per CLAUDE.md §8.1 — did not start Week 6. Committed
   and pushed. Native review of Weeks 1–5 remains the hard gate before any
   real learner.
+- **Session (Week 6 content drafted, plus Weeks 5–6 audio).** Drafted Days
+  36–42 (shopping & description) against curriculum-spec.md §3 Block C:
+  demonstratives ce/cet/cette/ces (distinguishing cet's vowel-triggered
+  allomorphy from ces's true liaison); adjective agreement via colors
+  (including blanc→blanche's genuine irregularity and orange's total
+  invariance) and BAGS placement (petit/grand/bon/mauvais/joli/jeune/vieux
+  before the noun) — the spec's explicit adjective-liaison phonics target,
+  covered with three distinct liaison consonants (petit's t, bon's
+  denasalized n, grands's z); clothes and sizes (the -ille glide with
+  ville/mille/tranquille as the documented exception); quantity words
+  (beaucoup de/un peu de/trop de/assez de/pas de, explicitly contrasted
+  with week 3's du/de la/des article-bearing partitive); and les soldes vs
+  le marché vs le supermarché as the week's Paris note (twice-yearly
+  regulated sale windows; no-haggling norm). Wired into
+  src/lessons/index.mjs. Verified for real: `npm run build` (12 modules, 0
+  errors), `npm run dryrun` (42 lessons, 622 unique keys, all recall
+  answers in range), `npm run counts` (829 clips/19,126 chars total, Week 6
+  alone: 134 clips). Walked through Day 36 (phonics/vocab/dialogue) and Day
+  42's review (chained 7-turn dialogue, all 6 recall questions answered via
+  the real UI, SRS step with 307 vocab items indexed, wrap/streak/stats)
+  live in a browser — zero console errors. One content unit only, per
+  CLAUDE.md §8.1 — did not start Week 7. Then, as the session's optional
+  side task, ran `npm run audio` again: generated 271 new clips covering
+  both Week 5 and Week 6 (558 Weeks-1–4 clips correctly left untouched by
+  the content-hash cache), and verified in a browser that a Week 6 clip
+  (`d36_cepull`) loads as a real mp3 instead of falling back to browser
+  TTS. All six built weeks now have real Azure audio. Committed in three
+  commits (content, audio, this STATE.md update) and pushed. Native review
+  of Weeks 1–6 remains the hard gate before any real learner.
 
 ---
 
