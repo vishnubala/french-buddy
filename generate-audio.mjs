@@ -49,7 +49,22 @@
 import { LESSONS } from "./src/lessons/index.mjs";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+
+/* ---------- .env loader (zero-dependency; reads ./.env if present) --------
+   Lets `npm run audio` work from a local .env file on any Node >= 18, with no
+   --env-file flag (Node 20.6+ only) and no dotenv package (kept dependency-free
+   per CLAUDE.md §3). Real shell env vars take precedence over the file. */
+(function loadEnv() {
+  if (!existsSync(".env")) return;
+  for (const line of readFileSync(".env", "utf8").split(/\r?\n/)) {
+    if (line.trim().startsWith("#")) continue;
+    const m = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
+    if (!m) continue;
+    const v = m[2].replace(/^['"]|['"]$/g, "");
+    if (process.env[m[1]] === undefined) process.env[m[1]] = v;
+  }
+})();
 
 /* ---------- config ---------- */
 const KEY    = process.env.AZURE_SPEECH_KEY;
