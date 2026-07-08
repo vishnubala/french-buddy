@@ -13,12 +13,13 @@ this conversation."
 ## [CURRENT PHASE]
 
 Content build, Block B (Weeks 3–5 of 12) · **Weeks 1–4 wired & building.**
-Immediate next unit of work is **Week 5 content**. **CLAUDE CODE TOOK OVER THE
-BUILD THIS SESSION** — first real (non-mirror) verification: `npm run build`
-green, `npm run dev` eyeballed live in a browser, in-repo validators created
-and passing, outstanding work committed and pushed to `main`. claude.ai is now
-advisor-only. Two standing gates still open below (native review;
-one-week-at-a-time).
+**Real Azure audio is now live** — the pipeline has been run for the first
+time, all 558 clips generated and committed, and the app plays them (verified
+in a real browser, not a mirror). Immediate next unit of work is **Week 5
+content**. **Native-speaker listening review of Weeks 1–4 is the hard gate
+before any real learner** (CLAUDE.md §8.2) — nothing above changes that;
+correct-*looking* audio existing is not the same as a human confirming it
+sounds right. Two standing gates still open (native review; one-week-at-a-time).
 
 ---
 
@@ -37,13 +38,30 @@ one-week-at-a-time).
   10 modules transformed, no errors, all four weeks bundled. Passed the
   audio-key/recall dry-run over the full 28-lesson set (below).
   **Not native-reviewed.**
-- **Audio**: pipeline (`generate-audio.mjs`) built and tested against the
-  collector logic, but **has never actually been run.** `public/audio/`
-  contains only `.gitkeep`. Every clip in the live app is browser-TTS fallback.
-  The person confirmed the fallback "sounds good" — but that was the *browser*
-  voice, not the Azure pipeline, and it is device/browser-dependent (see
-  Open Decision #4). Person plans a native review of Weeks 1–4 "when the right
-  person is near" — accepted as a concrete constraint, not a dodge.
+- **Audio — RUN FOR REAL THIS SESSION (Open Decision #2 RESOLVED).** Person
+  put a real Azure Speech key/region in `.env`; ran `npm run audio`. Generated
+  558 clips (417 base + 141 `_slow`) across all 28 lessons, ~11,993 characters,
+  0 failures. `public/audio/` now holds all 558 `.mp3` files + `clips.json` +
+  `manifest.json` (content-hash cache), all committed (~20 MB).
+  **Found and fixed a real bug while verifying:** `generate-audio.mjs` wrote
+  `clips.json` as valid JSON, then immediately overwrote it with a
+  `window.AUDIO_CLIPS = {...}` script-wrapper format. `main.js` fetches that
+  file and calls `r.json()` on it — which failed to parse the wrapped format,
+  silently caught by the existing `.catch(() => {})`, so `AUDIO_CLIPS` stayed
+  `{}` and **every clip would have kept falling back to browser TTS even with
+  the pipeline fully run.** Fixed by keeping only the plain-JSON write.
+  Verified in a real browser (`npm run dev`, not a mirror): `audio/clips.json`
+  now fetches and parses (558 entries), and clicking a phonics/vocab "say"
+  button loads the real mp3 (`206 Partial Content` on the network tab) instead
+  of invoking `speechSynthesis`. The old browser-TTS-fallback discrepancy
+  (Open Decision #4, resolved previously) is now moot for any visitor once
+  this deploys — real clips are the primary path, browser TTS is now only a
+  fallback for content that hasn't been generated (there is none currently).
+  **Native-speaker listening review of Weeks 1–4 is still the hard gate**
+  before any real learner sees this (CLAUDE.md §8.2) — generating audio that
+  *looks* correct does not satisfy it; neural TTS reads incorrect French
+  fluently, which is exactly why a human listening pass is required, not
+  optional. Person plans this "when the right person is near."
 - **Persistence/SRS**: implemented and wired (`src/storage.js`). Not blocked.
 - **Validation (this session, full 28-lesson set)**: `dryrun.mjs` and
   `counts.mjs` now live in-repo (CLAUDE.md §12.3, `npm run dryrun` / `npm run
@@ -100,42 +118,42 @@ happened and what to watch for if a mirror-based workflow is ever used again.
 
 ## Next action (literal, ready to paste)
 
-Build is now handled by **Claude Code** (local agent; see CLAUDE.md §12) and
-took over this session: `npm run build` green (10 modules, 0 errors), nav
-eyeballed live in a browser via `npm run dev`, `dryrun.mjs`/`counts.mjs`
-created and passing, all outstanding work committed in focused commits and
-pushed to `main`. The next content unit is **Week 5**; the audio pipeline can
-be run once `.env` holds the real Azure key (Open Decision #2).
+Build is now handled by **Claude Code** (local agent; see CLAUDE.md §12).
+This session: ran the real Azure audio pipeline for the first time (558
+clips, all committed), found and fixed the `clips.json` JSON-format bug
+above, and verified real-clip playback live in a browser. The next content
+unit is **Week 5**. Native review of Weeks 1–4 (text AND the now-real audio)
+is still the hard gate before any real learner — nothing this session changes
+that.
 
 ```
 # NEXT — Week 5 content (ONE week only; review gate still open)
 French Buddy. Read STATE.md and CLAUDE.md first.
 Draft Week 5 (Days 29-35: l'heure & daily routine — reflexive verbs se lever/
 se coucher, faire, etre en train de, 24h clock) against docs/curriculum-spec.md
-SS3. One week only. Flag that native review of Weeks 1-4 is still outstanding.
+SS3. One week only. Flag that native review of Weeks 1-4 (text + audio) is
+still outstanding.
 ```
-
-Still-useful side task whenever the person wants it: run the audio pipeline
-(`npm run audio` with an Azure F0 key) to replace browser TTS with fixed clips
-a native can review — see Open Decision #2.
 
 ## Open decisions (need a person, not just a build step)
 
 1. **GitHub Pages vs Netlify** — run both, or disable GH Pages? No cost either
    way; purely a "two URLs to keep straight" call.
-2. **When to run the audio pipeline** — F0 tier is effectively free (500K
-   chars/month; the whole 28-lesson set is ~12K chars, ~2.4%), so waiting saves
-   nothing real. Leaning "run it soon," ideally before/with the native review
-   so the reviewer hears the actual shipped clips.
+2. **RESOLVED — when to run the audio pipeline.** Run this session: 558 real
+   Azure clips generated and committed, `public/audio/` no longer empty. The
+   pipeline had a real bug (see gotchas above) that would have made every
+   clip fall back to browser TTS even after running it — fixed and verified
+   with a live browser check (network tab showed the actual mp3 loading).
 3. **When to get native review** — person will do Weeks 1–4 together "when the
    right person is near." Accepted. Still the hard gate before real learners
    and before any B1 (Block F) drafting.
 4. **RESOLVED — audio discrepancy.** `speechSynthesis.getVoices()` race in
    `src/main.js`, fixed by caching voices via `onvoiceschanged`. Netlify never
    runs an audio step (confirmed via `netlify.toml`); both tests were the same
-   browser-fallback path, one won the timing race. Fix removes the bug but does
-   NOT make the fallback reliably good across devices — running the real
-   pipeline is still the only guarantee. `public/audio/` still empty.
+   browser-fallback path, one won the timing race. Superseded by #2 above —
+   `public/audio/` now holds real clips, so this is moot for any visitor going
+   forward; browser TTS is only a fallback for ungenerated content (none right
+   now).
 5. **Nav hierarchy levels (person-decided, option b) — IMPLEMENTED this
    session.** Four level tabs A1/A2/B1/B2. Live rule: a level is live iff it
    contains ≥1 BUILT week; else greyed "à venir." Today only A1 is live; A2
@@ -238,6 +256,27 @@ a native can review — see Open Decision #2.
   NOT touch B1/Block F, did NOT add any dependency — all per the standing
   process gates. Rewrote this file's mirror-era gotchas section as historical
   context now that builds run directly on the machine.
+- **Session (first real audio run).** Person put a real Azure Speech key in
+  `.env`; ran `npm run audio` for the first time ever. Generated 558 clips
+  (417 base + 141 `_slow`) across all 28 lessons, ~11,993 characters, 0
+  failures. While verifying real-clip playback in a browser, found that
+  `audio/clips.json` failed to parse as JSON — `generate-audio.mjs` wrote it
+  twice, first as valid JSON then overwritten with a `window.AUDIO_CLIPS =
+  {...}` script wrapper, and `main.js`'s `fetch(...).then(r => r.json())`
+  silently failed on the wrapped format (caught by an existing `.catch(() =>
+  {})`), meaning `AUDIO_CLIPS` would have stayed empty and every clip kept
+  falling back to browser TTS regardless of the pipeline having run. Fixed by
+  removing the second (wrapper) write. Re-ran `npm run audio` (0 regenerated,
+  558 cache-hit, confirming the content-hash cache correctly left the mp3s
+  alone) and verified for real in a browser: `audio/clips.json` fetches and
+  parses (558 entries), and clicking a phonics/vocab say-button loads the
+  actual mp3 (`206 Partial Content` in the network tab) instead of invoking
+  `speechSynthesis`. Committed in two commits (the bug fix; then the 558
+  mp3s + clips.json + manifest.json, ~20 MB) and pushed to `main`. Resolves
+  Open Decision #2. Flagged clearly: native-speaker listening review of
+  Weeks 1–4 is still the hard gate before any real learner (CLAUDE.md §8.2)
+  — audio existing and sounding plausible to a non-native reviewer is not
+  the same thing as that gate being satisfied.
 
 ---
 
