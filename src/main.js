@@ -101,7 +101,11 @@ function syncHeader() {
   const ticks = el("ticks"); ticks.innerHTML = "";
   for (let i = 0; i < CURRICULUM.weeks; i++) {
     const t = document.createElement("div");
-    t.className = "tick" + (i < lesson.week - 1 ? " done" : "");
+    /* Nodes share the per-day axis of #train/#railDone: week i+1 sits at its
+       week-END day, and lights the moment the marker reaches it. */
+    const weekEndDay = (i + 1) * 7;
+    t.className = "tick" + (lesson.day >= weekEndDay ? " done" : "");
+    t.style.left = ((weekEndDay - 1) / (CURRICULUM.totalLessons - 1) * 100) + "%";
     ticks.appendChild(t);
   }
   el("lessonTitle").textContent = lesson.title;
