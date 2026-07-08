@@ -13,9 +13,12 @@ this conversation."
 ## [CURRENT PHASE]
 
 Content build, Block B (Weeks 3–5 of 12) · **Weeks 1–4 wired & building.**
-Immediate next unit of work is the **nav hierarchy refactor** (agreed split:
-Week 4 content this session, nav refactor next), then Week 5 content. Two
-standing gates still open below (native review; one-week-at-a-time).
+Immediate next unit of work is **Week 5 content**. **CLAUDE CODE TOOK OVER THE
+BUILD THIS SESSION** — first real (non-mirror) verification: `npm run build`
+green, `npm run dev` eyeballed live in a browser, in-repo validators created
+and passing, outstanding work committed and pushed to `main`. claude.ai is now
+advisor-only. Two standing gates still open below (native review;
+one-week-at-a-time).
 
 ---
 
@@ -42,18 +45,31 @@ standing gates still open below (native review; one-week-at-a-time).
   Open Decision #4). Person plans a native review of Weeks 1–4 "when the right
   person is near" — accepted as a concrete constraint, not a dodge.
 - **Persistence/SRS**: implemented and wired (`src/storage.js`). Not blocked.
-- **Validation (this session, full 28-lesson set)**: audio-key collector
-  dry-run (reusing the real `collectClips()`) plus extra checks — **PASS**:
-  417 unique audio source units (0 duplicate keys), 0 missing `say`/`key`
-  fields, all 96 recall `answer` indices in range, vocab keys unique for the
-  SRS `ITEM_INDEX`. Pipeline would emit 558 clips (417 base + 141 `_slow`),
-  ~11,993 chars of speech.
+- **Validation (this session, full 28-lesson set)**: `dryrun.mjs` and
+  `counts.mjs` now live in-repo (CLAUDE.md §12.3, `npm run dryrun` / `npm run
+  counts`) instead of only existing on the old assistant-side mirror. Run for
+  real this session — **PASS**: 417 unique audio keys (0 duplicates), 0
+  missing `say`/`key` fields, all 96 recall `answer` indices in range. Matches
+  last session's mirror numbers exactly.
 - **Counts (d1–28)**: 28 lessons · 558 clips · 11,993 speech chars ·
   72 phonics pairs · 204 vocab items · 141 dialogue turns · 96 recall Qs.
   Per week: W1 142 clips / W2 138 / W3 142 / W4 136.
-- **Build size**: gzipped JS ~48 KB (147 KB raw) with four weeks wired
-  (was ~36 KB at three weeks). Expected content growth, engine unchanged.
-  `main.js` is still well under the §3 ~500-line no-framework threshold.
+- **Build size**: gzipped JS ~48 KB (148 KB raw), CSS ~2.7 KB (11.6 KB raw)
+  after the nav refactor added the tiered-nav styles. Expected growth; engine
+  unchanged. `main.js` is ~305 lines, still under the §3 ~500-line
+  no-framework threshold (the nav refactor added ~50 lines).
+- **Nav (UI)**: refactored last session from a flat ~84-day-chip row into a
+  three-tier hierarchy — level tabs (A1 live; A2/B1/B2 greyed "à venir") → week
+  pills (built active, unbuilt 🔒 locked) → day chips for the current week only.
+  Data-driven from LESSONS; a level is live iff it has ≥1 built week, so A2
+  self-activates when Week 8 lands. **Eyeballed live in a real browser this
+  session** (`npm run dev`, not a mirror): level tabs render correctly (A1 the
+  only clickable button; A2/B1/B2 render as inert `<span>`s with "à venir" and
+  correctly fail to click); week pills 1–4 are live buttons, 5–7 render as
+  inert locked elements with 🔒 and correctly fail to click; clicking Sem 4 →
+  Jour 22 loads Week 4's actual content ("Aller : je vais au, à la, aux") with
+  the right day chips (22–28) for that week. No console errors. This closes the
+  last open nav check from last session.
 - **Deploy**: Netlify connected to GitHub, auto-deploying — confirmed by the
   person. GitHub Actions Pages workflow also present (`.github/workflows/
   deploy.yml`, uses `npm ci` → needs `package-lock.json` committed).
@@ -61,48 +77,42 @@ standing gates still open below (native review; one-week-at-a-time).
 - **Native review**: has not happened for any week. Hard prerequisite before
   real learners (CLAUDE.md §8.2). Person intends to do Weeks 1–4 together soon.
 
-## ⚠️ Assistant-side gotchas (read before building on disk)
+## ⚠️ Historical gotchas (from the claude.ai-advisor era, kept for context)
 
-- **Use the Filesystem tools to write to the repo, NOT the container
-  `create_file`.** They are different filesystems. This session, `create_file`
-  with a `C:\...` path reported "success" but wrote to the *assistant's* Linux
-  container at a literal path `/C:\Users\...`, leaving nothing on the Windows
-  disk — while the `index.mjs` import edit (done with `Filesystem:edit_file`)
-  DID land, briefly leaving the repo importing a missing `week4.mjs`. Correct
-  tools: `Filesystem:write_file` (create/overwrite), `Filesystem:edit_file`
-  (in-place edits). Always `Filesystem:get_file_info` or `list_directory`
-  after a write to confirm it actually landed — don't trust the success string.
-- **The build runs on a mirror, not the Windows repo.** The assistant's bash
-  can't reach `C:\...` and can't run `npm` on the Windows machine. Verification
-  builds copy the real source files into `/home/claude/fb` (Vite installed
-  there) and build/validate that. Faithful because files are copied verbatim,
-  but it is a mirror — run `npm run build` locally once yourself as the final
-  word. The dry-run/counts harness (`dryrun.mjs`, `counts.mjs`) lives in that
-  mirror.
+The two notes below described risks from *before* Claude Code took over the
+build (this session). They no longer apply now that builds/edits happen
+directly on the Windows machine, but are kept as a record of why the handoff
+happened and what to watch for if a mirror-based workflow is ever used again.
+
+- **Filesystem-bridge writes could silently land in the wrong filesystem.**
+  One session's `create_file` with a `C:\...` path reported "success" but
+  wrote to the assistant's own Linux container at a literal path
+  `/C:\Users\...`, leaving nothing on the Windows disk — while a separate
+  `Filesystem:edit_file` call DID land, briefly leaving the repo importing a
+  missing `week4.mjs`. N/A now: Claude Code's Edit/Write/Bash tools operate on
+  the real working tree directly — verified this session by running
+  `npm run build`/`npm run dev` for real, not against a copy.
+- **Builds used to run on a mirror, not the Windows repo**, because the old
+  assistant's bash couldn't reach `C:\...` or run `npm` on the Windows
+  machine. That limitation is gone — `dryrun.mjs`/`counts.mjs` now live
+  in-repo (§ above, CLAUDE.md §12.3) and were run for real this session with
+  results matching the old mirror's numbers exactly.
 
 ## Next action (literal, ready to paste)
 
-Week 4 is written, wired, and verified. **Agreed plan: the nav hierarchy
-refactor is next**, then Week 5 content.
+Build is now handled by **Claude Code** (local agent; see CLAUDE.md §12) and
+took over this session: `npm run build` green (10 modules, 0 errors), nav
+eyeballed live in a browser via `npm run dev`, `dryrun.mjs`/`counts.mjs`
+created and passing, all outstanding work committed in focused commits and
+pushed to `main`. The next content unit is **Week 5**; the audio pipeline can
+be run once `.env` holds the real Azure key (Open Decision #2).
 
 ```
-# NEXT — nav hierarchy refactor (UI only; no content week)
+# NEXT — Week 5 content (ONE week only; review gate still open)
 French Buddy. Read STATE.md and CLAUDE.md first.
-Refactor the day navigation in src/main.js + src/styles.css from the flat row
-of ~84 day chips into a hierarchy: level tabs (A1, A2 live; B1, B2 greyed-out
-"à venir" per the person's request) → week pills (built weeks active, unbuilt
-locked) → day chips for the selected week only. Data-driven from LESSONS; A1/A2
-week split is a judgment call (proposed A2 = Week 8+, where passé composé
-enters) to be flagged for a native reviewer. Build directly on disk with the
-Filesystem tools, verify with a mirror `vite build`, then wrap STATE.
-```
-
-```
-# THEN — Week 5 content (ONE week only; review gate still open)
-French Buddy. Read STATE.md and CLAUDE.md first.
-Draft Week 5 (Days 29–35: l'heure & daily routine — reflexive verbs se lever/
-se coucher, faire, être en train de, 24h clock) against docs/curriculum-spec.md
-§3. One week only. Flag that native review of Weeks 1–4 is still outstanding.
+Draft Week 5 (Days 29-35: l'heure & daily routine — reflexive verbs se lever/
+se coucher, faire, etre en train de, 24h clock) against docs/curriculum-spec.md
+SS3. One week only. Flag that native review of Weeks 1-4 is still outstanding.
 ```
 
 Still-useful side task whenever the person wants it: run the audio pipeline
@@ -126,14 +136,16 @@ a native can review — see Open Decision #2.
    browser-fallback path, one won the timing race. Fix removes the bug but does
    NOT make the fallback reliably good across devices — running the real
    pipeline is still the only guarantee. `public/audio/` still empty.
-5. **Nav hierarchy levels (NEW, person-decided).** Person asked for A1/A2/B1/B2
-   level tabs. Decision: A1 + A2 are the only live levels (course caps at strong
-   A2 per spec §0); **B1 and B2 render as greyed-out "à venir" tabs** — roadmap
-   tease, explicitly NOT implying the course delivers B1/B2 (that would be the
-   over-promise the project defines itself against, §7). The A1-vs-A2 week
-   boundary isn't defined in the spec (it organizes by Blocks A–E); proposed
-   split A2 = Week 8+ (passé composé onset), flagged for native reviewer to
-   move. To implement next session.
+5. **Nav hierarchy levels (person-decided, option b) — IMPLEMENTED this
+   session.** Four level tabs A1/A2/B1/B2. Live rule: a level is live iff it
+   contains ≥1 BUILT week; else greyed "à venir." Today only A1 is live; A2
+   auto-activates when Week 8 lands (data-driven, no code change). B1/B2 stay
+   greyed permanently under honest-scope (course caps at strong A2, spec
+   §0/§7). Built in src/main.js (LEVELS model + renderNav) + index.html (tier
+   containers) + src/styles.css (tier styles). A1-vs-A2 boundary (proposed A2
+   = Week 8+, passe compose onset) still flagged for the native reviewer to
+   move — changing it is a one-line edit to the LEVELS array. Open follow-up:
+   browser eyeball via `npm run dev` (mirror can't render/click).
 6. **Scope beyond A2 (B1+)** — planning sketch in CLAUDE.md §11. Hard trigger:
    do NOT start drafting Block F (Week 13) until Weeks 1–2 have a native review
    back. Push back once before complying if asked to override.
@@ -175,6 +187,57 @@ a native can review — see Open Decision #2.
   usage-limit cutoffs: Week 4 content this session, nav hierarchy refactor
   next. Person confirmed native review of Weeks 1–4 will happen "when the right
   person is near." Did NOT start Week 5 and did NOT run the Azure pipeline.
+- **Session (nav hierarchy refactor).** Refactored the day navigation from a
+  flat ~84-chip row into three data-driven tiers: level tabs -> week pills ->
+  per-week day chips. Added a LEVELS model + `renderNav()` to src/main.js
+  (replacing the flat-chip block inside syncHeader; rest of the renderer
+  untouched), tier containers to index.html (#levels/#weeks/#days, replacing
+  #stations), and tier styles to src/styles.css matching the existing pill
+  language. Live rule = option b (a level is live iff it has >=1 built week):
+  today A1 live, A2/B1/B2 greyed "a venir"; A2 self-activates when Week 8
+  lands. Verified on the mirror: `vite build` = 10 modules, no errors; a pure
+  logic check against real LESSONS confirmed A1 live / A2/B1/B2 greyed / week
+  pills 1-4 built + 5-7 locked / correct per-week day chips. Held the
+  process line: showed the plan before touching main.js, used Filesystem tools
+  (not the container create_file this time). One check left uncovered by a
+  headless mirror: a browser eyeball of the actual render/click via `npm run
+  dev`. Also delivered (chat-only, no repo change) the exact Azure Speech F0
+  key steps and the GitHub-Actions-vs-npm testing/deploy explanation, incl. the
+  Windows PowerShell env-var syntax and the key fact that audio is generated
+  locally + committed (never in CI).
+- **Session (Claude Code handoff setup).** Prepared the repo to be taken over
+  by Claude Code as the local build agent (claude.ai is now advisor-only).
+  Added CLAUDE.md §12 (operating manual: local execution, verify-by-running,
+  git discipline, .env/secrets, process gates, wrap ritual, validator harness
+  spec). Closed a real secret-leak gap: `.gitignore` now excludes `.env`
+  (+ `.env.*`, keeping `.env.example`). Added `.env.example` template. Made
+  `npm run audio` work from a local `.env` on any Node >=18 by adding a
+  zero-dependency `.env` loader to generate-audio.mjs (tested: parses keys,
+  trims whitespace, strips quotes, skips comments; real shell vars still win).
+  No lesson content or renderer logic changed. Outstanding work (Week 4, nav
+  refactor, this setup) is still UNCOMMITTED on disk — the first Claude Code
+  session commits it. Also gave the person the exact Azure-key -> `.env` steps
+  and the two ready-to-paste Claude Code prompts (takeover; audio run).
+- **Session (Claude Code's first real build session).** Took over as the local
+  build agent per CLAUDE.md §12. Verified `npm run build` for real (not a
+  mirror): 10 modules, 0 errors, matches the numbers claude.ai had projected.
+  Started `npm run dev` and eyeballed the nav hierarchy live in a browser:
+  A1/A2/B1/B2 level tabs render correctly (only A1 clickable, others inert
+  "à venir" spans that fail to click); week pills 1-4 live, 5-7 correctly
+  inert/locked; clicking into Week 4 -> Day 22 loads the real lesson content
+  with correct day chips; no console errors. This closes the browser-eyeball
+  check flagged as open at the end of the nav-refactor session. Created
+  `dryrun.mjs` and `counts.mjs` in-repo per §12.3 (they didn't exist on disk
+  yet, only conceptually on the old mirror) and wired `npm run dryrun` /
+  `npm run counts`; both pass and match the prior mirror numbers exactly (28
+  lessons, 417 unique audio keys, 558 clips, 11,993 chars). Confirmed
+  `.gitignore` excludes `.env`/`.env.*` and `.env.example` exists with no real
+  secret. Committed all outstanding work in four focused commits (nav
+  refactor; .env/.gitignore/loader setup; the two validators; the CLAUDE.md
+  §12 operating-manual docs) and pushed to `main`. Did NOT draft Week 5, did
+  NOT touch B1/Block F, did NOT add any dependency — all per the standing
+  process gates. Rewrote this file's mirror-era gotchas section as historical
+  context now that builds run directly on the machine.
 
 ---
 
