@@ -12,14 +12,16 @@ this conversation."
 
 ## [CURRENT PHASE]
 
-Content build, Block C underway (Weeks 6–8 of 12) · **Weeks 1–6 wired &
-building — exactly half the 12-week arc.** Week 6 (Days 36–42, shopping &
-description) drafted and wired this session, and **all six built weeks now
-have real Azure audio** — the pipeline was re-run this session to cover
-Weeks 5–6 (829 clips total, 0 clips still on browser-TTS fallback).
-Immediate next unit of work is **Week 7 content** (home & neighborhood, per
-curriculum-spec.md §3 Block C). **Native-speaker listening review of Weeks
-1–6 is the hard gate before any real learner** (CLAUDE.md §8.2) — nothing
+Content build · **Weeks 1–7 wired & building — the entire A1 block (7 of
+12 weeks) is now drafted, and every built week has real Azure audio (959
+clips, 0 on browser-TTS fallback).** Week 7 (Days 43–49, home &
+neighborhood) drafted, wired, and audio-generated this session — it's the
+LAST A1 week. **Immediate next unit of work is Week 8 content — the first
+A2 week and the first past tense: the passé composé** (per curriculum-spec.md
+§3 Block C, Week 8). Because A2 begins at Week 8, landing it will auto-light
+the A2 level tab in the nav (data-driven, no code change — LEVELS in
+main.js maps A2 = weeks 8–12). **Native-speaker listening review of Weeks
+1–7 is the hard gate before any real learner** (CLAUDE.md §8.2) — nothing
 above changes that. Two standing gates still open (native review;
 one-week-at-a-time).
 
@@ -74,15 +76,40 @@ one-week-at-a-time).
   all 6 recall questions answered through the real UI, SRS step with 307
   vocab items now indexed, wrap/streak/stats) live in a browser — zero
   console errors. **Not native-reviewed.**
-- **Audio for Weeks 5–6 — generated this session (optional side task, done).**
-  Ran `npm run audio` again: 271 new clips for Weeks 5–6's 14 lessons, 558
-  unchanged (Weeks 1–4 correctly untouched by the content-hash cache — the
-  cache worked exactly as designed). `public/audio/` now holds 829 clips
-  across all 42 lessons, committed. Verified in a real browser: `audio/
-  clips.json` includes both new weeks' keys, and a Week 6 phonics clip
-  (`d36_cepull`) loads the real mp3 (`206 Partial Content`) instead of
-  falling back to browser TTS. All 6 built weeks (1–6) now have real Azure
-  audio — none of the shipped content is still on browser-TTS fallback.
+- **Week 7 (Days 43–49) — drafted, wired, AND audio-generated this session.
+  The last A1 week.** Possessives mon/ma/mes (the spec's mon/ma nasal-contrast
+  phonics; the agree-with-the-noun-not-the-owner rule; mon-before-feminine-
+  vowel like week 6's cet) then the ton/ta/tes and son/sa/ses extension
+  (son/sa = his OR her — object's gender, not owner's); rooms of a home
+  (la pièce vs la chambre; toilettes still plural from week 4); furniture;
+  the regular -ir verb group (finir/choisir/réfléchir/réussir, the -iss-
+  plural signature, with an honest flag that partir/dormir are the
+  irregular kind); floors + prepositions (rez-de-chaussée vs premier étage
+  off-by-one, au + ordinal reusing week 4's fusion + ordinals); and le
+  quartier + the gardien/concierge as the Paris note. Kept strictly
+  present-tense, function-first A1 — passé composé deferred to week 8.
+  `src/lessons/index.mjs` imports WEEK7 and spreads it. Verified for real:
+  `npm run build` — 13 modules, 0 errors; `npm run dryrun` — 49 lessons,
+  720 unique audio keys, all recall answers in range; `npm run counts` —
+  959 clips/22,585 chars total, 130 for week 7. Walked Day 43 (all 7 step
+  types) and the Day 49 review (6-turn chained dialogue, all 6 recall
+  questions answered via the real UI, SRS step with 355 vocab items
+  indexed, wrap teasing week 8) live in a browser — zero console errors.
+  Confirmed the A1→A2 nav boundary is correct: with all 7 A1 weeks built
+  there are now NO locked week pills within A1, and A2/B1/B2 stay greyed
+  "à venir" (data-driven — A2 auto-lights when week 8 lands). Fixed one
+  duplicate recall option caught before commit (Day 49 Q3 had "nous
+  finissons" as both the answer and a distractor; distractor changed to
+  "nous finissez"). **Not native-reviewed.**
+- **Audio — Weeks 5–6 then Week 7 generated across recent sessions.** Ran
+  `npm run audio` for Weeks 5–6 (271 clips) and again this session for Week
+  7 (130 clips). `public/audio/` now holds **959 clips across all 49 built
+  lessons**, committed. The content-hash cache has proven itself over three
+  separate incremental runs (each left all earlier weeks' clips untouched).
+  Verified in a real browser each time via the network tab (`206 Partial
+  Content` on a real mp3, not browser-TTS fallback); most recently
+  `d43_monfrere` for Week 7. **Every built week (1–7) now has real Azure
+  audio — nothing shipped is still on browser-TTS fallback.**
 - **Audio — RUN FOR REAL THIS SESSION (Open Decision #2 RESOLVED).** Person
   put a real Azure Speech key/region in `.env`; ran `npm run audio`. Generated
   558 clips (417 base + 141 `_slow`) across all 28 lessons, ~11,993 characters,
@@ -164,38 +191,45 @@ happened and what to watch for if a mirror-based workflow is ever used again.
 ## Next action (literal, ready to paste)
 
 Build is now handled by **Claude Code** (local agent; see CLAUDE.md §12).
-This session: drafted and wired **Week 6** (Days 36–42), verified with a
-real build/dryrun/counts plus a live browser walkthrough, then (as a quick
-optional follow-up) ran `npm run audio` again to generate real clips for
-both Weeks 5 and 6 — all six built weeks now have real Azure audio, zero
-browser-TTS fallback remaining. The next content unit is **Week 7** (home &
-neighborhood — possessives mon/ma/mes, regular -ir verbs like finir, more
-prepositions; per curriculum-spec.md §3 Block C). Native review of Weeks
-1–6 is still the hard gate before any real learner.
+This session: drafted, wired, and audio-generated **Week 7** (Days 43–49),
+verified with a real build/dryrun/counts plus a live browser walkthrough —
+completing the whole A1 block (Weeks 1–7), all with real Azure audio. The
+next content unit is **Week 8 — the first A2 week and the first past
+tense, the passé composé** (with avoir; common irregular past participles;
+time markers hier/la semaine dernière — per curriculum-spec.md §3 Block C,
+Week 8). This is the A1→A2 crossover: landing Week 8 auto-lights the A2
+level tab (data-driven; no code change needed). It's also the point where
+the register genuinely shifts from fixed present-tense phrases toward real
+tense grammar, so pace it carefully. Native review of Weeks 1–7 is still
+the hard gate before any real learner.
 
 ```
-# NEXT — Week 7 content (ONE week only; review gate still open)
+# NEXT — Week 8 content (ONE week only; review gate still open; A2 begins)
 French Buddy. Read STATE.md and CLAUDE.md first.
-Draft Week 7 (Days 43-49: home & neighborhood — possessives mon/ma/mes/
-ton/ta/tes/son/sa/ses etc., regular -ir verbs (finir family), more
-prepositions, rooms/furniture/le quartier vocab, un studio/au 3e etage/
-le gardien-la concierge as the Paris note) against docs/curriculum-spec.md
-SS3. One week only. Flag that native review of Weeks 1-6 is still
-outstanding.
+Draft Week 8 (Days 50-56: talking about the past I — passé composé with
+avoir, common irregular past participles (eu/fait/pris/vu/etc.), time
+markers hier/la semaine derniere, the -é/-er/-ez homophone phonics trap,
+recounting-a-weekend Paris note) against docs/curriculum-spec.md SS3.
+This is the FIRST A2 week — introduce the passé composé carefully, still
+grounded in function. One week only. Flag that native review of Weeks 1-7
+is still outstanding, and confirm the A2 level tab auto-lights once Week 8
+is wired.
 ```
 
 ## Open decisions (need a person, not just a build step)
 
 1. **GitHub Pages vs Netlify** — run both, or disable GH Pages? No cost either
    way; purely a "two URLs to keep straight" call.
-2. **RESOLVED — when to run the audio pipeline.** Run initially for Weeks
-   1–4 (558 clips), then again this session for Weeks 5–6 (271 more clips,
-   829 total). `public/audio/` holds real Azure audio for every built week;
-   the content-hash cache has now proven itself safe across two separate
-   runs (0 unwanted regeneration of earlier weeks' clips either time).
-3. **When to get native review** — person will do Weeks 1–4 (now 1–6) together
-   "when the right person is near." Accepted. Still the hard gate before real
-   learners and before any B1 (Block F) drafting.
+2. **RESOLVED — when to run the audio pipeline.** Run incrementally: Weeks
+   1–4 (558 clips), then Weeks 5–6 (+271), then Week 7 (+130) — **959 clips
+   total across all 49 built lessons**. `public/audio/` holds real Azure
+   audio for every built week; the content-hash cache has now proven itself
+   safe across three separate incremental runs (0 unwanted regeneration of
+   earlier weeks' clips any time). Standing practice: run `npm run audio`
+   after each new week; it's cheap and additive.
+3. **When to get native review** — person will do Weeks 1–4 (now 1–7, the
+   whole A1 block) together "when the right person is near." Accepted. Still
+   the hard gate before real learners and before any B1 (Block F) drafting.
 4. **RESOLVED — audio discrepancy.** `speechSynthesis.getVoices()` race in
    `src/main.js`, fixed by caching voices via `onvoiceschanged`. Netlify never
    runs an audio step (confirmed via `netlify.toml`); both tests were the same
@@ -381,6 +415,32 @@ outstanding.
   TTS. All six built weeks now have real Azure audio. Committed in three
   commits (content, audio, this STATE.md update) and pushed. Native review
   of Weeks 1–6 remains the hard gate before any real learner.
+- **Session (Week 7 content + audio — A1 block complete).** Drafted Days
+  43–49 (home & neighborhood) against curriculum-spec.md §3 Block C, the
+  last A1 week: possessives mon/ma/mes (the spec's mon/ma nasal-contrast
+  phonics; the agree-with-the-owned-noun-not-the-owner rule; mon-before-
+  feminine-vowel echoing week 6's cet) then ton/ta/tes and son/sa/ses
+  (son/sa = his OR her, object's gender); rooms (la pièce vs la chambre);
+  furniture; the regular -ir verb group (finir/choisir/réfléchir/réussir,
+  -iss- plural signature, with an honest note that partir/dormir are
+  irregular — §8.4 discipline, not overgeneralizing); floors + prepositions
+  (rez-de-chaussée vs premier étage off-by-one, au + ordinal reusing week
+  4); le quartier + gardien/concierge Paris note. Held it strictly present-
+  tense/function-first A1 — passé composé deliberately deferred to week 8.
+  Wired into index.mjs. Verified for real: build (13 modules, 0 errors),
+  dryrun (49 lessons, 720 unique keys, all recall in range), counts (959
+  clips/22,585 chars, 130 for week 7); live browser walkthrough of Day 43
+  (all 7 step types) and Day 49 review (6-turn dialogue, all 6 recall
+  answered via the real UI, SRS with 355 vocab items, wrap teasing week 8)
+  — zero console errors. Fixed a duplicate recall option before commit
+  (Day 49 Q3 distractor). Confirmed the A1→A2 nav boundary renders
+  correctly (no locked pills left in A1; A2/B1/B2 greyed). Then ran
+  `npm run audio` (optional follow-up): +130 Week 7 clips, 829 unchanged,
+  959 total — verified `d43_monfrere` loads as a real mp3 in-browser. All
+  seven A1 weeks now have real Azure audio. Committed in three commits
+  (content, audio, this STATE.md update) and pushed. One week only, per
+  §8.1 — did NOT start Week 8. Native review of Weeks 1–7 remains the hard
+  gate before any real learner.
 
 ---
 
