@@ -496,6 +496,23 @@ review of Weeks 1-8 is still outstanding.
   commits (content, audio, this STATE.md update) and pushed. One week only,
   per §8.1 — did NOT start Week 9. Native review of Weeks 1–8 remains the
   hard gate before any real learner.
+- **Session (header rail fix — UI only, no content).** Fixed a pre-existing
+  coordinate mismatch in the progress rail: the week nodes (#ticks) were
+  flex-spaced on an even i/11 axis and lit by week number, while the marker
+  (#train) and green fill (#railDone) run on a per-day axis
+  (frac=(day-1)/83), so mid-week the marker sat visibly past a still-grey
+  node. Put the nodes on the same per-day axis (week i+1 at its week-END day
+  fraction ((i+1)*7-1)/83, lit when lesson.day >= (i+1)*7); #ticks is now
+  full-width with each .tick absolutely positioned + translateX(-50%)
+  centered. #train/#railDone formulas unchanged. Verified in a real browser
+  by measuring pixel geometry at days 1/45/49/84 (marker lands exactly on
+  each week's node on that week's last day; no grey node behind the marker).
+  NB for future browser verification: this headless preview doesn't paint
+  frames, so the 0.5s CSS transitions on #train/#railDone freeze at t≈0 and
+  make the marker/fill *measure* as stuck at 0% — inject
+  `#train,#railDone{transition:none!important}` before measuring, or the
+  readings lie. Single commit, pushed on green. Did NOT touch the LEVELS
+  array or any lesson content.
 
 ---
 
