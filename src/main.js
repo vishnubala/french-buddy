@@ -5,7 +5,10 @@
    ===================================================================== */
 import "./styles.css";
 import { LESSONS } from "./lessons/index.mjs";
-import { completeLesson, isCompleted, registerItems, dueKeys, gradeItem } from "./storage.js";
+import { completeLesson, isCompleted, registerItems, dueKeys, gradeItem, saveQuizResult } from "./storage.js";
+import { SKILL_BY_SLUG } from "./quiz/skills.mjs";
+import { QUIZ_BANK } from "./quiz/bank.mjs";
+import { createSession } from "./quiz/engine.mjs";
 
 const CURRICULUM = { totalLessons: 84, weeks: 12 };
 
@@ -93,6 +96,8 @@ let lesson = LESSONS[lessonIndex];
 let stepIndex = 0;
 let stepDone = new Array(lesson.steps.length).fill(false);
 let correct = 0, attempts = 0;
+let appMode = "lesson";   /* "lesson" | "quiz" — the step surface is shared */
+let quiz = null;          /* active diagnostic session (see src/quiz/) */
 
 const el = id => document.getElementById(id);
 const stepEl = el("step"), nextBtn = el("nextBtn");
@@ -171,13 +176,21 @@ function renderNav() {
 }
 
 function switchLesson(i) {
-  if (i === lessonIndex) return;
+  const wasQuiz = appMode === "quiz";
+  appMode = "lesson"; quiz = null;         /* any nav click leaves the quiz */
+  if (i === lessonIndex && !wasQuiz) return;
   lessonIndex = i; lesson = LESSONS[i];
   stepIndex = 0;
   stepDone = new Array(lesson.steps.length).fill(false);
   correct = 0; attempts = 0;
   window.scrollTo({ top: 0, behavior: "smooth" });
   syncHeader(); renderStep();
+}
+
+/* Jump straight to a given day's lesson (used by results "revisit" links). */
+function navigateToDay(day) {
+  const i = LESSONS.findIndex(L => L.day === day);
+  if (i >= 0) switchLesson(i);
 }
 
 function renderPlatform() {
@@ -292,25 +305,38 @@ function renderStep() {
   setNext();
 }
 
+/* Shared multiple-choice primitive: renders ONE question (prompt + options +
+   ok/no feedback) and calls onAnswered(isCorrect) after a choice. Used by BOTH
+   the in-lesson recall step AND the diagnostic quiz — one MC renderer, never
+   forked (§2). Returns the .q node; the caller appends and owns flow. */
+function renderMCQuestion(q, onAnswered) {
+  const wrap = document.createElement("div"); wrap.className = "q";
+  const pr = document.createElement("div"); pr.className = "prompt"; pr.innerHTML = q.prompt; wrap.appendChild(pr);
+  const opts = document.createElement("div"); opts.className = "opts";
+  const fb = document.createElement("div"); fb.className = "fb";
+  q.opts.forEach((o, oi) => {
+    const btn = document.createElement("button"); btn.className = "opt"; btn.textContent = o;
+    btn.onclick = () => {
+      [...opts.children].forEach(c => c.disabled = true);
+      const isCorrect = oi === q.answer;
+      if (isCorrect) { btn.classList.add("correct"); fb.className = "fb ok"; fb.innerHTML = "✓ " + q.ok; }
+      else { btn.classList.add("wrong"); opts.children[q.answer].classList.add("correct"); fb.className = "fb no"; fb.innerHTML = "✗ " + q.no; }
+      onAnswered(isCorrect);
+    };
+    opts.appendChild(btn);
+  });
+  wrap.appendChild(opts); wrap.appendChild(fb);
+  return wrap;
+}
+
 function renderRecall(s) {
   let answered = 0;
   s.questions.forEach(q => {
-    const wrap = document.createElement("div"); wrap.className = "q";
-    const pr = document.createElement("div"); pr.className = "prompt"; pr.innerHTML = q.prompt; wrap.appendChild(pr);
-    const opts = document.createElement("div"); opts.className = "opts";
-    const fb = document.createElement("div"); fb.className = "fb";
-    q.opts.forEach((o, oi) => {
-      const btn = document.createElement("button"); btn.className = "opt"; btn.textContent = o;
-      btn.onclick = () => {
-        [...opts.children].forEach(c => c.disabled = true);
-        attempts++;
-        if (oi === q.answer) { btn.classList.add("correct"); fb.className = "fb ok"; fb.innerHTML = "✓ " + q.ok; correct++; }
-        else { btn.classList.add("wrong"); opts.children[q.answer].classList.add("correct"); fb.className = "fb no"; fb.innerHTML = "✗ " + q.no; }
-        answered++; if (answered === s.questions.length) unlock();
-      };
-      opts.appendChild(btn);
+    const node = renderMCQuestion(q, isCorrect => {
+      attempts++; if (isCorrect) correct++;
+      answered++; if (answered === s.questions.length) unlock();
     });
-    wrap.appendChild(opts); wrap.appendChild(fb); stepEl.appendChild(wrap);
+    stepEl.appendChild(node);
   });
   lock("Réponds à tout");
 }
@@ -398,5 +424,129 @@ function advance() {
   }
 }
 
+/* =====================================================================
+   DIAGNOSTIC QUIZ — renders in the shared step surface, drives #nextBtn.
+   Logic lives in src/quiz/ (data + engine); this is only the rendering,
+   and it reuses renderMCQuestion — the same MC primitive as recall (§2).
+   ===================================================================== */
+
+const QUIZ_MODES = [["a1", "A1"], ["a2", "A2"], ["mega", "A1–A2"]];
+
+function renderQuizBar() {
+  const bar = el("quizbar"); if (!bar) return;
+  bar.innerHTML = '<span class="qlabel">Quiz diagnostique</span>';
+  QUIZ_MODES.forEach(([m, txt]) => {
+    const b = document.createElement("button"); b.className = "qbtn"; b.textContent = txt;
+    b.onclick = () => launchQuiz(m);
+    bar.appendChild(b);
+  });
+}
+
+function launchQuiz(mode) {
+  appMode = "quiz";
+  quiz = createSession(mode, QUIZ_BANK);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  el("stationNum").textContent = "QUIZ";
+  el("lessonTitle").textContent = quiz.meta.label;
+  el("lessonDur").textContent = "diagnostic · sans minuteur";
+  el("platform").innerHTML = "";
+  renderQuizItem();
+}
+
+function renderQuizItem() {
+  if (appMode !== "quiz") return;
+  const item = quiz.next();
+  if (!item) { renderQuizResults(); return; }
+  stepEl.innerHTML = "";
+  stepEl.classList.remove("anim"); void stepEl.offsetWidth; stepEl.classList.add("anim");
+
+  const eb = document.createElement("div"); eb.className = "eyebrow";
+  eb.textContent = quiz.phaseLabel() + " · question " + quiz.servedCount();
+  stepEl.appendChild(eb);
+  const h = document.createElement("h3");
+  h.textContent = (SKILL_BY_SLUG[item.skill] || {}).label || "Question";
+  stepEl.appendChild(h);
+
+  const node = renderMCQuestion(item, isCorrect => {
+    quiz.record(isCorrect);
+    nextBtn.disabled = false;
+    nextBtn.className = "next";
+    nextBtn.innerHTML = 'Continuer <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+    nextBtn.onclick = renderQuizItem;
+  });
+  stepEl.appendChild(node);
+
+  nextBtn.disabled = true; nextBtn.className = "next"; nextBtn.innerHTML = "Choisis une réponse";
+}
+
+function renderQuizResults() {
+  const r = quiz.results();
+  saveQuizResult({
+    mode: quiz.meta.mode, at: Date.now(), overall: r.overall,
+    perSkill: r.perSkill.map(s => ({ slug: s.slug, pct: s.pct, total: s.total })),
+  });
+
+  el("stationNum").textContent = "BILAN";
+  el("lessonTitle").textContent = "Résultats — " + quiz.meta.label;
+  el("lessonDur").textContent = "";
+  el("platform").innerHTML = "";
+  stepEl.innerHTML = "";
+  stepEl.classList.remove("anim"); void stepEl.offsetWidth; stepEl.classList.add("anim");
+
+  const eb = document.createElement("div"); eb.className = "eyebrow"; eb.textContent = "Bilan diagnostique";
+  stepEl.appendChild(eb);
+  const h = document.createElement("h3");
+  h.textContent = `Score : ${r.overall.correct} / ${r.overall.total} · ${r.overall.pct}%`;
+  stepEl.appendChild(h);
+
+  const bar = pct => {
+    const cls = pct >= 80 ? "hi" : pct >= 50 ? "mid" : "lo";
+    return `<div class="rbar"><div class="rfill ${cls}" style="width:${pct}%"></div></div>`;
+  };
+
+  /* per-skill, weakest first — the diagnostic payload */
+  const sub1 = document.createElement("div"); sub1.className = "rsub"; sub1.textContent = "Par compétence (le plus faible d'abord)";
+  stepEl.appendChild(sub1);
+  const skills = document.createElement("div"); skills.className = "results";
+  r.perSkill.forEach(s => {
+    const row = document.createElement("div"); row.className = "rrow" + (s.pct < 70 ? " weak" : "");
+    row.innerHTML =
+      `<div class="rhead"><span class="rlabel">${s.label}</span><span class="rscore">${s.correct}/${s.total} · ${s.pct}%</span></div>` +
+      bar(s.pct);
+    if (s.pct < 70) {
+      const rev = document.createElement("div"); rev.className = "revisit";
+      rev.appendChild(document.createTextNode("Réviser : "));
+      s.weeks.slice(0, 3).forEach(w => {
+        const day = (w - 1) * 7 + 1;
+        const link = document.createElement("button"); link.className = "revlink";
+        link.textContent = "Sem " + w + " (Jour " + day + ")";
+        link.onclick = () => navigateToDay(day);
+        rev.appendChild(link);
+      });
+      row.appendChild(rev);
+    }
+    skills.appendChild(row);
+  });
+  stepEl.appendChild(skills);
+
+  /* per-week */
+  const sub2 = document.createElement("div"); sub2.className = "rsub"; sub2.textContent = "Par semaine";
+  stepEl.appendChild(sub2);
+  const weeks = document.createElement("div"); weeks.className = "results";
+  r.perWeek.forEach(w => {
+    const row = document.createElement("div"); row.className = "rrow rweek";
+    row.innerHTML =
+      `<div class="rhead"><span class="rlabel">Semaine ${w.week}</span><span class="rscore">${w.correct}/${w.total} · ${w.pct}%</span></div>` +
+      bar(w.pct);
+    weeks.appendChild(row);
+  });
+  stepEl.appendChild(weeks);
+
+  nextBtn.disabled = false; nextBtn.className = "next done";
+  nextBtn.innerHTML = "Retour aux leçons";
+  nextBtn.onclick = () => switchLesson(lessonIndex);
+}
+
+renderQuizBar();
 syncHeader();
 renderStep();

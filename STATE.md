@@ -24,6 +24,21 @@ terminus (100%) with all 12 nodes lit; the day-84 wrap reads as course
 completion ("Parcours A2 — complet. Félicitations 🎉", 84/84 stations), no
 week-13 tease.
 
+**NEW (this session): the Mega-Quiz diagnostic ENGINE is built and verified.**
+A separate `src/quiz/` module (skills taxonomy + item bank + adaptive engine)
+that renders through the SAME recall MC primitive as lessons (§2 one-engine).
+Three entry points (A1 / A2 / A1–A2 méga) are filters over one engine;
+hybrid stopping rule (calibration one-per-skill → deepening on weak skills,
+hardest-first, to a cap of 24/28/40). Results screen shows overall %, per-skill
+accuracy (weakest-first, with "revisit Jour NN" links) and per-week accuracy.
+Item bank = ~695 auto-generated lexical items from LESSONS vocab + ~38
+hand-authored grammar items (THIN, ~2/skill, all 19 skills covered). Verified
+in a real browser: build green, dryrun/counts still pass for lessons,
+calibration touches every in-scope skill, wrong answers show correct-answer
+feedback, deepening fills to cap, revisit links navigate. **NOT yet done: the
+deep hand-authored grammar bank — esp. passé-composé-vs-imparfait minimal
+pairs — is the NEXT quiz session** (kept to 2 correct examples here).
+
 **The build phase is essentially done. The single remaining blocker to
 shipping to a real learner is the standing hard gate: full native-speaker
 listening review of all 12 weeks** (CLAUDE.md §8.2) — text AND the generated
@@ -332,6 +347,12 @@ decisions, NOT new lessons. In rough priority:
    someone has to *listen*. Nothing ships to a real learner until this is
    done, and it also gates any B1/Block F work (§11.5). This is now the
    single biggest blocker; everything else is secondary.
+1b. **Mega-Quiz — deep grammar bank (NEXT quiz session).** The engine +
+   thin content is shipped (`src/quiz/`). Next: flesh out `bank.mjs` HAND
+   items, especially a real passé-composé-vs-imparfait minimal-pair set
+   (only 2 placeholder items exist now). Keep §8.4 accuracy: every ok/no
+   must say what's right and why the wrong option is wrong. The two-axis
+   Cours/Entraînement nav was deliberately NOT built — still an open decision.
 2. **Deploy decision** (Open Decision #1): GitHub Pages vs Netlify — keep
    both or disable GH Pages. Purely a "two URLs" call; no cost either way.
 3. **Optional polish passes** (only if the person wants them), each its own

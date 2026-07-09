@@ -7,6 +7,7 @@
 
 const PROGRESS_KEY = "fb.progress.v1";
 const MASTERY_KEY  = "fb.mastery.v1";
+const QUIZ_KEY     = "fb.quiz.v1";
 
 /* Leitner intervals (days until next review), indexed by level.
    Matches docs/curriculum-spec.md §5. */
@@ -82,3 +83,9 @@ export function gradeItem(key, knew) {
   m[key] = it;
   save(MASTERY_KEY, m);
 }
+
+/* ---------------- quiz diagnostic (last result) ---------------- */
+/* The Mega-Quiz stores its most recent diagnostic summary so a returning
+   learner keeps their last per-skill picture. No accounts, no server. */
+export function saveQuizResult(res) { save(QUIZ_KEY, res); }
+export function getQuizResult() { return load(QUIZ_KEY, null); }

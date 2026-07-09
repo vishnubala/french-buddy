@@ -194,3 +194,32 @@
 .wk.locked{border-style:dashed;background:transparent;color:var(--zinc);cursor:not-allowed}
 .wk .lk{margin-left:4px;font-size:9px;opacity:.7}
 .days{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---- diagnostic quiz launcher + results ---- */
+.quizbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:3px;
+  border-top:1px dashed var(--zinc);padding-top:10px}
+.qlabel{font-family:"Spline Sans Mono",monospace;font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-soft);margin-right:2px}
+.qbtn{font-family:"Spline Sans Mono",monospace;font-size:11px;letter-spacing:.04em;padding:5px 12px;
+  border-radius:999px;border:1px solid var(--gold);background:var(--paper-2);color:#8a6410;
+  cursor:pointer;transition:all .12s ease}
+.qbtn:hover{background:var(--gold);color:#fff}
+
+.rsub{font-family:"Spline Sans Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-soft);margin:20px 0 10px}
+.results{display:flex;flex-direction:column;gap:9px}
+.rrow{background:var(--paper);border:1px solid var(--zinc-line);border-radius:11px;padding:11px 13px}
+.rrow.weak{border-color:var(--gold)}
+.rhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
+.rlabel{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:15px}
+.rscore{font-family:"Spline Sans Mono",monospace;font-size:12px;color:var(--ink-soft);white-space:nowrap}
+.rbar{height:7px;border-radius:5px;background:var(--zinc-line);overflow:hidden}
+.rfill{height:100%;border-radius:5px}
+.rfill.hi{background:var(--vert)}
+.rfill.mid{background:var(--gold)}
+.rfill.lo{background:var(--wrong)}
+.revisit{margin-top:10px;font-family:"Spline Sans Mono",monospace;font-size:11px;color:var(--ink-soft);
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.revlink{font-family:"Spline Sans Mono",monospace;font-size:11px;padding:3px 10px;border-radius:999px;
+  border:1px solid var(--vert);background:var(--paper-2);color:var(--vert-deep);cursor:pointer;transition:all .12s ease}
+.revlink:hover{background:var(--vert);color:#fff}
