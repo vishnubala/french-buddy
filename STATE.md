@@ -12,19 +12,21 @@ this conversation."
 
 ## [CURRENT PHASE]
 
-Content build · **Weeks 1–9 wired & building — all of A1 plus the first two
-A2 weeks; the passé composé is now COMPLETE (avoir + être). Every built week
-has real Azure audio (1223 clips, 0 on browser-TTS fallback).** Week 9 (Days
-57–63, passé composé with être + agreement + sequencing + light y/en) drafted,
-wired, and audio-generated this session — the **second A2 week**. A2 nav now
-shows Sem 8 + Sem 9 as live pills, Sem 10–12 locked, B1/B2 greyed "à venir".
-**Immediate next unit of work is Week 10 content — Plans & the near future:
-le futur proche (aller + infinitive), on for suggestions, weather, and
-politely making/declining plans** (per curriculum-spec.md §3 Block D, Week
-10). That completes the past/present/future timeline. **Native-speaker
-listening review of Weeks 1–9 is the hard gate before any real learner**
-(CLAUDE.md §8.2) — nothing above changes that. Two standing gates still open
-(native review; one-week-at-a-time).
+Content build · **Weeks 1–10 wired & building — all of A1 plus the first
+three A2 weeks; the whole everyday timeline (past / present / near-future)
+is now built. Every built week has real Azure audio (1349 clips, 0 on
+browser-TTS fallback).** Week 10 (Days 64–70, le futur proche + on-
+suggestions + weather + inviting/declining) drafted, wired, and audio-
+generated this session — the **third A2 week**, and the last brand-new
+tense. A2 nav now shows Sem 8–10 as live pills, Sem 11–12 locked, B1/B2
+greyed "à venir". **Immediate next unit of work is Week 11 content —
+Description & opinion: the imparfait (intro — description/habit, contrasted
+lightly with the passé composé), comparatives (plus/moins… que), opinion
+frames (je trouve que, à mon avis), and -re verbs (prendre/comprendre)**
+(per curriculum-spec.md §3 Block D, Week 11). From here it's depth, not new
+machinery. **Native-speaker listening review of Weeks 1–10 is the hard gate
+before any real learner** (CLAUDE.md §8.2) — nothing above changes that. Two
+standing gates still open (native review; one-week-at-a-time).
 
 ---
 
@@ -149,15 +151,38 @@ listening review of Weeks 1–9 is the hard gate before any real learner**
   "32/32 sus ✓", which unlocked the step — first time the review-day SRS
   has surfaced a non-empty queue in verification), wrap teasing week 10 —
   zero console errors. **Not native-reviewed.**
-- **Audio — incremental across sessions; now complete through Week 9.** Ran
-  `npm run audio` for Weeks 5–6 (271 clips), Week 7 (130), Week 8 (132), and
-  this session Week 9 (132). `public/audio/` now holds **1223 clips across
-  all 63 built lessons**, committed. The content-hash cache has held across
-  five separate incremental runs (each left all earlier weeks' clips
-  untouched). Verified in a real browser each time via the network tab
-  (`206 Partial Content` on a real mp3, not browser-TTS fallback); most
-  recently `d57_jesuisalle` for Week 9. **Every built week (1–9) now has
-  real Azure audio — nothing shipped is still on browser-TTS fallback.**
+- **Week 10 (Days 64–70) — drafted, wired, AND audio-generated this session.
+  THIRD A2 WEEK; the past/present/future timeline is now COMPLETE.** Le
+  futur proche = aller (the week-4 verb, unchanged) + infinitive, framed
+  throughout as "the aller you already own, now + a dictionary verb": the
+  concept + je/tu/on forms (64); full paradigm nous allons/vous allez/ils
+  vont + the vont/ont/sont ear-test + near-future markers (65); negation
+  je ne vais pas + infinitive (66); on-suggestions with rising intonation
+  — the spec's yes/no-question phonics target (67); weather il fait beau/
+  il va pleuvoir (68); inviting + accepting/declining politely, the Paris
+  "soft no" note (69); review with a hier/aujourd'hui/demain three-tense
+  contrast (70). **SCOPE GUARD held (spec §3): futur proche ONLY — the futur
+  simple (je mangerai) is deliberately excluded and named as out of scope
+  in the day-64 culture note.** Kept lighter/more conceptual than wks 8–9
+  since nothing new to conjugate (§11.2). Accuracy (§8.4): aller forms/
+  liaisons called back to week 4, not recontradicted; vont/ont/sont built
+  on wks 8–9. `src/lessons/index.mjs` imports WEEK10. Verified: build (16
+  modules, 0 errors), dryrun (70 lessons, 1014 unique keys, all recall in
+  range), counts (1349 clips/33,591 chars, 126 for wk10). Browser
+  walkthrough of Day 64 (all 7 step types) + Day 70 review (6-turn dialogue,
+  6 recall incl. the three-tense contrast answered via the UI, SRS, wrap
+  teasing week 11) — zero console errors. A2 nav shows Sem 8–10 live, Sem
+  11–12 locked. **Not native-reviewed.**
+- **Audio — incremental across sessions; now complete through Week 10.** Ran
+  `npm run audio` for Weeks 5–6 (271 clips), Week 7 (130), Week 8 (132),
+  Week 9 (132), and this session Week 10 (126). `public/audio/` now holds
+  **1349 clips across all 70 built lessons**, committed. The content-hash
+  cache has held across six separate incremental runs (each left all earlier
+  weeks' clips untouched). Verified in a real browser each time via the
+  network tab (`206 Partial Content` on a real mp3, not browser-TTS
+  fallback); most recently `d64_jevaispartir` for Week 10. **Every built
+  week (1–10) now has real Azure audio — nothing shipped is still on
+  browser-TTS fallback.**
 - **Audio — RUN FOR REAL THIS SESSION (Open Decision #2 RESOLVED).** Person
   put a real Azure Speech key/region in `.env`; ran `npm run audio`. Generated
   558 clips (417 base + 141 `_slow`) across all 28 lessons, ~11,993 characters,
@@ -239,30 +264,32 @@ happened and what to watch for if a mirror-based workflow is ever used again.
 ## Next action (literal, ready to paste)
 
 Build is now handled by **Claude Code** (local agent; see CLAUDE.md §12).
-This session: drafted, wired, and audio-generated **Week 9** (Days 57–63,
-passé composé with être + agreement + sequencing + light y/en), the second
+This session: drafted, wired, and audio-generated **Week 10** (Days 64–70,
+le futur proche + on-suggestions + weather + inviting/declining), the third
 A2 week — verified with a real build/dryrun/counts and a live browser
-walkthrough. That completes the passé composé (avoir + être). The next
-content unit is **Week 10 — Plans & the near future**: the **futur proche**
-(aller + infinitive: *je vais partir*), **on** for suggestions, **weather**,
-and making/declining plans/invitations politely (per curriculum-spec.md §3
-Block D, Week 10). With past + present + near-future, the learner will have
-the full everyday timeline. Handy continuity hook: *aller* is already deep
-in the learner's hands (week 4 present, week 9 as an être-past verb) — the
-futur proche just reuses it as an auxiliary-like helper. Native review of
-Weeks 1–9 is still the hard gate before any real learner.
+walkthrough. That completes the whole everyday timeline (past + present +
+near-future) and is the **last brand-new tense**. The next content unit is
+**Week 11 — Description & opinion**: the **imparfait** (intro — description
+& habit, contrasted *lightly* with the passé composé, NOT a full drill),
+**comparatives** (plus/moins/aussi… que), **opinion frames** (je trouve
+que, à mon avis, je pense que), and the **-re verbs** (prendre, comprendre)
+whose participles the learner has already met in the past tense (per
+curriculum-spec.md §3 Block D, Week 11). Continuity hook: c'était / il y
+avait have been *previewed* in wks 9–10 tips as "a first taste of the
+imparfait" — week 11 delivers it. From here it's depth, not new tenses.
+Native review of Weeks 1–10 is still the hard gate before any real learner.
 
 ```
-# NEXT — Week 10 content (ONE week only; review gate still open)
+# NEXT — Week 11 content (ONE week only; review gate still open)
 French Buddy. Read STATE.md and CLAUDE.md first.
-Draft Week 10 (Days 64-70: plans & the near future — futur proche
-(aller + infinitive, je vais/tu vas/on va + inf.), on for suggestions
-(on va au ciné ?), weather (il fait beau/il va pleuvoir), leisure/
-invitation vocab, politely accepting/declining (ça te dit ?, je veux
-bien, désolé je ne peux pas); intonation-of-yes/no-questions phonics;
-making-and-declining-plans-without-bluntness Paris note) against
-docs/curriculum-spec.md SS3. One week only. Flag that native review of
-Weeks 1-9 is still outstanding.
+Draft Week 11 (Days 71-77: description & opinion — imparfait as INTRO
+(description/habit: c'était, il y avait, je faisais; contrasted lightly
+with the passé composé's completed events, not a full imparfait drill),
+comparatives (plus/moins/aussi ... que; meilleur), opinion frames
+(je trouve que, à mon avis, je pense que), -re verbs (prendre/comprendre/
+apprendre); imparfait-endings phonics; café-debate-register/softening-
+disagreement Paris note) against docs/curriculum-spec.md SS3. One week
+only. Flag that native review of Weeks 1-10 is still outstanding.
 ```
 
 ## Open decisions (need a person, not just a build step)
@@ -271,17 +298,17 @@ Weeks 1-9 is still outstanding.
    way; purely a "two URLs to keep straight" call.
 2. **RESOLVED — when to run the audio pipeline.** Run incrementally: Weeks
    1–4 (558 clips), Weeks 5–6 (+271), Week 7 (+130), Week 8 (+132), Week 9
-   (+132) — **1223 clips total across all 63 built lessons**. `public/audio/`
-   holds real Azure audio for every built week; the content-hash cache has
-   now proven itself safe across five separate incremental runs (0 unwanted
-   regeneration of earlier weeks' clips any time). Standing practice: run
-   `npm run audio` after each new week; it's cheap and additive.
-3. **When to get native review** — person will do Weeks 1–4 (now 1–9, all of
-   A1 plus the first two A2 weeks) together "when the right person is near."
+   (+132), Week 10 (+126) — **1349 clips total across all 70 built lessons**.
+   `public/audio/` holds real Azure audio for every built week; the content-
+   hash cache has now proven itself safe across six separate incremental runs
+   (0 unwanted regeneration of earlier weeks' clips any time). Standing
+   practice: run `npm run audio` after each new week; it's cheap and additive.
+3. **When to get native review** — person will do Weeks 1–4 (now 1–10, all of
+   A1 plus the first three A2 weeks) together "when the right person is near."
    Accepted. Still the hard gate before real learners and before any B1
-   (Block F) drafting. Note: with the whole passé composé now built (avoir +
-   être + agreement), this is exactly the grammar-heavy content where TTS
-   reading wrong French fluently is most dangerous — the listening review
+   (Block F) drafting. Note: with the full timeline built (passé composé +
+   present + futur proche), this is exactly the grammar-heavy content where
+   TTS reading wrong French fluently is most dangerous — the listening review
    matters more, not less.
 4. **RESOLVED — audio discrepancy.** `speechSynthesis.getVoices()` race in
    `src/main.js`, fixed by caching voices via `onvoiceschanged`. Netlify never
@@ -561,6 +588,31 @@ Weeks 1-9 is still outstanding.
   10–12 locked. Committed in three commits (content, audio, this STATE.md
   update) and pushed. One week only, per §8.1 — did NOT start Week 10.
   Native review of Weeks 1–9 remains the hard gate before any real learner.
+- **Session (Week 10 content + audio — third A2 week; timeline complete).**
+  Drafted Days 64–70 (le futur proche) against curriculum-spec.md §3,
+  completing the past/present/future timeline. Framed the whole week as
+  "aller (week 4) + infinitive" — deliberately lighter than wks 8–9 (§11.2)
+  since there's nothing new to conjugate: concept + je/tu/on (64), full
+  paradigm + vont/ont/sont ear-test + markers (65), negation (66), on-
+  suggestions with rising-intonation phonics [spec target] (67), weather
+  (68), inviting/accepting/declining with the Paris soft-no note (69),
+  review with a hier/aujourd'hui/demain three-tense contrast (70). **Held
+  the scope guard: futur proche ONLY — the futur simple (je mangerai) is
+  explicitly excluded and named as out-of-scope in the day-64 culture note.**
+  Accuracy (§8.4): aller forms/liaisons called back to week 4 not
+  recontradicted; vont/ont/sont built on wks 8–9. Wired into index.mjs.
+  Verified: build (16 modules, 0 errors), dryrun (70 lessons, 1014 unique
+  keys, all recall in range), counts (1349 clips/33,591 chars, 126 for
+  wk10). Browser walkthrough of Day 64 (all 7 step types) + Day 70 review
+  (6-turn dialogue, 6 recall incl. three-tense contrast via the UI, SRS —
+  "Tout est à jour" on the fresh session — wrap teasing week 11); zero
+  console errors. Note: the preview server dropped mid-walkthrough once and
+  was restarted — no impact, verification re-run cleanly. Ran `npm run
+  audio`: +126 Week 10 clips, 1223 unchanged, 1349 total; verified
+  `d64_jevaispartir` loads as a real mp3. A2 nav shows Sem 8–10 live, Sem
+  11–12 locked. Committed in three commits (content, audio, this STATE.md
+  update) and pushed. One week only, per §8.1 — did NOT start Week 11.
+  Native review of Weeks 1–10 remains the hard gate before any real learner.
 
 ---
 
