@@ -12,23 +12,24 @@ this conversation."
 
 ## [CURRENT PHASE]
 
-Content build · **Weeks 1–11 wired & building — all of A1 plus four A2
-weeks; only Week 12 (the capstone/review) remains to reach the full 12-week
-course. Every built week has real Azure audio (1477 clips, 0 on browser-TTS
-fallback).** Week 11 (Days 71–77, the imparfait + comparatives + opinion +
-prendre family) drafted, wired, and audio-generated this session — the
-**fourth A2 week**, with the imparfait built as a 3-day spine (the last
-major new tense). A2 nav now shows Sem 8–11 as live pills, only Sem 12
-locked, B1/B2 greyed "à venir". **Immediate next unit of work is Week 12 —
-the FINAL week: "Putting it together"** — an integrated review + the
-capstone chained dialogue "Une journée à Paris" (boulangerie → métro →
-museum → café → plans for tomorrow) mixing present / passé composé /
-imparfait / futur proche, and a self-check against the A2 can-do statements
-(curriculum-spec.md §3 Block E + §6). **This is a review/consolidation week —
-NO new grammar** (it pulls together what's built). **Native-speaker listening
-review of Weeks 1–11 is the hard gate before any real learner** (CLAUDE.md
-§8.2) — nothing above changes that. Two standing gates still open (native
-review; one-week-at-a-time).
+**CONTENT-COMPLETE.** All **12 weeks / 84 lessons** of the A1→A2 course are
+drafted, wired, building, and audio-generated (**1621 real Azure clips, 0 on
+browser-TTS fallback**). Week 12 (Days 78–84, "Putting it together" — six
+scene-review days + the Day-84 capstone "Une journée à Paris" + the A2
+self-assessment) was drafted, wired, and audio-generated this session, with
+NO new grammar (pure consolidation). The nav is at its finished state: A1 and
+A2 both live, **all of Sem 1–12 built (no locked week pills under either
+level)**, B1/B2 greyed "à venir"; on day 84 the rail marker sits at the
+terminus (100%) with all 12 nodes lit; the day-84 wrap reads as course
+completion ("Parcours A2 — complet. Félicitations 🎉", 84/84 stations), no
+week-13 tease.
+
+**The build phase is essentially done. The single remaining blocker to
+shipping to a real learner is the standing hard gate: full native-speaker
+listening review of all 12 weeks** (CLAUDE.md §8.2) — text AND the generated
+audio, since neural TTS reads wrong French fluently. That review also gates
+any future B1/Block F work (§11.5). Immediate next actions are now review/
+polish/deploy decisions, not new content (see Next action).
 
 ---
 
@@ -201,16 +202,46 @@ review; one-week-at-a-time).
   3-day spine, the other three were genuinely one-day-sized; nothing was
   shifted to Week 12 (which is review-only by design) and nothing dropped.**
   **Not native-reviewed.**
-- **Audio — incremental across sessions; now complete through Week 11.** Ran
-  `npm run audio` for Weeks 5–6 (271 clips), Week 7 (130), Week 8 (132),
-  Week 9 (132), Week 10 (126), and this session Week 11 (128). `public/audio/`
-  now holds **1477 clips across all 77 built lessons**, committed. The
-  content-hash cache has held across seven separate incremental runs (each
-  left all earlier weeks' clips untouched). Verified in a real browser each
-  time via the network tab (`206 Partial Content` on a real mp3, not
-  browser-TTS fallback); most recently `d71_jeparlais` for Week 11. **Every
-  built week (1–11) now has real Azure audio — nothing shipped is still on
-  browser-TTS fallback.**
+- **Week 12 (Days 78–84) — drafted, wired, AND audio-generated this session.
+  THE FINAL WEEK; the course is now content-complete (84 lessons).** Pure
+  consolidation, NO new grammar (spec §3 Block E + §6): days 78–83 each
+  replay one scene/block of a day in Paris and recombine what's built —
+  morning café + greetings + register (78); métro + directions (79); the two
+  past tenses at the museum (80); opinion + comparison at the café (81); the
+  near future / plans (82); tu-vs-vous register-switching, with a full-circle
+  /y/-vs-/u/ phonics callback to day 1's rue/roue (83). **Day 84 is the
+  capstone**: the full **12-turn chained "Une journée à Paris"** dialogue
+  (café → métro → museum → café → plans) moving between present / passé
+  composé / imparfait / futur proche and switching register, then a **final
+  cumulative can-do quiz** (the A2 self-assessment, one Q per §6 competency),
+  the **§6 can-do bilan** as a culture step (with the honest "solid A2, not
+  B1" scope note kept to the end), the last SRS queue, and a **completion
+  wrap**. **Everything uses existing step types (§2 one-engine rule): the
+  self-assessment is a recall + culture step; the terminus wrap reuses the
+  métro theme (last station = terminus) so `next` reads as completion with NO
+  renderer branch / NO `if(day===84)`.** `src/lessons/index.mjs` imports
+  WEEK12. Verified: build (18 modules, 0 errors), dryrun (84 lessons, 1216
+  unique keys, all recall in range), counts (1621 clips/42,753 chars, 144 for
+  wk12). Browser walkthrough: Day 78 (all 7 step types); Day 84 (the 12-turn
+  capstone renders cleanly = 24 say buttons — the renderer handles the big
+  dialogue fine; 6-question can-do quiz; SRS; bilan culture; wrap showing
+  84/84 and "Prochaine station → Terminus · fin du parcours A2 …"). **FINISHED
+  END-STATE verified in-browser: A2 tab has NO locked week pills (all Sem
+  8–12 live buttons); on day 84 the rail marker sits at the terminus (100%)
+  exactly on the week-12 node, all 12 nodes lit, fill spanning the line;
+  B1/B2 remain greyed "à venir".** Zero console errors. **Not
+  native-reviewed.**
+- **Audio — incremental across sessions; now COMPLETE for the whole course.**
+  Ran `npm run audio` for Weeks 5–6 (271 clips), Week 7 (130), Week 8 (132),
+  Week 9 (132), Week 10 (126), Week 11 (128), and this session Week 12 (144,
+  incl. the 12-turn capstone). `public/audio/` now holds **1621 clips across
+  all 84 lessons of the finished course** (~42,753 chars — well inside
+  Azure's F0 free tier), committed. The content-hash cache held across eight
+  separate incremental runs (each left all earlier weeks' clips untouched).
+  Verified in a real browser each time via the network tab (`206 Partial
+  Content` on a real mp3, not browser-TTS fallback); most recently
+  `d78_bonjour` for Week 12. **All twelve weeks now have real Azure audio —
+  nothing is on browser-TTS fallback.**
 - **Audio — RUN FOR REAL THIS SESSION (Open Decision #2 RESOLVED).** Person
   put a real Azure Speech key/region in `.env`; ran `npm run audio`. Generated
   558 clips (417 base + 141 `_slow`) across all 28 lessons, ~11,993 characters,
@@ -291,64 +322,57 @@ happened and what to watch for if a mirror-based workflow is ever used again.
 
 ## Next action (literal, ready to paste)
 
-Build is now handled by **Claude Code** (local agent; see CLAUDE.md §12).
-This session: drafted, wired, and audio-generated **Week 11** (Days 71–77,
-the imparfait + comparatives + opinion + prendre family), the fourth A2
-week — verified with a real build/dryrun/counts and a live browser
-walkthrough. The imparfait (the last major new tense) is now in. **The next
-unit is Week 12 — the FINAL week, "Putting it together"** (curriculum-spec.md
-§3 Block E + §6). This is NOT a new-grammar week: it's an **integrated
-review** across present / passé composé / imparfait / futur proche, plus the
-**capstone** — a chained multi-scene dialogue "Une journée à Paris"
-(boulangerie → métro → museum → café → plans for tomorrow) that reuses only
-what's already built — and a **self-assessment** against the A2 can-do
-statements in spec §6. It's also the week that makes A1→A2 the full course:
-after it, all 12 weeks exist. Two special considerations for whoever builds
-it: (1) the capstone dialogue may be longer/multi-scene — check the renderer
-handles a big `dialogue` step (it did fine at 7 turns; watch for anything
-much larger); (2) the self-assessment / can-do check may want a step type
-the engine doesn't have yet — if so, prefer expressing it with existing step
-types (recall/culture/wrap) over adding a renderer branch, per §2's
-one-engine rule; flag if a genuinely new step type seems needed rather than
-adding it silently. Native review of Weeks 1–11 is still the hard gate before
-any real learner.
+**The 12-week course is content-complete — there is NO more content to
+draft.** All 84 lessons are written, wired, building, and audio-generated
+(1621 real Azure clips). So the next actions are review / polish / deploy
+decisions, NOT new lessons. In rough priority:
+
+1. **THE hard gate: full native-speaker listening review of all 12 weeks**
+   (CLAUDE.md §8.2). Text AND audio — TTS reads wrong French fluently, so
+   someone has to *listen*. Nothing ships to a real learner until this is
+   done, and it also gates any B1/Block F work (§11.5). This is now the
+   single biggest blocker; everything else is secondary.
+2. **Deploy decision** (Open Decision #1): GitHub Pages vs Netlify — keep
+   both or disable GH Pages. Purely a "two URLs" call; no cost either way.
+3. **Optional polish passes** (only if the person wants them), each its own
+   small session: an end-to-end click-through of the finished course in a
+   browser; a light QA of the `reg` (tu/vous) badges for consistency; a
+   look at bundle size (JS gzip is now ~140 KB with all 12 weeks + inline
+   data — still fine, but worth a glance if it grows).
+
+Do NOT start B1/Block F — it's gated behind the native review (§11.5), and
+CLAUDE.md §8.1's one-unit-per-session discipline still applies to any future
+build work.
 
 ```
-# NEXT — Week 12 content (the FINAL week; review/capstone, NO new grammar)
-French Buddy. Read STATE.md and CLAUDE.md first (esp. §2 one-engine rule,
-§8, §12). Draft Week 12 (Days 78-84: "Putting it together") against
-docs/curriculum-spec.md §3 Block E + §6. It is a CONSOLIDATION week — no
-new grammar: an integrated review moving between present / passé composé /
-imparfait / futur proche; the capstone chained dialogue "Une journée à
-Paris" (boulangerie -> métro -> museum -> café -> plans for tomorrow); and
-a Day 84 self-check against the A2 can-do statements (spec §6). Reuse
-existing step types; do NOT add a renderer branch without flagging (§2).
-One week only. This COMPLETES the 12-week course. Flag that full
-native-speaker review of all 12 weeks is the hard gate before any real
-learner, and that it triggers the §11.5 gate for any future B1/Block F work.
+# Typical next session (pick ONE)
+French Buddy. Read STATE.md and CLAUDE.md first.
+The 12-week course is content-complete. Today: [decide GH Pages vs Netlify /
+do an end-to-end browser click-through of the finished course / QA the
+tu-vous reg badges / [other]]. Do NOT draft new lessons or start B1 —
+native review of all 12 weeks is still the hard gate.
 ```
 
 ## Open decisions (need a person, not just a build step)
 
 1. **GitHub Pages vs Netlify** — run both, or disable GH Pages? No cost either
    way; purely a "two URLs to keep straight" call.
-2. **RESOLVED — when to run the audio pipeline.** Run incrementally: Weeks
-   1–4 (558 clips), Weeks 5–6 (+271), Week 7 (+130), Week 8 (+132), Week 9
-   (+132), Week 10 (+126), Week 11 (+128) — **1477 clips total across all 77
-   built lessons**. `public/audio/` holds real Azure audio for every built
-   week; the content-hash cache has now proven itself safe across seven
-   separate incremental runs (0 unwanted regeneration of earlier weeks' clips
-   any time). Standing practice: run `npm run audio` after each new week;
-   it's cheap and additive.
-3. **When to get native review** — person will do Weeks 1–4 (now 1–11, all of
-   A1 plus four A2 weeks) together "when the right person is near." Accepted.
-   Still the hard gate before real learners and before any B1 (Block F)
-   drafting. Note: with the full A2 verb system now built (passé composé +
-   imparfait + present + futur proche), this is exactly the grammar-heavy
-   content where TTS reading wrong French fluently is most dangerous — the
-   listening review matters more, not less. Once Week 12 lands, the whole
-   12-week course will exist and this review becomes the single biggest
-   blocker to shipping.
+2. **RESOLVED — audio pipeline, now run for the whole course.** Run
+   incrementally across eight sessions: Weeks 1–4 (558 clips), Weeks 5–6
+   (+271), Week 7 (+130), Week 8 (+132), Week 9 (+132), Week 10 (+126), Week
+   11 (+128), Week 12 (+144) — **1621 clips total across all 84 lessons**,
+   ~42,753 chars (well inside Azure F0's 500K/month). `public/audio/` holds
+   real Azure audio for every lesson; the content-hash cache proved itself
+   safe across all eight incremental runs. If a lesson's text is ever edited,
+   re-run `npm run audio` — it regenerates only the changed clips.
+3. **When to get native review — NOW THE #1 BLOCKER.** Person will do the
+   review together "when the right person is near." With all 12 weeks now
+   content-complete, this is the single biggest thing standing between the
+   course and a real learner. It must cover text AND audio (TTS reads wrong
+   French fluently, so listening matters), and it gates any B1 (Block F)
+   drafting (§11.5). Everything grammar-heavy from A2 (both past tenses,
+   agreement, the futur proche, the imparfait) is exactly where a wrong form
+   would teach a wrong instinct — so the listening pass matters most there.
 4. **RESOLVED — audio discrepancy.** `speechSynthesis.getVoices()` race in
    `src/main.js`, fixed by caching voices via `onvoiceschanged`. Netlify never
    runs an audio step (confirmed via `netlify.toml`); both tests were the same
@@ -676,6 +700,35 @@ learner, and that it triggers the §11.5 gate for any future B1/Block F work.
   §8.1 — did NOT start Week 12. Native review of Weeks 1–11 remains the hard
   gate before any real learner. **Only Week 12 (the capstone) remains to
   complete the whole 12-week course.**
+- **Session (Week 12 — THE FINAL WEEK; course content-complete).** Drafted
+  Days 78–84 ("Putting it together") against curriculum-spec.md §3 Block E +
+  §6 — a pure consolidation week, NO new grammar. Days 78–83 each replay one
+  scene/block of a day in Paris (café/greetings/register; métro/directions;
+  the two past tenses at the museum; opinion/comparison; the near future;
+  tu/vous register-switching with a full-circle rue/roue → tu/vous /y/-vs-/u/
+  phonics callback to day 1). Day 84 = the capstone: the full 12-turn chained
+  "Une journée à Paris" dialogue mixing all four tenses + register, a final
+  cumulative can-do quiz (the §6 self-assessment, as a recall step), the §6
+  can-do bilan (as a culture step, honest "solid A2 not B1" scope kept to the
+  end), the last SRS queue, and a completion wrap. Held the §2 one-engine
+  rule strictly: the self-assessment is recall+culture, and the completion
+  wrap reuses the métro theme (last station = terminus) so `next` reads as
+  completion — NO renderer branch, NO `if(day===84)`. Verified: build (18
+  modules, 0 errors), dryrun (84 lessons, 1216 unique keys, all recall in
+  range), counts (1621 clips/42,753 chars). Browser walkthrough of Day 78
+  (all 7 step types) + Day 84 (the 12-turn capstone renders cleanly — the
+  renderer handles the big dialogue fine; can-do quiz; SRS; bilan; completion
+  wrap). **Verified the FINISHED end-state in-browser as requested: A2 tab
+  has NO locked week pills (all Sem 8–12 live); on day 84 the rail marker
+  sits at the terminus (100%) exactly on the week-12 node with all 12 nodes
+  lit and the fill spanning the line; B1/B2 remain greyed "à venir"; the wrap
+  shows 84/84 and "Prochaine station → Terminus · fin du parcours A2 …".**
+  Zero console errors. Ran `npm run audio`: +144 clips, 1621 total; verified
+  `d78_bonjour` loads as a real mp3. Committed in three commits (content,
+  audio, this STATE.md update) and pushed. **THE 12-WEEK A1→A2 COURSE IS NOW
+  CONTENT-COMPLETE.** No content remains; the #1 blocker to shipping is the
+  standing native-speaker review of all 12 weeks (§8.2), which also gates B1
+  (§11.5). Did NOT touch B1/Block F or add dependencies.
 
 ---
 
