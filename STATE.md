@@ -12,21 +12,23 @@ this conversation."
 
 ## [CURRENT PHASE]
 
-Content build · **Weeks 1–10 wired & building — all of A1 plus the first
-three A2 weeks; the whole everyday timeline (past / present / near-future)
-is now built. Every built week has real Azure audio (1349 clips, 0 on
-browser-TTS fallback).** Week 10 (Days 64–70, le futur proche + on-
-suggestions + weather + inviting/declining) drafted, wired, and audio-
-generated this session — the **third A2 week**, and the last brand-new
-tense. A2 nav now shows Sem 8–10 as live pills, Sem 11–12 locked, B1/B2
-greyed "à venir". **Immediate next unit of work is Week 11 content —
-Description & opinion: the imparfait (intro — description/habit, contrasted
-lightly with the passé composé), comparatives (plus/moins… que), opinion
-frames (je trouve que, à mon avis), and -re verbs (prendre/comprendre)**
-(per curriculum-spec.md §3 Block D, Week 11). From here it's depth, not new
-machinery. **Native-speaker listening review of Weeks 1–10 is the hard gate
-before any real learner** (CLAUDE.md §8.2) — nothing above changes that. Two
-standing gates still open (native review; one-week-at-a-time).
+Content build · **Weeks 1–11 wired & building — all of A1 plus four A2
+weeks; only Week 12 (the capstone/review) remains to reach the full 12-week
+course. Every built week has real Azure audio (1477 clips, 0 on browser-TTS
+fallback).** Week 11 (Days 71–77, the imparfait + comparatives + opinion +
+prendre family) drafted, wired, and audio-generated this session — the
+**fourth A2 week**, with the imparfait built as a 3-day spine (the last
+major new tense). A2 nav now shows Sem 8–11 as live pills, only Sem 12
+locked, B1/B2 greyed "à venir". **Immediate next unit of work is Week 12 —
+the FINAL week: "Putting it together"** — an integrated review + the
+capstone chained dialogue "Une journée à Paris" (boulangerie → métro →
+museum → café → plans for tomorrow) mixing present / passé composé /
+imparfait / futur proche, and a self-check against the A2 can-do statements
+(curriculum-spec.md §3 Block E + §6). **This is a review/consolidation week —
+NO new grammar** (it pulls together what's built). **Native-speaker listening
+review of Weeks 1–11 is the hard gate before any real learner** (CLAUDE.md
+§8.2) — nothing above changes that. Two standing gates still open (native
+review; one-week-at-a-time).
 
 ---
 
@@ -173,15 +175,41 @@ standing gates still open (native review; one-week-at-a-time).
   6 recall incl. the three-tense contrast answered via the UI, SRS, wrap
   teasing week 11) — zero console errors. A2 nav shows Sem 8–10 live, Sem
   11–12 locked. **Not native-reviewed.**
-- **Audio — incremental across sessions; now complete through Week 10.** Ran
+- **Week 11 (Days 71–77) — drafted, wired, AND audio-generated this session.
+  FOURTH A2 WEEK; the imparfait, the last major new tense.** Built the
+  imparfait as a **3-day spine, not a grab-bag item** (§11.2): formation
+  (stem = present nous-form − ons + -ais/-ait/…; être irregular ét-) with
+  the -ais/-ait/-aient homophone phonics — parallel to the PC's -é/-er/-ez
+  (71); what it's FOR — description & habit (c'était/il y avait/il faisait,
+  quand j'étais petit) (72); the LIGHT passé-composé-vs-imparfait contrast
+  (photo vs film / event vs backdrop, é-vs-è phonics) per the spec's
+  "contrasted lightly" (73). Then comparatives plus/moins/aussi… que +
+  meilleur (74); opinion frames je trouve que/à mon avis/je pense que (75);
+  the **prendre family** (prendre/comprendre/apprendre — the -re verbs the
+  spec actually names, NOT regular attendre/vendre; half-known from wk3/wk8)
+  + café-debate register with the softening-disagreement Paris note (76);
+  review (77). Accuracy (§8.4): the PC/imparfait aspect examples were
+  reasoned individually for correctness (il faisait beau quand je suis
+  sorti; je dormais quand le téléphone a sonné; d'habitude je prenais vs une
+  fois j'ai pris). `src/lessons/index.mjs` imports WEEK11. Verified: build
+  (17 modules, 0 errors), dryrun (77 lessons, 1111 unique keys, all recall
+  in range), counts (1477 clips/37,618 chars, 128 for wk11). Browser
+  walkthrough of Day 71 (all 7 step types) + Day 77 review (6-turn dialogue,
+  6 recall via the UI, SRS, wrap teasing week 12) — zero console errors. A2
+  nav shows Sem 8–11 live, Sem 12 locked. **OVERLOAD CHECK OUTCOME: the
+  spec's four-topic bundle fit 7 days without cramming — imparfait got its
+  3-day spine, the other three were genuinely one-day-sized; nothing was
+  shifted to Week 12 (which is review-only by design) and nothing dropped.**
+  **Not native-reviewed.**
+- **Audio — incremental across sessions; now complete through Week 11.** Ran
   `npm run audio` for Weeks 5–6 (271 clips), Week 7 (130), Week 8 (132),
-  Week 9 (132), and this session Week 10 (126). `public/audio/` now holds
-  **1349 clips across all 70 built lessons**, committed. The content-hash
-  cache has held across six separate incremental runs (each left all earlier
-  weeks' clips untouched). Verified in a real browser each time via the
-  network tab (`206 Partial Content` on a real mp3, not browser-TTS
-  fallback); most recently `d64_jevaispartir` for Week 10. **Every built
-  week (1–10) now has real Azure audio — nothing shipped is still on
+  Week 9 (132), Week 10 (126), and this session Week 11 (128). `public/audio/`
+  now holds **1477 clips across all 77 built lessons**, committed. The
+  content-hash cache has held across seven separate incremental runs (each
+  left all earlier weeks' clips untouched). Verified in a real browser each
+  time via the network tab (`206 Partial Content` on a real mp3, not
+  browser-TTS fallback); most recently `d71_jeparlais` for Week 11. **Every
+  built week (1–11) now has real Azure audio — nothing shipped is still on
   browser-TTS fallback.**
 - **Audio — RUN FOR REAL THIS SESSION (Open Decision #2 RESOLVED).** Person
   put a real Azure Speech key/region in `.env`; ran `npm run audio`. Generated
@@ -264,32 +292,40 @@ happened and what to watch for if a mirror-based workflow is ever used again.
 ## Next action (literal, ready to paste)
 
 Build is now handled by **Claude Code** (local agent; see CLAUDE.md §12).
-This session: drafted, wired, and audio-generated **Week 10** (Days 64–70,
-le futur proche + on-suggestions + weather + inviting/declining), the third
-A2 week — verified with a real build/dryrun/counts and a live browser
-walkthrough. That completes the whole everyday timeline (past + present +
-near-future) and is the **last brand-new tense**. The next content unit is
-**Week 11 — Description & opinion**: the **imparfait** (intro — description
-& habit, contrasted *lightly* with the passé composé, NOT a full drill),
-**comparatives** (plus/moins/aussi… que), **opinion frames** (je trouve
-que, à mon avis, je pense que), and the **-re verbs** (prendre, comprendre)
-whose participles the learner has already met in the past tense (per
-curriculum-spec.md §3 Block D, Week 11). Continuity hook: c'était / il y
-avait have been *previewed* in wks 9–10 tips as "a first taste of the
-imparfait" — week 11 delivers it. From here it's depth, not new tenses.
-Native review of Weeks 1–10 is still the hard gate before any real learner.
+This session: drafted, wired, and audio-generated **Week 11** (Days 71–77,
+the imparfait + comparatives + opinion + prendre family), the fourth A2
+week — verified with a real build/dryrun/counts and a live browser
+walkthrough. The imparfait (the last major new tense) is now in. **The next
+unit is Week 12 — the FINAL week, "Putting it together"** (curriculum-spec.md
+§3 Block E + §6). This is NOT a new-grammar week: it's an **integrated
+review** across present / passé composé / imparfait / futur proche, plus the
+**capstone** — a chained multi-scene dialogue "Une journée à Paris"
+(boulangerie → métro → museum → café → plans for tomorrow) that reuses only
+what's already built — and a **self-assessment** against the A2 can-do
+statements in spec §6. It's also the week that makes A1→A2 the full course:
+after it, all 12 weeks exist. Two special considerations for whoever builds
+it: (1) the capstone dialogue may be longer/multi-scene — check the renderer
+handles a big `dialogue` step (it did fine at 7 turns; watch for anything
+much larger); (2) the self-assessment / can-do check may want a step type
+the engine doesn't have yet — if so, prefer expressing it with existing step
+types (recall/culture/wrap) over adding a renderer branch, per §2's
+one-engine rule; flag if a genuinely new step type seems needed rather than
+adding it silently. Native review of Weeks 1–11 is still the hard gate before
+any real learner.
 
 ```
-# NEXT — Week 11 content (ONE week only; review gate still open)
-French Buddy. Read STATE.md and CLAUDE.md first.
-Draft Week 11 (Days 71-77: description & opinion — imparfait as INTRO
-(description/habit: c'était, il y avait, je faisais; contrasted lightly
-with the passé composé's completed events, not a full imparfait drill),
-comparatives (plus/moins/aussi ... que; meilleur), opinion frames
-(je trouve que, à mon avis, je pense que), -re verbs (prendre/comprendre/
-apprendre); imparfait-endings phonics; café-debate-register/softening-
-disagreement Paris note) against docs/curriculum-spec.md SS3. One week
-only. Flag that native review of Weeks 1-10 is still outstanding.
+# NEXT — Week 12 content (the FINAL week; review/capstone, NO new grammar)
+French Buddy. Read STATE.md and CLAUDE.md first (esp. §2 one-engine rule,
+§8, §12). Draft Week 12 (Days 78-84: "Putting it together") against
+docs/curriculum-spec.md §3 Block E + §6. It is a CONSOLIDATION week — no
+new grammar: an integrated review moving between present / passé composé /
+imparfait / futur proche; the capstone chained dialogue "Une journée à
+Paris" (boulangerie -> métro -> museum -> café -> plans for tomorrow); and
+a Day 84 self-check against the A2 can-do statements (spec §6). Reuse
+existing step types; do NOT add a renderer branch without flagging (§2).
+One week only. This COMPLETES the 12-week course. Flag that full
+native-speaker review of all 12 weeks is the hard gate before any real
+learner, and that it triggers the §11.5 gate for any future B1/Block F work.
 ```
 
 ## Open decisions (need a person, not just a build step)
@@ -298,18 +334,21 @@ only. Flag that native review of Weeks 1-10 is still outstanding.
    way; purely a "two URLs to keep straight" call.
 2. **RESOLVED — when to run the audio pipeline.** Run incrementally: Weeks
    1–4 (558 clips), Weeks 5–6 (+271), Week 7 (+130), Week 8 (+132), Week 9
-   (+132), Week 10 (+126) — **1349 clips total across all 70 built lessons**.
-   `public/audio/` holds real Azure audio for every built week; the content-
-   hash cache has now proven itself safe across six separate incremental runs
-   (0 unwanted regeneration of earlier weeks' clips any time). Standing
-   practice: run `npm run audio` after each new week; it's cheap and additive.
-3. **When to get native review** — person will do Weeks 1–4 (now 1–10, all of
-   A1 plus the first three A2 weeks) together "when the right person is near."
-   Accepted. Still the hard gate before real learners and before any B1
-   (Block F) drafting. Note: with the full timeline built (passé composé +
-   present + futur proche), this is exactly the grammar-heavy content where
-   TTS reading wrong French fluently is most dangerous — the listening review
-   matters more, not less.
+   (+132), Week 10 (+126), Week 11 (+128) — **1477 clips total across all 77
+   built lessons**. `public/audio/` holds real Azure audio for every built
+   week; the content-hash cache has now proven itself safe across seven
+   separate incremental runs (0 unwanted regeneration of earlier weeks' clips
+   any time). Standing practice: run `npm run audio` after each new week;
+   it's cheap and additive.
+3. **When to get native review** — person will do Weeks 1–4 (now 1–11, all of
+   A1 plus four A2 weeks) together "when the right person is near." Accepted.
+   Still the hard gate before real learners and before any B1 (Block F)
+   drafting. Note: with the full A2 verb system now built (passé composé +
+   imparfait + present + futur proche), this is exactly the grammar-heavy
+   content where TTS reading wrong French fluently is most dangerous — the
+   listening review matters more, not less. Once Week 12 lands, the whole
+   12-week course will exist and this review becomes the single biggest
+   blocker to shipping.
 4. **RESOLVED — audio discrepancy.** `speechSynthesis.getVoices()` race in
    `src/main.js`, fixed by caching voices via `onvoiceschanged`. Netlify never
    runs an audio step (confirmed via `netlify.toml`); both tests were the same
@@ -613,6 +652,30 @@ only. Flag that native review of Weeks 1-10 is still outstanding.
   11–12 locked. Committed in three commits (content, audio, this STATE.md
   update) and pushed. One week only, per §8.1 — did NOT start Week 11.
   Native review of Weeks 1–10 remains the hard gate before any real learner.
+- **Session (Week 11 content + audio — fourth A2 week; the imparfait).**
+  Drafted Days 71–77 (description & opinion) against curriculum-spec.md §3.
+  Read the spec's Week 11 scope first and ran the requested OVERLOAD CHECK:
+  the bundle (imparfait + comparatives + opinions + -re verbs) fits 7 days
+  without cramming the imparfait, so built it as a 3-day spine (formation 71
+  / use 72 / light PC-contrast 73) with comparatives (74), opinions (75),
+  and the prendre family + café-debate (76) each one focused day, review
+  (77). Reported outcome: no cram, no drop, nothing shifted to Week 12
+  (which is review-only by design). Spec fidelity call worth noting: the
+  "-re verbs" the spec names are prendre/comprendre (irregular, half-known
+  from wk3/wk8), NOT the regular attendre/vendre group the takeover-prompt
+  hypothesised — followed the spec. Accuracy (§8.4): every PC/imparfait
+  aspect example reasoned individually (backdrop-imparfait + event-PC).
+  Verified: build (17 modules, 0 errors), dryrun (77 lessons, 1111 unique
+  keys, all recall in range), counts (1477 clips/37,618 chars, 128 for
+  wk11). Browser walkthrough of Day 71 (all 7 step types) + Day 77 review
+  (6-turn dialogue, 6 recall via UI, SRS "Tout est à jour", wrap teasing
+  week 12); zero console errors. Ran `npm run audio`: +128 clips, 1349
+  unchanged, 1477 total; verified `d71_jeparlais` loads as a real mp3. A2
+  nav shows Sem 8–11 live, only Sem 12 locked. Committed in three commits
+  (content, audio, this STATE.md update) and pushed. One week only, per
+  §8.1 — did NOT start Week 12. Native review of Weeks 1–11 remains the hard
+  gate before any real learner. **Only Week 12 (the capstone) remains to
+  complete the whole 12-week course.**
 
 ---
 
