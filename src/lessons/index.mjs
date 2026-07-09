@@ -8,4 +8,5 @@ import { WEEK6 } from './week6.mjs';
 import { WEEK7 } from './week7.mjs';
 import { WEEK8 } from './week8.mjs';
 import { WEEK9 } from './week9.mjs';
-export const LESSONS = [...WEEK1, ...WEEK2, ...WEEK3, ...WEEK4, ...WEEK5, ...WEEK6, ...WEEK7, ...WEEK8, ...WEEK9];
+import { WEEK10 } from './week10.mjs';
+export const LESSONS = [...WEEK1, ...WEEK2, ...WEEK3, ...WEEK4, ...WEEK5, ...WEEK6, ...WEEK7, ...WEEK8, ...WEEK9, ...WEEK10];
