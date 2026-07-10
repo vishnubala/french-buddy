@@ -32,45 +32,48 @@ hybrid stopping rule (calibration one-per-skill → deepening on weak skills,
 hardest-first, to a cap of 24/28/40). Results screen shows overall %, per-skill
 accuracy (weakest-first, with "revisit Jour NN" links) and per-week accuracy.
 
-**Grammar banks deepened so far (all wired VERBATIM, browser-verified):**
-`bank.mjs` now carries six real hand-authored sets, each replacing its ~2
-placeholders and tagged via `.map` at the export:
-- `PC_IMP_ITEMS` (20) — `pc_vs_imparfait`/diff3/weeks[8,9,11] (prior session)
-- `PARTITIVE_ITEMS` (12) — `partitive_quantity`/diff3/weeks[3,6] (prior session)
-- `ADJECTIVE_ITEMS` (12) — `adjectives`/diff3/weeks[6] (prior session)
-- `PASSE_COMPOSE_ITEMS` (12) — `passe_compose`/diff3/weeks[8,9] (this session)
-- `DEMONSTR_POSSESS_ITEMS` (12) — `demonstr_possess`/diff2/weeks[6,7] (this session)
-- `PRONUNCIATION_ITEMS` (11) — `pronunciation`/diff3/weeks[1..12] (this session)
+**ALL 19 skills now have real hand-authored banks (no ~2-item placeholders
+left). bank.mjs = 848 items = 667 generated + 181 hand-authored.** Every skill's
+set is a named const spread into the export via `.map` with constant tags. The
+15 grammar sets: pc_vs_imparfait (20), partitive_quantity (12), adjectives (12),
+passe_compose (12), demonstr_possess (12), pronunciation (11) [prior sessions];
+**this session:** etre_avoir (12), present_verbs (12), reflexive (10),
+imparfait (12, formation-only), futur_proche (10), imperative (10),
+prepositions (12) [7 DRAFTED by Claude Code], plus comparatives (12) and
+negation (12) [VETTED, wired verbatim]. The 4 lexical skills stay generated
+from LESSONS.
 
-**NEW (this session): passe_compose + demonstr_possess + pronunciation banks
-wired + verified, plus two housekeeping fixes.**
-- passe_compose drills avoir-vs-être + participle agreement, irregular
-  participles, and the sortir-with-direct-object → avoir case. demonstr_possess
-  drills possessives agreeing with the thing owned (not the owner) + ce/cet/
-  cette/ces + ma→mon/ce→cet before a vowel. pronunciation drills /y/-vs-/u/,
-  /z/ & /t/ liaison, -é/-er/-ez (/e/) vs -ais/-ait/-aient (/ɛ/), silent verb
-  -ent, nasal vowels, and the ville /vil/ exception.
-- **One deviation from verbatim (person-approved):** `DEMONSTR_POSSESS_ITEMS`
-  item 11 had a duplicate option (`["leur","leurs","leur"]`); the 3rd was
-  replaced with `"ses"` per the person's call. Everything else verbatim.
-- **TAXONOMY FIX:** `skills.mjs` pc_vs_imparfait `weeks:[11]` → `[8,9,11]`, so
-  its results revisit chips now point at Sem 8+9 (passé composé) AND Sem 11
-  (imparfait) — the earlier inconsistency is resolved. Verified in-browser:
-  failing pc now shows all three chips.
-- **GITIGNORE FIX:** `.claude/launch.json` (machine-specific dev-server port)
-  is now gitignored; it no longer surfaces as untracked. The long-standing
-  "launch.json uncommitted" flag is closed.
-- **Bank composition (permanent `dryrun` regression line via `BANK_STATS`,
-  exits non-zero on mismatch): 764 items = 667 generated + 97 hand-authored**
-  (was 735 = 667 + 68; +12+12+11 − 6 placeholders = 97 hand).
-- Verified: build green, dryrun/counts pass for lessons, all 35 new items valid
-  (tags/answers in range, no duplicate options). Browser (A2 + mega): the three
-  skills appear with correct-answer "why" feedback on wrong answers, results
-  rank weakest-first; deterministic sim confirms failing a passe_compose
-  calibration item makes deepening serve all 12 band-3 passe_compose items.
-- **Note (still open):** several hand sets have their correct answer always at
-  `opts[0]` (adjectives 12/12, pronunciation 11/11) — a learnable-position
-  tell. Worth shuffling opts at wire-time in a later polish pass.
+**NEW (this session): the 9 remaining mechanical grammar skills filled + a
+runtime option-shuffle.**
+- **7 mechanical banks DRAFTED by Claude Code** (etre_avoir, present_verbs,
+  reflexive, imparfait, futur_proche, imperative, prepositions) from advisor
+  frameworks, using ONLY course-taught verbs/vocab (surveyed LESSONS first;
+  avoided soif/peur which aren't taught; each ok/no §8.4-compliant). **These 78
+  items are Claude-authored and NOT yet native-reviewed (CLAUDE.md §8.2)** —
+  they need the same listening/reading gate as the lessons before a real
+  learner sees them.
+- **2 VETTED banks wired verbatim:** comparatives (plus/moins/aussi…que, the
+  bon→meilleur adj vs bien→mieux adv split, autant for quantity, le moins/
+  meilleur superlatives) and negation (ne…pas/jamais/rien/plus placement across
+  present/PC/futur-proche, partitive→de under negation, Personne ne, spoken
+  ne-drop).
+- **RUNTIME OPTION-SHUFFLE (Part C) — `renderMCQuestion(q, cb, shuffle=false)`.**
+  The QUIZ passes `true`; LESSONS omit it and keep authored order. Correctness
+  travels WITH each option as a `[text, correct]` flag — grading and the
+  correct-highlight use the flag, NEVER `q.answer`'s index. **This resolves the
+  old "correct always at opts[0]" tell for the whole bank** (no per-set
+  re-balancing needed).
+- **Bank line (dynamic `BANK_STATS`, exits non-zero on mismatch): 848 = 667
+  generated + 181 hand-authored** (was 764 + 78 mechanical + 24 vetted − 18
+  placeholders).
+- **Verified for real:** build green, dryrun/counts pass for lessons; all 9 new
+  sets valid (3-opt, no dup options, correct tags); all 19 skills appear in the
+  quiz; results rank weakest-first. Shuffle grading stress-tested in-browser
+  (488 checks across relaunches): correct answer lands in all positions, the
+  SAME question shows correct in different slots (73 prompts), clicking the
+  correct option in its shuffled slot grades OK, and the correct-answer text is
+  stable per prompt (grading never index-tied). In-lesson recall confirmed
+  UNSHUFFLED (option order identical across re-renders) and still grades right.
 
 **The build phase is essentially done. The single remaining blocker to
 shipping to a real learner is the standing hard gate: full native-speaker
@@ -380,17 +383,15 @@ decisions, NOT new lessons. In rough priority:
    someone has to *listen*. Nothing ships to a real learner until this is
    done, and it also gates any B1/Block F work (§11.5). This is now the
    single biggest blocker; everything else is secondary.
-1b. **Mega-Quiz — the 9 MECHANICAL grammar skills (NEXT quiz session; start
-   immediately, don't let it simmer).** Real sets now exist for 6 skills
-   (pc_vs_imparfait, partitive_quantity, adjectives, passe_compose,
-   demonstr_possess, pronunciation). Remaining thin (~2 item) targets — the
-   9 mechanical grammar skills: **etre_avoir, present_verbs, reflexive,
-   imparfait, futur_proche, negation, imperative, prepositions, comparatives**
-   — drafted by Claude Code from advisor frameworks, advisor-reviewed before
-   wiring. Keep §8.4 accuracy: every ok/no must say what's right and why the
-   wrong option is wrong; wire vetted content VERBATIM. §8.1 one-unit
-   discipline still applies. The two-axis Cours/Entraînement nav was
-   deliberately NOT built — still an open decision.
+1b. **Mega-Quiz — NEXT session: the two-axis Cours/Entraînement nav.** The
+   item bank is now COMPLETE — all 19 skills have real hand-authored sets and
+   the runtime shuffle is in. The deliberately-deferred piece is the two-axis
+   navigation (Cours = the 84-lesson track; Entraînement = the diagnostic
+   quiz), replacing the current minimal quiz launcher bar. Start there.
+   SEPARATE standing debt, NOT nav: the **7 Claude-drafted mechanical banks**
+   (etre_avoir, present_verbs, reflexive, imparfait, futur_proche, imperative,
+   prepositions — 78 items) are NOT native-reviewed; fold them into the §8.2
+   listening/reading review gate before any real learner sees the quiz.
 2. **Deploy decision** (Open Decision #1): GitHub Pages vs Netlify — keep
    both or disable GH Pages. Purely a "two URLs" call; no cost either way.
 3. **Optional polish passes** (only if the person wants them), each its own
