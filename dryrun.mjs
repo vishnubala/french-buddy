@@ -11,6 +11,7 @@
    Exits non-zero on any failure. */
 
 import { LESSONS } from "./src/lessons/index.mjs";
+import { BANK_STATS } from "./src/quiz/bank.mjs";
 
 const errors = [];
 const seenKeys = new Set();
@@ -57,3 +58,11 @@ if (errors.length) {
 }
 
 console.log(`DRY-RUN PASS — ${LESSONS.length} lessons, ${seenKeys.size} unique audio keys, all recall answers in range.`);
+
+/* Bank regression line — must reconcile: generated + hand === total. */
+const { total, generated, hand } = BANK_STATS;
+if (generated + hand !== total) {
+  console.error(`BANK MISMATCH — generated(${generated}) + hand(${hand}) !== total(${total}).`);
+  process.exit(1);
+}
+console.log(`QUIZ BANK — ${total} items = ${generated} generated + ${hand} hand-authored.`);
