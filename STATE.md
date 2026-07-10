@@ -32,26 +32,45 @@ hybrid stopping rule (calibration one-per-skill → deepening on weak skills,
 hardest-first, to a cap of 24/28/40). Results screen shows overall %, per-skill
 accuracy (weakest-first, with "revisit Jour NN" links) and per-week accuracy.
 
-**NEW (this session): the flagship pc_vs_imparfait discrimination bank is wired
-+ verified.** `bank.mjs` now carries `PC_IMP_ITEMS` — 20 vetted, accuracy-
-checked minimal-pair items (imparfait background/habit/description vs passé-
-composé completed/sudden/sequenced events; être/reflexive auxiliaries correct),
-wired VERBATIM and tagged `skill:"pc_vs_imparfait", diff:3, weeks:[8,9,11]` via
-`.map`. The 2 placeholders it replaced are gone.
-- **True bank composition (reconciled; prior "695+38=733" was a loose estimate
-  that never summed):** `dryrun` now logs a permanent bank regression line via a
-  `BANK_STATS` export — **715 items = 667 generated + 48 hand-authored** (was
-  697 = 667 + 30; +20 pc items − 2 placeholders = 48 hand). Reconciles or the
-  dryrun exits non-zero.
-- Verified in a real browser (A2 + mega): pc items appear in calibration, wrong
-  answers show the correct option + "why" feedback, results still rank weakest-
-  first (pc landed top at 0/20), and a deterministic sim confirms a wrong pc
-  calibration answer makes deepening serve band-3 pc items first (15 in A2 to
-  cap, all 20 in mega).
-- **Known minor inconsistency (left as-is):** items are tagged `weeks:[8,9,11]`
-  but the verbatim `SKILLS` taxonomy still has pc_vs_imparfait `weeks:[11]`, so
-  the results *revisit link* points only to Sem 11 while the *per-week* split
-  credits 8/9/11. Widen the taxonomy to `[8,9,11]` only if desired.
+**Grammar banks deepened so far (all wired VERBATIM, browser-verified):**
+`bank.mjs` now carries six real hand-authored sets, each replacing its ~2
+placeholders and tagged via `.map` at the export:
+- `PC_IMP_ITEMS` (20) — `pc_vs_imparfait`/diff3/weeks[8,9,11] (prior session)
+- `PARTITIVE_ITEMS` (12) — `partitive_quantity`/diff3/weeks[3,6] (prior session)
+- `ADJECTIVE_ITEMS` (12) — `adjectives`/diff3/weeks[6] (prior session)
+- `PASSE_COMPOSE_ITEMS` (12) — `passe_compose`/diff3/weeks[8,9] (this session)
+- `DEMONSTR_POSSESS_ITEMS` (12) — `demonstr_possess`/diff2/weeks[6,7] (this session)
+- `PRONUNCIATION_ITEMS` (11) — `pronunciation`/diff3/weeks[1..12] (this session)
+
+**NEW (this session): passe_compose + demonstr_possess + pronunciation banks
+wired + verified, plus two housekeeping fixes.**
+- passe_compose drills avoir-vs-être + participle agreement, irregular
+  participles, and the sortir-with-direct-object → avoir case. demonstr_possess
+  drills possessives agreeing with the thing owned (not the owner) + ce/cet/
+  cette/ces + ma→mon/ce→cet before a vowel. pronunciation drills /y/-vs-/u/,
+  /z/ & /t/ liaison, -é/-er/-ez (/e/) vs -ais/-ait/-aient (/ɛ/), silent verb
+  -ent, nasal vowels, and the ville /vil/ exception.
+- **One deviation from verbatim (person-approved):** `DEMONSTR_POSSESS_ITEMS`
+  item 11 had a duplicate option (`["leur","leurs","leur"]`); the 3rd was
+  replaced with `"ses"` per the person's call. Everything else verbatim.
+- **TAXONOMY FIX:** `skills.mjs` pc_vs_imparfait `weeks:[11]` → `[8,9,11]`, so
+  its results revisit chips now point at Sem 8+9 (passé composé) AND Sem 11
+  (imparfait) — the earlier inconsistency is resolved. Verified in-browser:
+  failing pc now shows all three chips.
+- **GITIGNORE FIX:** `.claude/launch.json` (machine-specific dev-server port)
+  is now gitignored; it no longer surfaces as untracked. The long-standing
+  "launch.json uncommitted" flag is closed.
+- **Bank composition (permanent `dryrun` regression line via `BANK_STATS`,
+  exits non-zero on mismatch): 764 items = 667 generated + 97 hand-authored**
+  (was 735 = 667 + 68; +12+12+11 − 6 placeholders = 97 hand).
+- Verified: build green, dryrun/counts pass for lessons, all 35 new items valid
+  (tags/answers in range, no duplicate options). Browser (A2 + mega): the three
+  skills appear with correct-answer "why" feedback on wrong answers, results
+  rank weakest-first; deterministic sim confirms failing a passe_compose
+  calibration item makes deepening serve all 12 band-3 passe_compose items.
+- **Note (still open):** several hand sets have their correct answer always at
+  `opts[0]` (adjectives 12/12, pronunciation 11/11) — a learnable-position
+  tell. Worth shuffling opts at wire-time in a later polish pass.
 
 **The build phase is essentially done. The single remaining blocker to
 shipping to a real learner is the standing hard gate: full native-speaker
@@ -361,20 +380,17 @@ decisions, NOT new lessons. In rough priority:
    someone has to *listen*. Nothing ships to a real learner until this is
    done, and it also gates any B1/Block F work (§11.5). This is now the
    single biggest blocker; everything else is secondary.
-1b. **Mega-Quiz — deepen the remaining thin grammar skills (NEXT quiz
-   session, start immediately — do not let it simmer).** pc_vs_imparfait is
-   now a real 20-item set; every OTHER grammar slug is still at ~2 hand items
-   (etre_avoir, present_verbs, reflexive, passe_compose, imparfait,
-   futur_proche, negation, imperative, partitive_quantity, demonstr_possess,
-   adjectives, comparatives, prepositions, pronunciation). Take each from ~2
-   up to a real set, one accuracy-vetted batch at a time (§8.1 one-unit
-   discipline still applies — don't bulk-generate all 14 blind). Keep §8.4
-   accuracy: every ok/no must say what's right and why the wrong option is
-   wrong; wire vetted content VERBATIM. NOTE: a vetted 12-item `adjectives`
-   set was already drafted/pasted this session (agreement + BAGS placement,
-   invariable colours orange/marron) — a good first batch to wire next.
-   The two-axis Cours/Entraînement nav was deliberately NOT built — still an
-   open decision.
+1b. **Mega-Quiz — the 9 MECHANICAL grammar skills (NEXT quiz session; start
+   immediately, don't let it simmer).** Real sets now exist for 6 skills
+   (pc_vs_imparfait, partitive_quantity, adjectives, passe_compose,
+   demonstr_possess, pronunciation). Remaining thin (~2 item) targets — the
+   9 mechanical grammar skills: **etre_avoir, present_verbs, reflexive,
+   imparfait, futur_proche, negation, imperative, prepositions, comparatives**
+   — drafted by Claude Code from advisor frameworks, advisor-reviewed before
+   wiring. Keep §8.4 accuracy: every ok/no must say what's right and why the
+   wrong option is wrong; wire vetted content VERBATIM. §8.1 one-unit
+   discipline still applies. The two-axis Cours/Entraînement nav was
+   deliberately NOT built — still an open decision.
 2. **Deploy decision** (Open Decision #1): GitHub Pages vs Netlify — keep
    both or disable GH Pages. Purely a "two URLs" call; no cost either way.
 3. **Optional polish passes** (only if the person wants them), each its own
