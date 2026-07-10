@@ -246,15 +246,8 @@ const HAND = [
     ok:"vous imperative : Prenez la ligne 1.",
     no:"Prenez — the vous command; « prends » is the tu form." },
 
-  /* partitive_quantity */
-  { skill:"partitive_quantity", diff:3, weeks:[3], prompt:"« I'd like some bread » (le pain) :",
-    opts:["je voudrais le pain","je voudrais du pain","je voudrais de pain","je voudrais un pain"], answer:1,
-    ok:"partitive de + le = du : je voudrais du pain (« some bread »).",
-    no:"« some » + masculine = du (de+le) : du pain." },
-  { skill:"partitive_quantity", diff:2, weeks:[6], prompt:"« A lot of people » :",
-    opts:["beaucoup du monde","beaucoup de monde","beaucoup des monde","beaucoup le monde"], answer:1,
-    ok:"quantity words take bare de : beaucoup de monde.",
-    no:"After a quantity word it's always bare de : beaucoup de monde (never du/des)." },
+  /* partitive_quantity — vetted set lives in PARTITIVE_ITEMS below, spread into
+     the export with its constant tags (not here in HAND). */
 
   /* demonstr_possess */
   { skill:"demonstr_possess", diff:2, weeks:[6], prompt:"« this jacket » (une veste) :",
@@ -266,15 +259,8 @@ const HAND = [
     ok:"the possessive agrees with the noun : ma maison (maison is feminine).",
     no:"ma maison — possessives match the noun's gender, and maison is feminine." },
 
-  /* adjectives */
-  { skill:"adjectives", diff:3, weeks:[6], prompt:"« a green jacket » (une veste) :",
-    opts:["une veste vert","une veste verte","une verte veste","une vert veste"], answer:1,
-    ok:"colours follow the noun and agree : une veste verte (fem -e).",
-    no:"une veste verte — colours go after the noun and agree in gender." },
-  { skill:"adjectives", diff:2, weeks:[6], prompt:"« a small dog » (un chien) :",
-    opts:["un chien petit","un petit chien","un petite chien","une petit chien"], answer:1,
-    ok:"petit is a BAGS adjective (size) → before the noun : un petit chien.",
-    no:"petit goes before the noun (BAGS) : un petit chien." },
+  /* adjectives — vetted set lives in ADJECTIVE_ITEMS below, spread into the
+     export with its constant tags (not here in HAND). */
 
   /* comparatives */
   { skill:"comparatives", diff:2, weeks:[11], prompt:"« cheaper than the taxi » :",
@@ -394,11 +380,99 @@ const PC_IMP_ITEMS = [
     no:"<em>soudain</em> = a sudden completed change → passé composé: <b>le ciel est devenu noir</b>. The surrounding description is imparfait." },
 ];
 
+/* ------------------------- partitive vs quantity + de discrimination (vetted) */
+/* Wired VERBATIM. Tagged skill:"partitive_quantity", diff:3, weeks:[3,6] via the
+   .map at the export. Partitive du/de la/de l'/des vs bare de after quantity
+   words / measures / negation, vs definite le for "in general". */
+const PARTITIVE_ITEMS = [
+  { prompt:"Au marché, j'achète ______ pommes. (some)", opts:["des","de","de la"], answer:0,
+    ok:"<b>des</b> — plain partitive plural, \"some apples,\" no quantity word → des pommes.",
+    no:"No quantity word + plural \"some\" = partitive <b>des</b>. (<em>de</em> needs a quantity word; <em>de la</em> is feminine singular.)" },
+  { prompt:"Il y a beaucoup ______ pommes ici. (a lot of)", opts:["des","de","du"], answer:1,
+    ok:"<b>de</b> — after a quantity word (beaucoup) the article drops to bare de: beaucoup de pommes.",
+    no:"Quantity words (beaucoup, trop, assez…) take plain <b>de</b>, never des/du → beaucoup de pommes." },
+  { prompt:"Le matin, je bois ______ café. (some)", opts:["du","de","le"], answer:0,
+    ok:"<b>du</b> — partitive masculine, \"some coffee\": je bois du café.",
+    no:"\"Some coffee\" (masc, affirmative) → partitive <b>du</b>. (<em>le café</em> = coffee in general; <em>de</em> needs a quantity word.)" },
+  { prompt:"Je ne bois pas ______ café. (negative)", opts:["du","de","le"], answer:1,
+    ok:"<b>de</b> — in the negative, du/de la/des flatten to plain de: ne… pas de café.",
+    no:"Negation flattens the partitive to <b>de</b> → pas de café, not pas du café." },
+  { prompt:"J'aime ______ café ; c'est ma boisson préférée. (in general)", opts:["le","du","de"], answer:0,
+    ok:"<b>le</b> — liking something in general takes the definite article: j'aime le café.",
+    no:"aimer + a general truth → definite <b>le</b>, not the partitive du (\"some\")." },
+  { prompt:"Je voudrais ______ eau, s'il vous plaît. (some)", opts:["de l'","de","d'"], answer:0,
+    ok:"<b>de l'</b> — partitive before a vowel: de l'eau (\"some water\").",
+    no:"\"Some water,\" no quantity word, before a vowel → partitive <b>de l'</b>eau." },
+  { prompt:"Un verre ______ eau, s'il vous plaît. (a glass of)", opts:["de l'","d'","de la"], answer:1,
+    ok:"<b>d'</b> — a measure (un verre) takes bare de, elided before a vowel: un verre d'eau.",
+    no:"A container/measure → plain de → <b>d'</b>eau, not the partitive de l'." },
+  { prompt:"Tu as assez ______ argent ? (enough)", opts:["de l'","d'","du"], answer:1,
+    ok:"<b>d'</b> — assez is a quantity word → bare de, elided before a vowel: assez d'argent.",
+    no:"assez + noun drops the article to <b>d'</b> (before a vowel) → assez d'argent." },
+  { prompt:"Elle met trop ______ sucre dans son thé. (too much)", opts:["du","de","le"], answer:1,
+    ok:"<b>de</b> — trop (quantity) → plain de: trop de sucre.",
+    no:"Quantity words take bare <b>de</b> → trop de sucre, not trop du." },
+  { prompt:"Elle mange ______ confiture. (some)", opts:["de la","de","la"], answer:0,
+    ok:"<b>de la</b> — partitive feminine, \"some jam\": de la confiture.",
+    no:"\"Some jam\" (fem, affirmative) → partitive <b>de la</b>. (<em>la confiture</em> = jam in general.)" },
+  { prompt:"Un kilo ______ tomates, s'il vous plaît. (a kilo of)", opts:["des","de","de la"], answer:1,
+    ok:"<b>de</b> — a measure (un kilo) → bare de: un kilo de tomates.",
+    no:"Measures/quantities take plain <b>de</b> → un kilo de tomates, not des." },
+  { prompt:"Il n'y a plus ______ lait. (no more)", opts:["du","de","le"], answer:1,
+    ok:"<b>de</b> — ne… plus behaves like negation, so the partitive → plain de: plus de lait.",
+    no:"ne… plus drops the article to <b>de</b> → plus de lait." },
+];
+
+/* --------------------------- adjective agreement & placement (vetted) */
+/* Wired VERBATIM. Tagged skill:"adjectives", diff:3, weeks:[6] via the .map at
+   the export. Irregular feminines (beau/belle, blanc/blanche, vieux/vieille),
+   invariable colours (orange, marron), and BAGS placement. */
+const ADJECTIVE_ITEMS = [
+  { prompt:"C'est une ______ maison. (beautiful)", opts:["belle","beau"], answer:0,
+    ok:"<b>belle</b> — beau is irregular → belle before a feminine noun; beauty adjectives precede: une belle maison.",
+    no:"beau → <b>belle</b> (fem); a BAGS (beauty) adjective goes before the noun → une belle maison." },
+  { prompt:"Elle porte une jupe ______. (white)", opts:["blanche","blanc"], answer:0,
+    ok:"<b>blanche</b> — blanc has an irregular feminine; colors follow the noun: une jupe blanche.",
+    no:"blanc → <b>blanche</b> (irregular fem), placed after the noun → une jupe blanche." },
+  { prompt:"Ce sont des chaussures ______. (orange)", opts:["orange","oranges"], answer:0,
+    ok:"<b>orange</b> — a color named after a fruit is invariable: des chaussures orange.",
+    no:"orange never agrees → chaussures <b>orange</b>, not oranges." },
+  { prompt:"Où est le ______ ? (little black cat)", opts:["petit chat noir","chat petit noir"], answer:0,
+    ok:"<b>petit chat noir</b> — size (petit) goes before the noun, color (noir) after.",
+    no:"petit is a size (BAGS) adjective → before the noun; noir after → petit chat noir." },
+  { prompt:"C'est une voiture ______. (red)", opts:["rouge","rouges"], answer:0,
+    ok:"<b>rouge</b> — one car (singular), and rouge already ends in -e: une voiture rouge.",
+    no:"Singular noun → singular adjective; rouge stays <b>rouge</b> → une voiture rouge." },
+  { prompt:"Mes deux frères sont ______. (tall)", opts:["grands","grand"], answer:0,
+    ok:"<b>grands</b> — masculine plural subject → add -s: ils sont grands.",
+    no:"Plural agreement → <b>grands</b>." },
+  { prompt:"C'est une ______ femme. (old)", opts:["vieille","vieux"], answer:0,
+    ok:"<b>vieille</b> — vieux is irregular → vieille (fem); age precedes the noun: une vieille femme.",
+    no:"vieux → <b>vieille</b> (fem), before the noun → une vieille femme." },
+  { prompt:"un ______ repas (good)", opts:["bon","bonne"], answer:0,
+    ok:"<b>bon</b> — repas is masculine → bon; goodness precedes: un bon repas.",
+    no:"repas is masculine → <b>bon</b> (not bonne), before the noun → un bon repas." },
+  { prompt:"une ______ idée (good)", opts:["bonne","bon"], answer:0,
+    ok:"<b>bonne</b> — idée is feminine → bonne (bon doubles its n): une bonne idée.",
+    no:"bon → <b>bonne</b> before a feminine noun → une bonne idée." },
+  { prompt:"Elle a les cheveux ______. (chestnut brown)", opts:["marron","marrons"], answer:0,
+    ok:"<b>marron</b> — a color from a noun (chestnut) is invariable: les cheveux marron.",
+    no:"marron never agrees → cheveux <b>marron</b>, not marrons." },
+  { prompt:"C'est un livre ______. (interesting)", opts:["intéressant","intéressante"], answer:0,
+    ok:"<b>intéressant</b> — livre is masculine → no -e; ordinary adjectives follow: un livre intéressant.",
+    no:"livre is masculine → <b>intéressant</b>, placed after the noun → un livre intéressant." },
+  { prompt:"Nous cherchons une ______. (big house)", opts:["grande maison","maison grande"], answer:0,
+    ok:"<b>grande maison</b> — size goes before the noun and agrees (fem): une grande maison.",
+    no:"A size (BAGS) adjective precedes the noun → grande maison; grand → grande (fem)." },
+];
+
 /* ------------------------------------------------------------------ export */
 /* Assign a stable id to every item (the engine tracks served/unserved by id). */
 const GENERATED = generateLexical();
-const PC_IMP = PC_IMP_ITEMS.map(it => ({ ...it, skill:"pc_vs_imparfait", diff:3, weeks:[8,9,11] }));
-const HAND_ALL = [...HAND, ...PC_IMP];
+const PC_IMP     = PC_IMP_ITEMS.map(it     => ({ ...it, skill:"pc_vs_imparfait",    diff:3, weeks:[8,9,11] }));
+const PARTITIVE  = PARTITIVE_ITEMS.map(it   => ({ ...it, skill:"partitive_quantity", diff:3, weeks:[3,6]    }));
+const ADJECTIVES = ADJECTIVE_ITEMS.map(it   => ({ ...it, skill:"adjectives",         diff:3, weeks:[6]      }));
+const HAND_ALL = [...HAND, ...PC_IMP, ...PARTITIVE, ...ADJECTIVES];
 export const QUIZ_BANK = [...GENERATED, ...HAND_ALL].map((it, i) => ({ id: i, ...it }));
 
 /* Exact source split, known at construction (no heuristic) — surfaced so the
