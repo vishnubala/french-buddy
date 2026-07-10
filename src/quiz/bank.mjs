@@ -162,82 +162,33 @@ function generateLexical() {
 /* ---------------------------------------------- hand-authored grammar (source 2) */
 
 const HAND = [
-  /* etre_avoir */
-  { skill:"etre_avoir", diff:1, weeks:[1], prompt:"Complétez : Je ___ étudiant.",
-    opts:["suis","es","ai","a"], answer:0,
-    ok:"être : je suis. « Je suis étudiant » = I am a student.",
-    no:"Use être : je suis. « j'ai » is avoir (to have), not identity." },
-  { skill:"etre_avoir", diff:2, weeks:[2], prompt:"Complétez : Tu ___ un frère ?",
-    opts:["es","as","est","a"], answer:1,
-    ok:"avoir : tu as. « Tu as un frère ? » = Do you have a brother?",
-    no:"Possession uses avoir : tu as. « tu es » is être (you are)." },
+  /* etre_avoir — vetted set lives in ETRE_AVOIR_ITEMS below, spread into the
+     export with its constant tags (not here in HAND). */
 
-  /* present_verbs */
-  { skill:"present_verbs", diff:2, weeks:[2], prompt:"Complétez : Nous ___ français. (parler)",
-    opts:["parlons","parlez","parle","parlent"], answer:0,
-    ok:"-er verb, nous → -ons : nous parlons.",
-    no:"nous takes -ons : parlons. « parlez » is the vous form." },
-  { skill:"present_verbs", diff:2, weeks:[7], prompt:"Complétez : Ils ___ à 18h. (finir)",
-    opts:["finit","finent","finissent","finissons"], answer:2,
-    ok:"regular -ir verb, ils → -issent : ils finissent.",
-    no:"ils finissent — -ir verbs grow -iss- in the plural; « finent » isn't a form." },
+  /* present_verbs — vetted set lives in PRESENT_VERBS_ITEMS below, spread into
+     the export with its constant tags (not here in HAND). */
 
-  /* reflexive */
-  { skill:"reflexive", diff:2, weeks:[5], prompt:"Complétez : Je ___ lève à 7h.",
-    opts:["me","te","se","m'a"], answer:0,
-    ok:"reflexive with je → me : je me lève.",
-    no:"je pairs with me : je me lève. « te » goes with tu." },
-  { skill:"reflexive", diff:2, weeks:[5], prompt:"Complétez : Elle ___ couche tôt.",
-    opts:["me","se","te","s'est"], answer:1,
-    ok:"il/elle → se : elle se couche.",
-    no:"elle takes se : elle se couche. « me » is for je." },
+  /* reflexive — vetted set lives in REFLEXIVE_ITEMS below, spread into the
+     export with its constant tags (not here in HAND). */
 
   /* passe_compose — vetted set lives in PASSE_COMPOSE_ITEMS below, spread into
      the export with its constant tags (not here in HAND). */
 
-  /* imparfait */
-  { skill:"imparfait", diff:3, weeks:[11], prompt:"Imparfait de « nous parlons », je → :",
-    opts:["je parlais","j'ai parlé","je parle","je parlerai"], answer:0,
-    ok:"imparfait stem parl- + -ais : je parlais.",
-    no:"je parlais — imparfait (nous-stem + -ais); « j'ai parlé » is the passé composé." },
-  { skill:"imparfait", diff:2, weeks:[11], prompt:"« The weather was nice » :",
-    opts:["c'est beau","il fait beau","il faisait beau","il va faire beau"], answer:2,
-    ok:"past description → imparfait : il faisait beau.",
-    no:"il faisait beau — imparfait for a past state; « il fait beau » is the present." },
+  /* imparfait — vetted formation set lives in IMPARFAIT_ITEMS below, spread into
+     the export with its constant tags (not here in HAND). */
 
   /* pc_vs_imparfait — the flagship discrimination bank lives in PC_IMP_ITEMS
      below (vetted, 20 items); it's spread into the export with its constant
      tags, so it does NOT live here in HAND. */
 
-  /* futur_proche */
-  { skill:"futur_proche", diff:2, weeks:[10], prompt:"« We're going to eat » (on) :",
-    opts:["on mange","on va manger","on a mangé","on mangeait"], answer:1,
-    ok:"futur proche = aller + infinitive : on va manger.",
-    no:"on va manger — aller (va) + infinitive; « on a mangé » is the past." },
-  { skill:"futur_proche", diff:2, weeks:[10], prompt:"« I'm not going to go out » :",
-    opts:["je ne vais pas sortir","je vais ne pas sortir","je ne sors pas aller","je n'ai pas sortir"], answer:0,
-    ok:"ne + [vais] + pas + infinitive : je ne vais pas sortir.",
-    no:"Negation wraps the conjugated aller : je ne vais pas sortir." },
+  /* futur_proche — vetted set lives in FUTUR_PROCHE_ITEMS below, spread into the
+     export with its constant tags (not here in HAND). */
 
-  /* negation */
-  { skill:"negation", diff:1, weeks:[2], prompt:"« I don't understand » :",
-    opts:["je comprends pas ne","je ne comprends pas","je ne pas comprends","ne je comprends pas"], answer:1,
-    ok:"ne + verb + pas : je ne comprends pas.",
-    no:"ne … pas wraps the verb : je ne comprends pas." },
-  { skill:"negation", diff:3, weeks:[8], prompt:"« I didn't eat » (passé composé) :",
-    opts:["je n'ai mangé pas","je ne mangé pas","je n'ai pas mangé","je pas mangé"], answer:2,
-    ok:"pas sits between auxiliary and participle : je n'ai pas mangé.",
-    no:"In the passé composé, pas comes before the participle : je n'ai pas mangé." },
+  /* negation — vetted set lives in NEGATION_ITEMS below, spread into the export
+     with its constant tags (not here in HAND). */
 
-  /* imperative */
-  { skill:"imperative", diff:2, weeks:[4], prompt:"Telling someone (vous) to turn right :",
-    opts:["tourner à droite","tournez à droite","vous tournez","tu tournes"], answer:1,
-    ok:"vous imperative drops the pronoun : Tournez à droite.",
-    no:"The command is the vous form without the pronoun : Tournez !" },
-  { skill:"imperative", diff:2, weeks:[4], prompt:"« Take line 1 » (vous) :",
-    opts:["prends la ligne 1","prenez la ligne 1","vous prenez la ligne 1","prendre la ligne 1"], answer:1,
-    ok:"vous imperative : Prenez la ligne 1.",
-    no:"Prenez — the vous command; « prends » is the tu form." },
+  /* imperative — vetted set lives in IMPERATIVE_ITEMS below, spread into the
+     export with its constant tags (not here in HAND). */
 
   /* partitive_quantity — vetted set lives in PARTITIVE_ITEMS below, spread into
      the export with its constant tags (not here in HAND). */
@@ -248,25 +199,11 @@ const HAND = [
   /* adjectives — vetted set lives in ADJECTIVE_ITEMS below, spread into the
      export with its constant tags (not here in HAND). */
 
-  /* comparatives */
-  { skill:"comparatives", diff:2, weeks:[11], prompt:"« cheaper than the taxi » :",
-    opts:["plus cher que le taxi","moins cher que le taxi","aussi cher que le taxi","meilleur que le taxi"], answer:1,
-    ok:"moins … que = less … than : moins cher que le taxi.",
-    no:"« cheaper » = less expensive → moins cher que." },
-  { skill:"comparatives", diff:2, weeks:[11], prompt:"« a better coffee » (bon) :",
-    opts:["un plus bon café","un meilleur café","un mieux café","un café plus bon"], answer:1,
-    ok:"bon → meilleur (irregular) : un meilleur café.",
-    no:"bon's comparative is meilleur, never « plus bon »." },
+  /* comparatives — vetted set lives in COMPARATIVE_ITEMS below, spread into the
+     export with its constant tags (not here in HAND). */
 
-  /* prepositions */
-  { skill:"prepositions", diff:2, weeks:[4], prompt:"« I'm going to the museum » (le musée) :",
-    opts:["je vais à le musée","je vais au musée","je vais du musée","je vais le musée"], answer:1,
-    ok:"à + le = au : je vais au musée.",
-    no:"à + le fuses to au : au musée (never « à le »)." },
-  { skill:"prepositions", diff:2, weeks:[4], prompt:"« to the station » (la gare) :",
-    opts:["au gare","à la gare","à le gare","aux gare"], answer:1,
-    ok:"à la (no fusion before feminine) : à la gare.",
-    no:"à la gare — à + la doesn't fuse; only à+le=au and à+les=aux." },
+  /* prepositions — vetted set lives in PREPOSITIONS_ITEMS below, spread into the
+     export with its constant tags (not here in HAND). */
 
   /* pronunciation — vetted set lives in PRONUNCIATION_ITEMS below, spread into
      the export with its constant tags (not here in HAND). */
@@ -585,6 +522,374 @@ const PRONUNCIATION_ITEMS = [
     no:"ville is the exception <b>/vil/</b>, not the /ij/ of fille — same group as mille, tranquille." },
 ];
 
+/* ============================================================================
+   MECHANICAL grammar banks — DRAFTED by Claude Code from advisor frameworks
+   (this session), using ONLY course-taught verbs/vocab (checked against
+   LESSONS: être/avoir, -er verbs, finir/choisir, prendre-family, aller, faire;
+   avoir faim/froid/raison/ans — soif/peur are NOT taught and are avoided). All
+   diff:2, 3 options. §8.4: every ok/no names the correct answer AND why the
+   wrong option is wrong. Correct answer is authored at opts[0] for reviewability
+   — the runtime shuffle (main.js) randomizes display position, so position
+   carries no signal. NOT yet native-reviewed (CLAUDE.md §8.2).
+   ============================================================================ */
+
+/* etre_avoir — present être/avoir + choosing which (être = identity/state/
+   description; avoir = possession, age, avoir faim/froid/raison). */
+const ETRE_AVOIR_ITEMS = [
+  { prompt:"J'______ faim. (be hungry)", opts:["ai","suis","es"], answer:0,
+    ok:"<b>ai</b> — French says avoir faim ('have hunger'), so j'ai faim.",
+    no:"Hunger uses avoir → j'<b>ai</b> faim, never 'je suis faim'. être is for identity/state, not hunger." },
+  { prompt:"Elle ______ française.", opts:["est","a","es"], answer:0,
+    ok:"<b>est</b> — nationality/identity takes être: elle est française.",
+    no:"Identity → être → elle <b>est</b> française. 'a' is avoir (to have), wrong for who someone is." },
+  { prompt:"Nous ______ étudiants.", opts:["sommes","avons","êtes"], answer:0,
+    ok:"<b>sommes</b> — identity → être, and nous → sommes: nous sommes étudiants.",
+    no:"Identity → être, nous form <b>sommes</b>. 'avons' is avoir; 'êtes' is the vous form." },
+  { prompt:"Tu ______ un frère ?", opts:["as","es","a"], answer:0,
+    ok:"<b>as</b> — possession is avoir; tu → as: tu as un frère ?",
+    no:"Possession uses avoir → tu <b>as</b>. 'es' is être (you are); 'a' is the il/elle form." },
+  { prompt:"J'______ vingt ans. (age)", opts:["ai","suis","as"], answer:0,
+    ok:"<b>ai</b> — age is avoir + ans: j'ai vingt ans.",
+    no:"Age uses avoir → j'<b>ai</b> vingt ans, never 'je suis vingt ans'. French counts age with 'have'." },
+  { prompt:"Vous ______ professeur ?", opts:["êtes","avez","est"], answer:0,
+    ok:"<b>êtes</b> — profession/identity → être; vous → êtes: vous êtes professeur ?",
+    no:"Identity → être, vous form <b>êtes</b>. 'avez' is avoir; 'est' is il/elle." },
+  { prompt:"Ils ______ contents.", opts:["sont","ont","es"], answer:0,
+    ok:"<b>sont</b> — describing a mood/state → être; ils → sont: ils sont contents.",
+    no:"A description → être, ils form <b>sont</b>. 'ont' is avoir (they have); 'es' is tu." },
+  { prompt:"J'______ froid, ferme la fenêtre. (feel cold)", opts:["ai","suis","fais"], answer:0,
+    ok:"<b>ai</b> — a person who feels cold says avoir froid: j'ai froid.",
+    no:"Feeling cold = avoir froid → j'<b>ai</b> froid, not 'je suis froid'. (Weather is 'il fait froid'.)" },
+  { prompt:"Vous ______ raison. (be right)", opts:["avez","êtes","avons"], answer:0,
+    ok:"<b>avez</b> — 'to be right' is avoir raison; vous → avez raison.",
+    no:"'Being right' uses avoir → vous <b>avez</b> raison ('have reason'). être is wrong; 'avons' is nous." },
+  { prompt:"Le café ______ chaud.", opts:["est","a","fait"], answer:0,
+    ok:"<b>est</b> — a thing's quality takes être: le café est chaud (the coffee is hot).",
+    no:"An object's description → être → le café <b>est</b> chaud. avoir chaud (a) is for a person feeling hot." },
+  { prompt:"Elles ______ deux voitures.", opts:["ont","sont","avez"], answer:0,
+    ok:"<b>ont</b> — possession is avoir; elles → ont: elles ont deux voitures.",
+    no:"Possession → avoir, elles form <b>ont</b>. 'sont' is être; 'avez' is vous." },
+  { prompt:"Je ______ à Paris. (location)", opts:["suis","ai","es"], answer:0,
+    ok:"<b>suis</b> — saying where you are takes être: je suis à Paris.",
+    no:"Location → être → je <b>suis</b> à Paris. 'ai' is avoir, wrong for saying where you are." },
+];
+
+/* present_verbs — -er (e/es/e/ons/ez/ent), -ir with -iss- (finir/choisir),
+   prendre-family (drops d in plural, doubles n for ils). */
+const PRESENT_VERBS_ITEMS = [
+  { prompt:"Nous ______ à la question. (finir)", opts:["finissons","finons","finissez"], answer:0,
+    ok:"<b>finissons</b> — -ir verbs insert -iss- in the plural: nous finissons.",
+    no:"finir keeps -iss- in the plural → nous <b>finissons</b>, never 'finons'. 'finissez' is vous." },
+  { prompt:"Je ______ le français. (parler)", opts:["parle","parles","parlons"], answer:0,
+    ok:"<b>parle</b> — -er verb, je → -e: je parle.",
+    no:"je → -e → je <b>parle</b>. 'parles' is the tu form; 'parlons' is nous." },
+  { prompt:"Ils ______ à six heures. (finir)", opts:["finissent","finent","finissons"], answer:0,
+    ok:"<b>finissent</b> — ils/elles → -issent for -ir verbs: ils finissent.",
+    no:"-ir plural keeps -iss- → ils <b>finissent</b>, not 'finent'. 'finissons' is nous." },
+  { prompt:"Tu ______ le bus. (prendre)", opts:["prends","prend","prens"], answer:0,
+    ok:"<b>prends</b> — prendre: je/tu prends. tu prends le bus.",
+    no:"tu → <b>prends</b> (with -ds). 'prend' is il/elle; 'prens' isn't a form." },
+  { prompt:"Vous ______ un café ? (prendre)", opts:["prenez","prendez","prennez"], answer:0,
+    ok:"<b>prenez</b> — prendre drops the d in the plural: vous prenez.",
+    no:"prendre loses its d before plural endings → vous <b>prenez</b>, not 'prendez'." },
+  { prompt:"Elles ______ le métro. (prendre)", opts:["prennent","prendent","prenent"], answer:0,
+    ok:"<b>prennent</b> — prendre doubles the n for ils/elles: elles prennent.",
+    no:"ils/elles → <b>prennent</b> (double n, no d). 'prendent' wrongly keeps the d." },
+  { prompt:"Nous ______ à Paris. (habiter)", opts:["habitons","habitez","habites"], answer:0,
+    ok:"<b>habitons</b> — -er verb, nous → -ons: nous habitons.",
+    no:"nous → -ons → nous <b>habitons</b>. 'habitez' is vous; 'habites' is tu." },
+  { prompt:"Elle ______ un livre. (choisir)", opts:["choisit","choisi","choise"], answer:0,
+    ok:"<b>choisit</b> — -ir verb, il/elle → -it: elle choisit.",
+    no:"il/elle → <b>choisit</b>. 'choisi' is the past participle, not the present." },
+  { prompt:"Je ______ le professeur. (comprendre)", opts:["comprends","comprend","comprenez"], answer:0,
+    ok:"<b>comprends</b> — comprendre works like prendre: je comprends.",
+    no:"je → <b>comprends</b>. 'comprend' is il/elle; 'comprenez' is vous." },
+  { prompt:"Ils ______ la télé. (regarder)", opts:["regardent","regardes","regarde"], answer:0,
+    ok:"<b>regardent</b> — -er verb, ils → -ent (silent): ils regardent.",
+    no:"ils/elles → -ent → ils <b>regardent</b>. 'regarde' is il/elle singular; 'regardes' is tu." },
+  { prompt:"Vous ______ le français. (parler)", opts:["parlez","parler","parlé"], answer:0,
+    ok:"<b>parlez</b> — vous → -ez: vous parlez.",
+    no:"vous → <b>parlez</b>. 'parler' is the infinitive and 'parlé' the participle — same /e/ sound, wrong form." },
+  { prompt:"Je ______ à huit heures. (finir)", opts:["finis","finit","fini"], answer:0,
+    ok:"<b>finis</b> — -ir verb, je → -is: je finis.",
+    no:"je → <b>finis</b>. 'finit' is il/elle; 'fini' is the participle." },
+];
+
+/* reflexive — pronoun agrees with subject (me/te/se/nous/vous/se); elision
+   before a vowel (je m'appelle). */
+const REFLEXIVE_ITEMS = [
+  { prompt:"Je ______ à 7h. (se lever)", opts:["me lève","lève","te lèves"], answer:0,
+    ok:"<b>me lève</b> — je pairs with me: je me lève.",
+    no:"je → me → je <b>me lève</b>. Dropping the pronoun ('lève') loses the reflexive; 'te lèves' is for tu." },
+  { prompt:"Tu ______ tôt. (se coucher)", opts:["te couches","se couche","me couche"], answer:0,
+    ok:"<b>te couches</b> — tu pairs with te: tu te couches.",
+    no:"tu → te → tu <b>te couches</b>. 'se couche' is il/elle; 'me couche' is je." },
+  { prompt:"Elle ______ à 8h. (se réveiller)", opts:["se réveille","me réveille","te réveilles"], answer:0,
+    ok:"<b>se réveille</b> — il/elle → se: elle se réveille.",
+    no:"elle → se → elle <b>se réveille</b>. 'me' is for je; 'te' for tu." },
+  { prompt:"Le matin, nous ______. (se doucher)", opts:["nous douchons","douchons","nous douchez"], answer:0,
+    ok:"<b>nous douchons</b> — nous keeps its reflexive pronoun: nous nous douchons.",
+    no:"nous → nous + -ons → <b>nous douchons</b>. Dropping the pronoun ('douchons') loses the reflexive; 'douchez' is vous." },
+  { prompt:"Comment ______-vous ? (s'appeler)", opts:["vous appelez","appelez","vous appellez"], answer:0,
+    ok:"<b>vous appelez</b> — vous keeps its pronoun: comment vous appelez-vous ?",
+    no:"vous → <b>vous appelez</b> (one l). Dropping the pronoun ('appelez') loses the reflexive." },
+  { prompt:"Je ______ Marie. (s'appeler)", opts:["m'appelle","me appelle","appelle"], answer:0,
+    ok:"<b>m'appelle</b> — me elides before a vowel: je m'appelle Marie.",
+    no:"me → m' before a vowel → je <b>m'appelle</b>, never 'me appelle'." },
+  { prompt:"Ils ______ tard. (se coucher)", opts:["se couchent","se couche","te couches"], answer:0,
+    ok:"<b>se couchent</b> — ils → se + -ent: ils se couchent.",
+    no:"ils → se and -ent → ils <b>se couchent</b>. 'se couche' is singular il/elle." },
+  { prompt:"Tu ______ à quelle heure ? (se réveiller)", opts:["te réveilles","se réveille","me réveille"], answer:0,
+    ok:"<b>te réveilles</b> — tu → te: tu te réveilles.",
+    no:"tu → te → tu <b>te réveilles</b>. 'se' is for il/elle/ils; 'me' for je." },
+  { prompt:"Elle ______ les mains. (se laver)", opts:["se lave","lave","me lave"], answer:0,
+    ok:"<b>se lave</b> — il/elle → se: elle se lave les mains.",
+    no:"elle → se → elle <b>se lave</b>. Dropping it ('lave') makes it non-reflexive (washing something else)." },
+  { prompt:"Le matin, vous ______. (se lever)", opts:["vous levez","levez","vous levé"], answer:0,
+    ok:"<b>vous levez</b> — vous keeps its pronoun: vous vous levez.",
+    no:"vous → vous + -ez → <b>vous levez</b>. 'levez' alone drops the reflexive; 'levé' is a participle." },
+];
+
+/* imparfait (formation only — aspect is pc_vs_imparfait's job). Stem = nous-form
+   minus -ons + -ais/-ait/-ions/-aient; être irregular (ét-). Spelling traps:
+   -ger keeps e before a (mangeais) but not before i (mangions); -cer takes ç. */
+const IMPARFAIT_ITEMS = [
+  { prompt:"Je ______ une pomme. (manger, imparfait)", opts:["mangeais","mangais","mangeai"], answer:0,
+    ok:"<b>mangeais</b> — -ger verbs keep the e before -ais: je mangeais.",
+    no:"manger keeps its e before an a → je <b>mangeais</b>, not 'mangais'." },
+  { prompt:"Tu ______ à Paris. (habiter, imparfait)", opts:["habitais","habitait","habites"], answer:0,
+    ok:"<b>habitais</b> — imparfait tu → -ais: tu habitais.",
+    no:"tu imparfait → <b>habitais</b>. 'habitait' is il/elle; 'habites' is the present." },
+  { prompt:"Il ______ beau. (faire, imparfait)", opts:["faisait","fesait","faisrait"], answer:0,
+    ok:"<b>faisait</b> — stem from nous faisons → fais- + -ait: il faisait.",
+    no:"faire's imparfait stem is the nous-form fais- → il <b>faisait</b> (spelled ai), not 'fesait'." },
+  { prompt:"Nous ______ français. (parler, imparfait)", opts:["parlions","parlons","parlaient"], answer:0,
+    ok:"<b>parlions</b> — imparfait nous → -ions: nous parlions.",
+    no:"imparfait nous → <b>parlions</b>. 'parlons' is the present; 'parlaient' is ils." },
+  { prompt:"Je ______ à 8h. (commencer, imparfait)", opts:["commençais","commencais","commenceais"], answer:0,
+    ok:"<b>commençais</b> — -cer verbs take ç before a: je commençais.",
+    no:"commencer needs the cedilla ç before a → je <b>commençais</b>, not 'commencais'." },
+  { prompt:"Elles ______ la télé. (regarder, imparfait)", opts:["regardaient","regardais","regardent"], answer:0,
+    ok:"<b>regardaient</b> — ils/elles imparfait → -aient: elles regardaient.",
+    no:"ils/elles → -aient → elles <b>regardaient</b>. 'regardais' is je/tu; 'regardent' is the present." },
+  { prompt:"J'______ étudiant. (être, imparfait)", opts:["étais","étai","suis"], answer:0,
+    ok:"<b>étais</b> — être is irregular in the imparfait (stem ét-): j'étais.",
+    no:"être's imparfait uses ét- → j'<b>étais</b>. 'suis' is the present; 'étai' isn't a form." },
+  { prompt:"Vous ______ à la maison. (être, imparfait)", opts:["étiez","êtiez","étez"], answer:0,
+    ok:"<b>étiez</b> — être imparfait, vous → étiez.",
+    no:"être imparfait vous → <b>étiez</b> (é, no circumflex), not 'êtiez'." },
+  { prompt:"Nous ______ à sept heures. (finir, imparfait)", opts:["finissions","finions","finissons"], answer:0,
+    ok:"<b>finissions</b> — stem from nous finissons → finiss- + -ions: nous finissions.",
+    no:"-ir verbs keep -iss- in the imparfait too → nous <b>finissions</b>, not 'finions'. 'finissons' is the present." },
+  { prompt:"Elle ______ le métro. (prendre, imparfait)", opts:["prenait","prendait","prenais"], answer:0,
+    ok:"<b>prenait</b> — stem from nous prenons → pren- + -ait: elle prenait.",
+    no:"prendre's imparfait stem is pren- (no d) → elle <b>prenait</b>. 'prenais' is je/tu." },
+  { prompt:"Tu ______ beaucoup. (travailler, imparfait)", opts:["travaillais","travaillait","travailles"], answer:0,
+    ok:"<b>travaillais</b> — tu imparfait → -ais: tu travaillais.",
+    no:"tu → -ais → tu <b>travaillais</b>. 'travaillait' is il/elle; 'travailles' is the present." },
+  { prompt:"Nous ______ une pizza. (manger, imparfait)", opts:["mangions","mangeions","mangeons"], answer:0,
+    ok:"<b>mangions</b> — before -ions the e isn't needed (i keeps g soft): nous mangions.",
+    no:"manger keeps e before a/o but NOT before -ions → nous <b>mangions</b>, not 'mangeions'. 'mangeons' is the present." },
+];
+
+/* futur_proche — conjugated aller + infinitive; the second verb stays infinitive. */
+const FUTUR_PROCHE_ITEMS = [
+  { prompt:"Demain, je ______ le film. (regarder)", opts:["vais regarder","vais regarde","vas regarder"], answer:0,
+    ok:"<b>vais regarder</b> — futur proche = aller + infinitive: je vais regarder.",
+    no:"The second verb stays infinitive → je <b>vais regarder</b>, not 'vais regarde'. 'vas' is the tu form." },
+  { prompt:"Ce soir, nous ______ une pizza. (manger)", opts:["allons manger","allons mangeons","allez manger"], answer:0,
+    ok:"<b>allons manger</b> — aller (nous → allons) + infinitive: nous allons manger.",
+    no:"aller + infinitive → nous <b>allons manger</b>. 'mangeons' is conjugated (wrong here); 'allez' is vous." },
+  { prompt:"Tu ______ le train. (prendre)", opts:["vas prendre","vas prends","va prendre"], answer:0,
+    ok:"<b>vas prendre</b> — tu → vas + infinitive: tu vas prendre.",
+    no:"tu → vas + infinitive <b>vas prendre</b>. 'prends' is conjugated; 'va' is il/elle." },
+  { prompt:"Ils ______ le livre. (finir)", opts:["vont finir","vont finissent","allons finir"], answer:0,
+    ok:"<b>vont finir</b> — ils → vont + infinitive: ils vont finir le livre.",
+    no:"ils → vont + infinitive <b>vont finir</b>. 'finissent' is conjugated; 'allons' is nous." },
+  { prompt:"Je ne ______ pas sortir ce soir. (aller)", opts:["vais","vas","suis"], answer:0,
+    ok:"<b>vais</b> — negation wraps the conjugated aller: je ne vais pas sortir.",
+    no:"ne … pas surrounds the aller form → je ne <b>vais</b> pas sortir. 'vas' is tu." },
+  { prompt:"Vous ______ un café. (prendre)", opts:["allez prendre","allez prenez","vont prendre"], answer:0,
+    ok:"<b>allez prendre</b> — vous → allez + infinitive: vous allez prendre.",
+    no:"vous → allez + infinitive <b>allez prendre</b>. 'prenez' is conjugated; 'vont' is ils." },
+  { prompt:"Elle ______ à la maison. (rester)", opts:["va rester","va reste","vas rester"], answer:0,
+    ok:"<b>va rester</b> — elle → va + infinitive: elle va rester.",
+    no:"elle → va + infinitive <b>va rester</b>. 'reste' is conjugated; 'vas' is tu." },
+  { prompt:"Je ______ le français. (apprendre)", opts:["vais apprendre","vais apprend","vas apprendre"], answer:0,
+    ok:"<b>vais apprendre</b> — aller + infinitive: je vais apprendre le français.",
+    no:"the second verb stays infinitive → je <b>vais apprendre</b>, not 'apprend'. 'vas' is tu." },
+  { prompt:"Nous ______ tôt. (partir)", opts:["allons partir","allons partons","allez partir"], answer:0,
+    ok:"<b>allons partir</b> — nous → allons + infinitive: nous allons partir.",
+    no:"nous → allons + infinitive <b>allons partir</b>. 'partons' is conjugated; 'allez' is vous." },
+  { prompt:"Il ne ______ pas travailler demain. (aller)", opts:["va","vas","va pas"], answer:0,
+    ok:"<b>va</b> — negation wraps the aller form: il ne va pas travailler.",
+    no:"ne … pas wraps aller → il ne <b>va</b> pas travailler. 'vas' is tu." },
+];
+
+/* imperative — verb, no subject pronoun; -er tu-form drops -s (Mange!), -ir keeps
+   it (Finis!), vous (Prenez!), nous = 'let's' (Allons!). vous for strangers. */
+const IMPERATIVE_ITEMS = [
+  { prompt:"(to a stranger) ______ à droite. (tourner)", opts:["Tournez","Tourne","Tournes"], answer:0,
+    ok:"<b>Tournez</b> — a stranger takes vous; the command drops the pronoun: Tournez à droite.",
+    no:"For a stranger use the vous command → <b>Tournez</b>. 'Tourne' is the tu command (for friends)." },
+  { prompt:"(to a friend) ______ ta chambre ! (regarder)", opts:["Regarde","Regardes","Regardez"], answer:0,
+    ok:"<b>Regarde</b> — the tu imperative of -er verbs drops the -s: Regarde !",
+    no:"tu command of an -er verb loses its -s → <b>Regarde</b>, not 'Regardes'. 'Regardez' is vous." },
+  { prompt:"______-y ! ('let's go', aller)", opts:["Allons","Allez","Va"], answer:0,
+    ok:"<b>Allons</b> — the nous imperative means 'let's': Allons-y ! (let's go).",
+    no:"'Let's go' is the nous command → <b>Allons</b>-y. 'Allez' is vous; 'Va' is tu." },
+  { prompt:"(to a stranger) ______ la ligne 1. (prendre)", opts:["Prenez","Prends","Prendez"], answer:0,
+    ok:"<b>Prenez</b> — vous command: Prenez la ligne 1.",
+    no:"vous command of prendre → <b>Prenez</b>. 'Prends' is tu; 'Prendez' isn't a form." },
+  { prompt:"(to a friend) ______ ! (manger)", opts:["Mange","Manges","Mangez"], answer:0,
+    ok:"<b>Mange</b> — tu imperative of an -er verb drops -s: Mange !",
+    no:"tu -er command loses -s → <b>Mange</b>, not 'Manges'. 'Mangez' is vous." },
+  { prompt:"(to a stranger) ______ tout droit. (continuer)", opts:["Continuez","Continue","Continues"], answer:0,
+    ok:"<b>Continuez</b> — vous command: Continuez tout droit.",
+    no:"For a stranger → vous <b>Continuez</b>. 'Continue' is the tu command." },
+  { prompt:"(to a friend) ______ le bus. (prendre)", opts:["Prends","Prend","Prenez"], answer:0,
+    ok:"<b>Prends</b> — tu command of prendre keeps -ds: Prends le bus.",
+    no:"tu command → <b>Prends</b>. 'Prend' (no -s) is the il form; 'Prenez' is vous." },
+  { prompt:"(to a friend) ______ ! (finir)", opts:["Finis","Fini","Finissez"], answer:0,
+    ok:"<b>Finis</b> — the tu imperative of -ir verbs keeps its -s: Finis !",
+    no:"-ir tu command keeps -s → <b>Finis</b> (unlike -er verbs, which drop it). 'Finissez' is vous." },
+  { prompt:"______ ! ('let's watch', regarder)", opts:["Regardons","Regardez","Regarde"], answer:0,
+    ok:"<b>Regardons</b> — the nous command means 'let's': Regardons !",
+    no:"'Let's watch' → nous command <b>Regardons</b>. 'Regardez' is vous; 'Regarde' is tu." },
+  { prompt:"(to a friend) ______ à la maison. (aller)", opts:["Va","Vas","Allez"], answer:0,
+    ok:"<b>Va</b> — the tu imperative of aller drops the -s: Va à la maison.",
+    no:"tu command of aller → <b>Va</b> (no -s). 'Vas' is the present tu; 'Allez' is vous." },
+];
+
+/* prepositions — à+le=au, à+les=aux (à la / à l' no fusion); place phrases
+   à côté de / en face de / près de with de+le=du, de+les=des; devant/derrière/
+   entre take no de. */
+const PREPOSITIONS_ITEMS = [
+  { prompt:"Je vais ______ musée. (le)", opts:["au","à le","à la"], answer:0,
+    ok:"<b>au</b> — à + le fuses to au: je vais au musée.",
+    no:"à + le must fuse → <b>au</b> musée, never 'à le'. 'à la' is for feminine nouns." },
+  { prompt:"Elle va ______ toilettes. (les)", opts:["aux","à les","à la"], answer:0,
+    ok:"<b>aux</b> — à + les fuses to aux: aux toilettes.",
+    no:"à + les → <b>aux</b>, never 'à les'." },
+  { prompt:"Nous allons ______ gare. (la)", opts:["à la","au","à le"], answer:0,
+    ok:"<b>à la</b> — à + la doesn't fuse (feminine): à la gare.",
+    no:"à + la stays <b>à la</b> gare — only à+le and à+les fuse (au/aux)." },
+  { prompt:"Le café est à côté ______ musée. (le)", opts:["du","de le","de la"], answer:0,
+    ok:"<b>du</b> — à côté de + le → du: à côté du musée.",
+    no:"de + le fuses to du → à côté <b>du</b> musée, never 'de le'." },
+  { prompt:"La poste est en face ______ gare. (la)", opts:["de la","du","de le"], answer:0,
+    ok:"<b>de la</b> — en face de + la (feminine, no fusion): en face de la gare.",
+    no:"de + la doesn't fuse → en face <b>de la</b> gare. Only de+le=du and de+les=des fuse." },
+  { prompt:"J'habite près ______ parc. (le)", opts:["du","de le","des"], answer:0,
+    ok:"<b>du</b> — près de + le → du: près du parc.",
+    no:"de + le → <b>du</b> → près du parc, not 'de le'. 'des' is de+les (plural)." },
+  { prompt:"Le taxi est ______ la gare. (in front of)", opts:["devant","devant de","en face"], answer:0,
+    ok:"<b>devant</b> — devant takes no de: devant la gare (in front of the station).",
+    no:"devant is used directly, no de → <b>devant</b> la gare, not 'devant de'." },
+  { prompt:"La pharmacie est ______ le café et la banque. (between)", opts:["entre","entre de","au"], answer:0,
+    ok:"<b>entre</b> — entre needs no de: entre le café et la banque.",
+    no:"entre takes nouns directly → <b>entre</b> le café et la banque, not 'entre de'." },
+  { prompt:"Je vais ______ restaurant. (le)", opts:["au","à le","du"], answer:0,
+    ok:"<b>au</b> — à + le → au: au restaurant.",
+    no:"à + le → <b>au</b> restaurant. 'du' is de+le (of the), a different meaning." },
+  { prompt:"Les toilettes sont ______ fond du couloir. (le, 'at the')", opts:["au","à le","à la"], answer:0,
+    ok:"<b>au</b> — à + le = au: au fond du couloir (at the end of the corridor).",
+    no:"à + le → <b>au</b> fond. ('du couloir' already shows de+le=du.)" },
+  { prompt:"La banque est à côté ______ toilettes. (les)", opts:["des","de les","du"], answer:0,
+    ok:"<b>des</b> — à côté de + les → des: à côté des toilettes.",
+    no:"de + les fuses to des → à côté <b>des</b> toilettes, never 'de les'." },
+  { prompt:"Le parc est ______ la maison. (behind)", opts:["derrière","derrière de","près"], answer:0,
+    ok:"<b>derrière</b> — derrière takes no de: derrière la maison.",
+    no:"derrière is used directly → <b>derrière</b> la maison, not 'derrière de'." },
+];
+
+/* ------------------------------ comparatives & superlatives (vetted) */
+/* Wired VERBATIM. Tagged skill:"comparatives", diff:2, weeks:[11] via the .map
+   at the export. plus/moins/aussi … que; the irregular bon→meilleur (adjective)
+   vs bien→mieux (adverb); autant for quantities; le moins/le meilleur superlative. */
+const COMPARATIVE_ITEMS = [
+  { prompt:"Marie est ______ grande que Paul. (more)", opts:["plus","meilleure","mieux"], answer:0,
+    ok:"<b>plus</b> — the regular comparative of an adjective: plus grande que ('taller than').",
+    no:"Ordinary comparison of an adjective uses <b>plus … que</b> → plus grande que. (meilleur/mieux are the special 'better' words.)" },
+  { prompt:"Ce café est ______ que l'autre. (better — quality of a thing)", opts:["plus bon","meilleur","mieux"], answer:1,
+    ok:"<b>meilleur</b> — the comparative of the adjective bon is the irregular meilleur, never 'plus bon'.",
+    no:"bon has an irregular comparative: <b>meilleur</b> (not 'plus bon'). It's an adjective describing the café." },
+  { prompt:"Elle chante ______ que moi. (better — how she does it)", opts:["meilleur","mieux","plus bien"], answer:1,
+    ok:"<b>mieux</b> — 'better' describing a VERB (how she sings) is the adverb mieux, the irregular form of bien.",
+    no:"Modifying a verb (chante) needs the adverb → <b>mieux</b> (irregular of bien), not the adjective meilleur." },
+  { prompt:"Le train est ______ rapide que le bus. (faster)", opts:["plus","meilleur","mieux"], answer:0,
+    ok:"<b>plus</b> — rapide is a normal adjective → plus rapide que.",
+    no:"rapide takes the regular <b>plus … que</b> → plus rapide que." },
+  { prompt:"Il travaille ______ que son frère. (less)", opts:["moins","moindre","pire"], answer:0,
+    ok:"<b>moins</b> — 'less' with a verb → moins que: il travaille moins que.",
+    no:"'Less' is <b>moins … que</b> → il travaille moins que son frère." },
+  { prompt:"Cette pizza est ______ bonne que l'autre. (less)", opts:["moins","plus","mieux"], answer:0,
+    ok:"<b>moins</b> — 'less good' uses moins + bonne (moins doesn't have an irregular form): moins bonne que.",
+    no:"'Less good' is regular → <b>moins</b> bonne que. (Only 'more good' becomes the irregular meilleur.)" },
+  { prompt:"Anne et Léa sont ______ grandes l'une que l'autre. (as)", opts:["aussi","autant","plus"], answer:0,
+    ok:"<b>aussi</b> — equality with an adjective → aussi … que: aussi grandes que.",
+    no:"'As … as' with an adjective is <b>aussi … que</b> → aussi grandes que. (autant is for quantities/verbs.)" },
+  { prompt:"Aujourd'hui je vais ______ qu'hier. (better — feeling/state)", opts:["meilleur","mieux","plus bon"], answer:1,
+    ok:"<b>mieux</b> — 'I'm doing better' (aller + adverb) → je vais mieux. A fixed, very common phrase.",
+    no:"With aller ('to feel/do'), 'better' is the adverb <b>mieux</b> → je vais mieux, never meilleur." },
+  { prompt:"C'est le ______ restaurant de la ville. (the best)", opts:["plus bon","meilleur","mieux"], answer:1,
+    ok:"<b>meilleur</b> — the superlative of bon is le meilleur ('the best'), an adjective for restaurant.",
+    no:"The superlative of bon is <b>le meilleur</b> (not 'le plus bon') — adjective describing the restaurant." },
+  { prompt:"Paul court ______ vite que Marc. (as)", opts:["aussi","autant","aussi bien"], answer:0,
+    ok:"<b>aussi</b> — aussi … que before an adverb (vite): aussi vite que.",
+    no:"Equality before an adverb → <b>aussi</b> vite que." },
+  { prompt:"Il a ______ d'argent que moi. (as much)", opts:["aussi","autant","plus bien"], answer:1,
+    ok:"<b>autant</b> — equality of a QUANTITY (money) → autant de … que: autant d'argent que.",
+    no:"'As much (of)' a quantity uses <b>autant de … que</b>, not aussi → autant d'argent que." },
+  { prompt:"De tous les livres, c'est le ______ intéressant. (least)", opts:["moins","pire","mauvais"], answer:0,
+    ok:"<b>moins</b> — the superlative 'the least' is le moins + adjective: le moins intéressant.",
+    no:"'The least' = <b>le moins</b> intéressant. (pire/mauvais are 'worse/bad', not 'least'.)" },
+];
+
+/* ------------------------------ negation (placement & scope, vetted) */
+/* Wired VERBATIM. Tagged skill:"negation", diff:2, weeks:[2,8,9,10] via the .map
+   at the export. ne … pas/jamais/rien/plus placement (present, passé composé,
+   futur proche), partitive/indefinite → de under negation, Personne ne as
+   subject, and the spoken-French ne-drop. */
+const NEGATION_ITEMS = [
+  { prompt:"Present: 'I don't speak French.' Je ______ français.", opts:["ne parle pas","parle ne pas","ne pas parle"], answer:0,
+    ok:"<b>ne parle pas</b> — ne … pas wraps around the conjugated verb: je ne parle pas.",
+    no:"ne and pas hug the verb → <b>ne parle pas</b>. (ne before, pas after.)" },
+  { prompt:"Passé composé: 'I didn't eat.' Je ______.", opts:["n'ai pas mangé","n'ai mangé pas","ne mangé pas ai"], answer:0,
+    ok:"<b>n'ai pas mangé</b> — in compound tenses, ne … pas wraps the AUXILIARY, not the participle: n'ai pas mangé.",
+    no:"pas goes right after the auxiliary (avoir/être), before the participle → <b>n'ai pas mangé</b>, never 'ai mangé pas'." },
+  { prompt:"'I never watch TV.' Je ______ la télé.", opts:["ne regarde jamais","ne jamais regarde","regarde ne jamais"], answer:0,
+    ok:"<b>ne regarde jamais</b> — jamais takes pas's slot after the verb: ne … jamais.",
+    no:"ne … jamais wraps the verb like ne … pas → <b>ne regarde jamais</b>." },
+  { prompt:"'I have never eaten there.' Je ______ mangé là-bas.", opts:["n'ai jamais","ne jamais ai","n'ai jamais pas"], answer:0,
+    ok:"<b>n'ai jamais</b> — in the passé composé, jamais sits after the auxiliary: je n'ai jamais mangé. (No 'pas' — jamais replaces it.)",
+    no:"jamais goes after the auxiliary and there's no pas → <b>n'ai jamais</b> mangé." },
+  { prompt:"'I eat nothing / I don't eat anything.' Je ______.", opts:["ne mange rien","ne rien mange","mange ne rien"], answer:0,
+    ok:"<b>ne mange rien</b> — rien takes the post-verb slot: ne … rien.",
+    no:"ne … rien wraps the verb → <b>ne mange rien</b> ('I eat nothing')." },
+  { prompt:"'There's no more bread.' Il ______ pain.", opts:["n'y a plus de","n'y a plus du","y a ne plus de"], answer:0,
+    ok:"<b>n'y a plus de</b> — ne … plus ('no more'), and negation flattens the article to de: plus de pain.",
+    no:"ne … plus = 'no more', and after negation the partitive → de → <b>n'y a plus de</b> pain." },
+  { prompt:"'I don't want any coffee.' Je ne veux pas ______ café.", opts:["de","du","le"], answer:0,
+    ok:"<b>de</b> — after a negative, du/de la/des collapse to de: pas de café.",
+    no:"Negation flattens the partitive → <b>de</b>: je ne veux pas de café (not 'pas du café')." },
+  { prompt:"'I'm not going to go.' (futur proche) Je ______ aller.", opts:["ne vais pas","ne vais aller pas","vais ne pas"], answer:0,
+    ok:"<b>ne vais pas</b> — in futur proche, ne … pas wraps the conjugated aller, before the infinitive: je ne vais pas aller.",
+    no:"pas goes after the conjugated verb (vais), before the infinitive → <b>ne vais pas</b> aller." },
+  { prompt:"'Nobody is here.' ______ est ici.", opts:["Personne ne","Ne personne","Personne pas"], answer:0,
+    ok:"<b>Personne ne</b> — when 'nobody' is the subject, it leads and ne stays before the verb: Personne n'est ici.",
+    no:"Subject 'nobody' → <b>Personne ne</b> … (Personne n'est ici). No pas." },
+  { prompt:"'I don't have a car.' Je n'ai pas ______ voiture.", opts:["de","une","la"], answer:0,
+    ok:"<b>de</b> — negation turns the indefinite une into de: je n'ai pas de voiture.",
+    no:"After a negative, un/une → de → <b>pas de</b> voiture." },
+  { prompt:"Spoken French often drops one part of the negation. Which?", opts:["the 'ne' (t'inquiète pas)","the 'pas'","both"], answer:0,
+    ok:"<b>the 'ne'</b> — in casual speech the ne is commonly dropped: 'je sais pas', 't'inquiète pas'. pas carries the negation.",
+    no:"Casual speech drops <b>ne</b>, keeping pas: 'je sais pas'. (In writing, keep both.)" },
+  { prompt:"'I don't eat meat anymore.' Je ______ viande.", opts:["ne mange plus de","ne mange pas plus","ne plus mange de"], answer:0,
+    ok:"<b>ne mange plus de</b> — ne … plus ('no longer'), + de after negation: je ne mange plus de viande.",
+    no:"'No longer' = ne … plus, and negation → de → <b>ne mange plus de</b> viande." },
+];
+
 /* ------------------------------------------------------------------ export */
 /* Assign a stable id to every item (the engine tracks served/unserved by id). */
 const GENERATED = generateLexical();
@@ -594,7 +899,17 @@ const ADJECTIVES = ADJECTIVE_ITEMS.map(it        => ({ ...it, skill:"adjectives"
 const PASSE_COMP = PASSE_COMPOSE_ITEMS.map(it    => ({ ...it, skill:"passe_compose",       diff:3, weeks:[8,9]    }));
 const DEM_POSS   = DEMONSTR_POSSESS_ITEMS.map(it => ({ ...it, skill:"demonstr_possess",    diff:2, weeks:[6,7]    }));
 const PRONUN     = PRONUNCIATION_ITEMS.map(it    => ({ ...it, skill:"pronunciation",       diff:3, weeks:[1,2,3,4,5,6,7,8,9,10,11,12] }));
-const HAND_ALL = [...HAND, ...PC_IMP, ...PARTITIVE, ...ADJECTIVES, ...PASSE_COMP, ...DEM_POSS, ...PRONUN];
+const ETRE_AV    = ETRE_AVOIR_ITEMS.map(it       => ({ ...it, skill:"etre_avoir",          diff:2, weeks:[1,2]    }));
+const PRES_VB    = PRESENT_VERBS_ITEMS.map(it     => ({ ...it, skill:"present_verbs",       diff:2, weeks:[2,7,11] }));
+const REFLEX     = REFLEXIVE_ITEMS.map(it         => ({ ...it, skill:"reflexive",           diff:2, weeks:[5]      }));
+const IMPARF     = IMPARFAIT_ITEMS.map(it         => ({ ...it, skill:"imparfait",           diff:2, weeks:[11]     }));
+const FUTUR      = FUTUR_PROCHE_ITEMS.map(it      => ({ ...it, skill:"futur_proche",        diff:2, weeks:[10]     }));
+const IMPER      = IMPERATIVE_ITEMS.map(it        => ({ ...it, skill:"imperative",          diff:2, weeks:[4]      }));
+const PREPOS     = PREPOSITIONS_ITEMS.map(it      => ({ ...it, skill:"prepositions",        diff:2, weeks:[4]      }));
+const COMPAR     = COMPARATIVE_ITEMS.map(it       => ({ ...it, skill:"comparatives",         diff:2, weeks:[11]     }));
+const NEGAT      = NEGATION_ITEMS.map(it          => ({ ...it, skill:"negation",             diff:2, weeks:[2,8,9,10] }));
+const HAND_ALL = [...HAND, ...PC_IMP, ...PARTITIVE, ...ADJECTIVES, ...PASSE_COMP, ...DEM_POSS, ...PRONUN,
+                  ...ETRE_AV, ...PRES_VB, ...REFLEX, ...IMPARF, ...FUTUR, ...IMPER, ...PREPOS, ...COMPAR, ...NEGAT];
 export const QUIZ_BANK = [...GENERATED, ...HAND_ALL].map((it, i) => ({ id: i, ...it }));
 
 /* Exact source split, known at construction (no heuristic) — surfaced so the
