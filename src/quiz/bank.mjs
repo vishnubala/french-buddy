@@ -192,15 +192,8 @@ const HAND = [
     ok:"il/elle → se : elle se couche.",
     no:"elle takes se : elle se couche. « me » is for je." },
 
-  /* passe_compose */
-  { skill:"passe_compose", diff:2, weeks:[8], prompt:"« I ate » (manger) :",
-    opts:["je mange","j'ai mangé","je suis mangé","je mangeais"], answer:1,
-    ok:"passé composé with avoir : j'ai mangé.",
-    no:"j'ai mangé — avoir + participle; manger takes avoir, not être." },
-  { skill:"passe_compose", diff:3, weeks:[9], prompt:"« She went » (aller) :",
-    opts:["elle a allé","elle est allée","elle a allée","elle est allé"], answer:1,
-    ok:"aller takes être + agreement : elle est allée (-e for « she »).",
-    no:"aller is an être-verb and the participle agrees : elle est allée." },
+  /* passe_compose — vetted set lives in PASSE_COMPOSE_ITEMS below, spread into
+     the export with its constant tags (not here in HAND). */
 
   /* imparfait */
   { skill:"imparfait", diff:3, weeks:[11], prompt:"Imparfait de « nous parlons », je → :",
@@ -249,15 +242,8 @@ const HAND = [
   /* partitive_quantity — vetted set lives in PARTITIVE_ITEMS below, spread into
      the export with its constant tags (not here in HAND). */
 
-  /* demonstr_possess */
-  { skill:"demonstr_possess", diff:2, weeks:[6], prompt:"« this jacket » (une veste) :",
-    opts:["ce veste","cet veste","cette veste","ces veste"], answer:2,
-    ok:"feminine noun → cette veste.",
-    no:"cette — the feminine demonstrative; « ce/cet » are masculine." },
-  { skill:"demonstr_possess", diff:2, weeks:[7], prompt:"« my house » (la maison) :",
-    opts:["mon maison","ma maison","mes maison","ma maisons"], answer:1,
-    ok:"the possessive agrees with the noun : ma maison (maison is feminine).",
-    no:"ma maison — possessives match the noun's gender, and maison is feminine." },
+  /* demonstr_possess — vetted set lives in DEMONSTR_POSSESS_ITEMS below, spread
+     into the export with its constant tags (not here in HAND). */
 
   /* adjectives — vetted set lives in ADJECTIVE_ITEMS below, spread into the
      export with its constant tags (not here in HAND). */
@@ -282,15 +268,8 @@ const HAND = [
     ok:"à la (no fusion before feminine) : à la gare.",
     no:"à la gare — à + la doesn't fuse; only à+le=au and à+les=aux." },
 
-  /* pronunciation */
-  { skill:"pronunciation", diff:3, weeks:[1], prompt:"Which pair sounds the SAME?",
-    opts:["rue / roue","vingt / vin","tu / tout","du / doux"], answer:1,
-    ok:"vingt and vin are both /vɛ̃/ — identical. The others each contrast /y/ vs /u/.",
-    no:"vingt = vin = /vɛ̃/. rue/roue, tu/tout, du/doux all contrast /y/ vs /u/." },
-  { skill:"pronunciation", diff:2, weeks:[8], prompt:"« mangé », « manger » and « mangez » …",
-    opts:["sound different","sound the same (/e/)","are all silent","only rhyme in pairs"], answer:1,
-    ok:"-é, -er, -ez all sound /e/ : mangé = manger = mangez. Spelling differs, sound doesn't.",
-    no:"They're identical : /mɑ̃ʒe/. The classic -é/-er/-ez trap." },
+  /* pronunciation — vetted set lives in PRONUNCIATION_ITEMS below, spread into
+     the export with its constant tags (not here in HAND). */
 ];
 
 /* ---------------------- flagship pc_vs_imparfait discrimination bank (vetted) */
@@ -466,13 +445,156 @@ const ADJECTIVE_ITEMS = [
     no:"A size (BAGS) adjective precedes the noun → grande maison; grand → grande (fem)." },
 ];
 
+/* ------------------------------- passé composé (avoir vs être + agreement) */
+/* Wired VERBATIM. Tagged skill:"passe_compose", diff:3, weeks:[8,9] via the .map
+   at the export. avoir vs être auxiliary choice, participle agreement with être,
+   irregular participles, and the sortir-with-direct-object → avoir case. */
+const PASSE_COMPOSE_ITEMS = [
+  { prompt:"Hier, elle ______ au cinéma. (aller)", opts:["a allé","est allée","est allé"], answer:1,
+    ok:"<b>est allée</b> — aller takes être, and with être the participle agrees with the subject: elle → allée.",
+    no:"aller is an être-verb, and être-participles agree: a feminine subject → <b>est allée</b>." },
+  { prompt:"J'______ une pizza hier soir. (manger)", opts:["ai mangé","suis mangé","ai mangée"], answer:0,
+    ok:"<b>ai mangé</b> — manger takes avoir; with avoir there's no agreement with the subject → mangé.",
+    no:"manger takes avoir (not être), and avoir gives no subject agreement → <b>ai mangé</b>." },
+  { prompt:"Nous ______ à huit heures. (partir)", opts:["avons parti","sommes partis","sommes parti"], answer:1,
+    ok:"<b>sommes partis</b> — partir takes être; the participle agrees with nous (masc. plural) → partis.",
+    no:"partir is an être-verb and agrees with the subject → <b>sommes partis</b> (plural -s)." },
+  { prompt:"Les filles ______ tard. (arriver)", opts:["ont arrivé","sont arrivées","sont arrivé"], answer:1,
+    ok:"<b>sont arrivées</b> — arriver takes être; feminine plural subject → arrivées (-es).",
+    no:"arriver takes être and agrees → feminine plural <b>sont arrivées</b>." },
+  { prompt:"Il ______ son café. (prendre)", opts:["a pris","est pris","a prendu"], answer:0,
+    ok:"<b>a pris</b> — prendre takes avoir and has the irregular participle pris.",
+    no:"prendre takes avoir, irregular participle → <b>a pris</b> (not 'prendu')." },
+  { prompt:"Tu ______ la vérité ? (dire)", opts:["as dit","es dit","as disé"], answer:0,
+    ok:"<b>as dit</b> — dire takes avoir; irregular participle dit.",
+    no:"dire takes avoir with the irregular participle → <b>as dit</b>." },
+  { prompt:"Elle ______ dans la maison. (rester)", opts:["a resté","est restée","est resté"], answer:1,
+    ok:"<b>est restée</b> — rester is one of the être-verbs (state, no movement), and agrees → restée.",
+    no:"rester takes être (it's on the être list) and agrees with a feminine subject → <b>est restée</b>." },
+  { prompt:"Vous ______ le film ? (voir)", opts:["avez vu","êtes vus","avez vou"], answer:0,
+    ok:"<b>avez vu</b> — voir takes avoir; irregular participle vu; no subject agreement with avoir.",
+    no:"voir takes avoir (irregular participle vu), and avoir doesn't agree → <b>avez vu</b>." },
+  { prompt:"Elle ______ le chien ce matin. (sortir)", opts:["a sorti","est sortie","est sorti"], answer:0,
+    ok:"<b>a sorti</b> — sortir usually takes être, BUT with a direct object (le chien = 'took the dog out') it takes avoir, no agreement.",
+    no:"With a direct object, sortir means 'took (something) out' → avoir → <b>a sorti</b> le chien. (Without an object: elle est sortie.)" },
+  { prompt:"Ce matin, je ______ à sept heures. (se réveiller)", opts:["ai réveillé","me suis réveillé","suis réveillé"], answer:1,
+    ok:"<b>me suis réveillé</b> — reflexive verbs always take être and keep the pronoun: je me suis réveillé.",
+    no:"Reflexive verbs take être and keep their pronoun → <b>me suis réveillé(e)</b>." },
+  { prompt:"Nous ______ un bon week-end. (avoir)", opts:["avons eu","sommes eus","avons eue"], answer:0,
+    ok:"<b>avons eu</b> — avoir itself takes avoir; irregular participle eu.",
+    no:"avoir takes avoir, irregular participle → <b>avons eu</b>." },
+  { prompt:"Il ______ malade toute la semaine. (être)", opts:["a été","est été","a étée"], answer:0,
+    ok:"<b>a été</b> — être takes avoir in the passé composé; participle été, no agreement.",
+    no:"être takes avoir (not itself) → <b>a été</b>, participle été." },
+];
+
+/* ------------------------------ demonstratives & possessives */
+/* Wired VERBATIM. Tagged skill:"demonstr_possess", diff:2, weeks:[6,7] via the
+   .map at the export. Possessives agree with the thing owned (not the owner);
+   ce/cet/cette/ces; ma→mon / ce→cet before a vowel. NOTE: item 11's 3rd option
+   was "leur" (a duplicate of the correct answer in the source); per the person's
+   call it's replaced with "ses" — the only deviation from verbatim. */
+const DEMONSTR_POSSESS_ITEMS = [
+  { prompt:"Paul aime ______ sœur. (his)", opts:["sa","son","ses"], answer:0,
+    ok:"<b>sa</b> — the possessive agrees with the thing owned (sœur, feminine), NOT the owner: sa sœur = his sister.",
+    no:"French agrees with the noun owned, not the owner. sœur is feminine → <b>sa</b> sœur (even though 'his')." },
+  { prompt:"Marie cherche ______ frère. (her)", opts:["sa","son","ses"], answer:1,
+    ok:"<b>son</b> — frère is masculine, so son, regardless of Marie being female. son = his OR her.",
+    no:"Agreement is with frère (masculine) → <b>son</b> frère. son/sa doesn't tell you the owner's gender." },
+  { prompt:"J'adore ______ amie Léa. (my)", opts:["ma","mon","mes"], answer:1,
+    ok:"<b>mon</b> — before a feminine noun starting with a vowel, ma → mon for sound: mon amie.",
+    no:"ma becomes <b>mon</b> before a vowel (mon amie), even though amie is feminine — it's for pronunciation." },
+  { prompt:"______ enfants sont à l'école. (his/her)", opts:["Sa","Son","Ses"], answer:2,
+    ok:"<b>Ses</b> — plural owned thing (enfants) → ses, for his or her.",
+    no:"A plural noun owned → <b>ses</b> enfants (his or her children)." },
+  { prompt:"Tu as vu ______ voiture ? (your, informal)", opts:["ta","ton","tes"], answer:0,
+    ok:"<b>ta</b> — voiture is feminine singular → ta voiture.",
+    no:"voiture is feminine → <b>ta</b> voiture." },
+  { prompt:"______ étudiants travaillent bien. (these)", opts:["Ce","Cet","Ces"], answer:2,
+    ok:"<b>Ces</b> — plural noun → ces (these/those): ces étudiants.",
+    no:"A plural noun → <b>ces</b> étudiants." },
+  { prompt:"Regarde ______ homme là-bas. (that)", opts:["ce","cet","cette"], answer:1,
+    ok:"<b>cet</b> — before a masculine noun starting with a vowel/h, ce → cet: cet homme.",
+    no:"ce → <b>cet</b> before a masculine vowel-noun (cet homme), for sound." },
+  { prompt:"______ maison est très belle. (this)", opts:["Ce","Cet","Cette"], answer:2,
+    ok:"<b>Cette</b> — feminine singular noun → cette: cette maison.",
+    no:"maison is feminine → <b>cette</b> maison." },
+  { prompt:"Nous avons perdu ______ clés. (our)", opts:["notre","nos","votre"], answer:1,
+    ok:"<b>nos</b> — plural owned thing (clés) → nos, regardless of the owners.",
+    no:"A plural noun owned → <b>nos</b> clés (notre is for a singular noun)." },
+  { prompt:"C'est ______ livre ou le mien ? (your, formal/plural)", opts:["votre","vos","ton"], answer:0,
+    ok:"<b>votre</b> — singular noun (livre) → votre; vos would need a plural noun.",
+    no:"livre is singular → <b>votre</b> livre (vos is for plurals)." },
+  { prompt:"Ils adorent ______ nouvelle école. (their)", opts:["leur","leurs","ses"], answer:0,
+    ok:"<b>leur</b> — one school (singular) → leur, even though 'they' own it: leur école.",
+    no:"leur/leurs agrees with the thing owned, not the owners. One school → <b>leur</b> école." },
+  { prompt:"______ appartement est au cinquième étage. (this)", opts:["Ce","Cet","Cette"], answer:1,
+    ok:"<b>Cet</b> — appartement is masculine and starts with a vowel → cet appartement.",
+    no:"Masculine vowel-noun → <b>cet</b> appartement (ce would be wrong before the vowel)." },
+];
+
+/* ------------------------------ pronunciation & liaison */
+/* Wired VERBATIM. Tagged skill:"pronunciation", diff:3, weeks:[1..12] via the
+   .map at the export. /y/ vs /u/, /z/ and /t/ liaison, -é/-er/-ez (/e/) vs
+   -ais/-ait/-aient (/ɛ/), silent verb -ent, nasal vowels, and the ville /vil/
+   exception. */
+const PRONUNCIATION_ITEMS = [
+  { prompt:"Which word has the /y/ sound (lips rounded, like 'tu'), NOT /u/ (like 'ou')?",
+    opts:["tu","tout","nous"], answer:0,
+    ok:"<b>tu</b> — /y/: say 'ee' then round your lips. tout and nous have /u/ (the 'oo' of 'ou').",
+    no:"<b>tu</b> is /y/ (tight rounded lips). tout/nous are /u/ — the sound this course contrasts from Day 1." },
+  { prompt:"In 'vous avez', what happens between the two words?",
+    opts:["a /z/ liaison: vous‿avez","nothing, both said separately","a /t/ liaison"], answer:0,
+    ok:"<b>/z/ liaison</b> — the silent -s of vous links onto the vowel as /z/: 'vou-zavez'.",
+    no:"A final silent -s liaises as <b>/z/</b> before a vowel → vous‿avez ('vou-zavez')." },
+  { prompt:"Which set are all pronounced the SAME (/e/), as in the passé composé -é?",
+    opts:["parlé, parler, parlez","parlé, parlait, parlais","parler, parlé, parle"], answer:0,
+    ok:"<b>parlé, parler, parlez</b> — all /e/ (parlé = -é, parler = -er, parlez = -ez). This homophone trap is why spelling matters.",
+    no:"The /e/ set is <b>parlé / parler / parlez</b>. parlait/parlais are /ɛ/ (imparfait), and 'parle' ends in a silent-e /parl/." },
+  { prompt:"Which set are all pronounced the SAME (/ɛ/), the imparfait ending?",
+    opts:["parlais, parlait, parlaient","parlais, parler, parlé","parlait, parlez, parler"], answer:0,
+    ok:"<b>parlais, parlait, parlaient</b> — all /ɛ/. The imparfait endings -ais/-ait/-aient are homophones; only the subject tells them apart.",
+    no:"The imparfait /ɛ/ set is <b>-ais / -ait / -aient</b>. The -er/-é/-ez group is the other sound, /e/." },
+  { prompt:"How is the final consonant in 'petit' (masc.) vs 'petite' (fem.) pronounced?",
+    opts:["petit: silent t; petite: audible t","both audible","both silent"], answer:0,
+    ok:"<b>petit</b> = /pəti/ (silent t); the feminine -e in <b>petite</b> = /pətit/ makes the t sound.",
+    no:"The feminine -e 'wakes' a silent final consonant: petit /pəti/ → petite /pətit/." },
+  { prompt:"'trois heures' — what links the words?",
+    opts:["a /z/ liaison: troi‿zheures","a /s/ sound","nothing"], answer:0,
+    ok:"<b>/z/ liaison</b> — the -s of trois links onto the vowel of heures (h is mute) → 'troi-zeur'.",
+    no:"trois + a vowel → <b>/z/</b> liaison: troi‿zheures ('troi-zeur'); the h of heures is silent." },
+  { prompt:"In 'un grand arbre', how does 'grand' link to 'arbre'?",
+    opts:["the d sounds as /t/: gran‿t‿arbre","a /z/ sound","no liaison"], answer:0,
+    ok:"<b>/t/</b> — in liaison, a final d is pronounced /t/: grand‿arbre = 'gran-tarbre'.",
+    no:"A liaising final -d becomes <b>/t/</b> → grand‿arbre ('gran-tarbre')." },
+  { prompt:"The -ent ending on 'ils parlent' is…",
+    opts:["completely silent: 'parl'","pronounced 'ont'","a nasal 'en'"], answer:0,
+    ok:"<b>silent</b> — the 3rd-person plural -ent is not pronounced: ils parlent = /parl/, same sound as 'il parle'.",
+    no:"Verb -ent is <b>silent</b>: ils parlent sounds exactly like il parle (/parl/)." },
+  { prompt:"Which is the nasal vowel, as in 'vin' (wine)?",
+    opts:["vin /vɛ̃/","vine","vi-ne"], answer:0,
+    ok:"<b>vin</b> /vɛ̃/ — a single nasal vowel, no n consonant actually pronounced; air passes through the nose.",
+    no:"<b>vin</b> is one nasal vowel /vɛ̃/ — you don't pronounce a separate 'n'." },
+  { prompt:"'ils ont' vs 'ils sont' — the difference is…",
+    opts:["ont: /z/ liaison (il‿zon); sont: /s/ (il-son)","identical","both /z/"], answer:0,
+    ok:"<b>ils‿ont</b> = 'il-zon' (/z/ liaison, they have); <b>ils sont</b> = 'il-son' (/s/, they are). One sound flips the meaning.",
+    no:"ils ont = /z/ liaison ('il-zon', have); ils sont = /s/ ('il-son', are). The /z/–/s/ contrast is the whole distinction." },
+  { prompt:"How is 'ville' pronounced?",
+    opts:["/vil/ — the ill is /il/, an exception","/vij/ like 'fille'","/vi/"], answer:0,
+    ok:"<b>/vil/</b> — ville, mille, tranquille are exceptions where -ill- is /il/, not the usual /ij/ glide (as in fille /fij/).",
+    no:"ville is the exception <b>/vil/</b>, not the /ij/ of fille — same group as mille, tranquille." },
+];
+
 /* ------------------------------------------------------------------ export */
 /* Assign a stable id to every item (the engine tracks served/unserved by id). */
 const GENERATED = generateLexical();
-const PC_IMP     = PC_IMP_ITEMS.map(it     => ({ ...it, skill:"pc_vs_imparfait",    diff:3, weeks:[8,9,11] }));
-const PARTITIVE  = PARTITIVE_ITEMS.map(it   => ({ ...it, skill:"partitive_quantity", diff:3, weeks:[3,6]    }));
-const ADJECTIVES = ADJECTIVE_ITEMS.map(it   => ({ ...it, skill:"adjectives",         diff:3, weeks:[6]      }));
-const HAND_ALL = [...HAND, ...PC_IMP, ...PARTITIVE, ...ADJECTIVES];
+const PC_IMP     = PC_IMP_ITEMS.map(it          => ({ ...it, skill:"pc_vs_imparfait",    diff:3, weeks:[8,9,11] }));
+const PARTITIVE  = PARTITIVE_ITEMS.map(it        => ({ ...it, skill:"partitive_quantity", diff:3, weeks:[3,6]    }));
+const ADJECTIVES = ADJECTIVE_ITEMS.map(it        => ({ ...it, skill:"adjectives",         diff:3, weeks:[6]      }));
+const PASSE_COMP = PASSE_COMPOSE_ITEMS.map(it    => ({ ...it, skill:"passe_compose",       diff:3, weeks:[8,9]    }));
+const DEM_POSS   = DEMONSTR_POSSESS_ITEMS.map(it => ({ ...it, skill:"demonstr_possess",    diff:2, weeks:[6,7]    }));
+const PRONUN     = PRONUNCIATION_ITEMS.map(it    => ({ ...it, skill:"pronunciation",       diff:3, weeks:[1,2,3,4,5,6,7,8,9,10,11,12] }));
+const HAND_ALL = [...HAND, ...PC_IMP, ...PARTITIVE, ...ADJECTIVES, ...PASSE_COMP, ...DEM_POSS, ...PRONUN];
 export const QUIZ_BANK = [...GENERATED, ...HAND_ALL].map((it, i) => ({ id: i, ...it }));
 
 /* Exact source split, known at construction (no heuristic) — surfaced so the
