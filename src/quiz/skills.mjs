@@ -10,7 +10,7 @@ export const SKILLS = [
   { slug:"reflexive",           label:"Reflexive verbs & routine",           weeks:[5],        band:2 },
   { slug:"passe_compose",       label:"Passé composé (avoir & être)",        weeks:[8,9],      band:3 },
   { slug:"imparfait",           label:"Imparfait (formation & use)",         weeks:[11],       band:3 },
-  { slug:"pc_vs_imparfait",     label:"Passé composé vs imparfait",          weeks:[11],       band:3 },
+  { slug:"pc_vs_imparfait",     label:"Passé composé vs imparfait",          weeks:[8,9,11],   band:3 },
   { slug:"futur_proche",        label:"Futur proche (aller + inf.)",         weeks:[10],       band:2 },
   { slug:"negation",            label:"Negation (ne…pas, placement)",        weeks:[2,8,9,10], band:2 },
   { slug:"imperative",          label:"Imperative (commands)",               weeks:[4],        band:2 },
