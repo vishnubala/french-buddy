@@ -305,23 +305,41 @@ function renderStep() {
   setNext();
 }
 
+/* Fisher–Yates shuffle (returns a new array). */
+function shuffleArr(a) {
+  const r = a.slice();
+  for (let i = r.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [r[i], r[j]] = [r[j], r[i]]; }
+  return r;
+}
+
 /* Shared multiple-choice primitive: renders ONE question (prompt + options +
    ok/no feedback) and calls onAnswered(isCorrect) after a choice. Used by BOTH
    the in-lesson recall step AND the diagnostic quiz — one MC renderer, never
-   forked (§2). Returns the .q node; the caller appends and owns flow. */
-function renderMCQuestion(q, onAnswered) {
+   forked (§2). Returns the .q node; the caller appends and owns flow.
+
+   `shuffle` is opt-in: the QUIZ passes true (so a correct answer isn't always in
+   the authored slot); LESSONS omit it and keep authored order. Correctness
+   travels WITH each option as a flag — we build [text, correct] pairs and grade
+   on the flag, NEVER on q.answer's index — so the correct-answer highlight and
+   the ok/no feedback always name the truly-correct option wherever it lands. */
+function renderMCQuestion(q, onAnswered, shuffle = false) {
   const wrap = document.createElement("div"); wrap.className = "q";
   const pr = document.createElement("div"); pr.className = "prompt"; pr.innerHTML = q.prompt; wrap.appendChild(pr);
   const opts = document.createElement("div"); opts.className = "opts";
   const fb = document.createElement("div"); fb.className = "fb";
-  q.opts.forEach((o, oi) => {
-    const btn = document.createElement("button"); btn.className = "opt"; btn.textContent = o;
+  let pairs = q.opts.map((o, oi) => ({ text: o, correct: oi === q.answer }));
+  if (shuffle) pairs = shuffleArr(pairs);
+  pairs.forEach(p => {
+    const btn = document.createElement("button"); btn.className = "opt"; btn.textContent = p.text;
     btn.onclick = () => {
       [...opts.children].forEach(c => c.disabled = true);
-      const isCorrect = oi === q.answer;
-      if (isCorrect) { btn.classList.add("correct"); fb.className = "fb ok"; fb.innerHTML = "✓ " + q.ok; }
-      else { btn.classList.add("wrong"); opts.children[q.answer].classList.add("correct"); fb.className = "fb no"; fb.innerHTML = "✗ " + q.no; }
-      onAnswered(isCorrect);
+      if (p.correct) { btn.classList.add("correct"); fb.className = "fb ok"; fb.innerHTML = "✓ " + q.ok; }
+      else {
+        btn.classList.add("wrong");
+        [...opts.children].forEach((c, ci) => { if (pairs[ci].correct) c.classList.add("correct"); });
+        fb.className = "fb no"; fb.innerHTML = "✗ " + q.no;
+      }
+      onAnswered(p.correct);
     };
     opts.appendChild(btn);
   });
@@ -332,6 +350,7 @@ function renderMCQuestion(q, onAnswered) {
 function renderRecall(s) {
   let answered = 0;
   s.questions.forEach(q => {
+    /* no shuffle — lessons keep authored option order */
     const node = renderMCQuestion(q, isCorrect => {
       attempts++; if (isCorrect) correct++;
       answered++; if (answered === s.questions.length) unlock();
@@ -473,7 +492,7 @@ function renderQuizItem() {
     nextBtn.className = "next";
     nextBtn.innerHTML = 'Continuer <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
     nextBtn.onclick = renderQuizItem;
-  });
+  }, true);   /* quiz path: shuffle option positions */
   stepEl.appendChild(node);
 
   nextBtn.disabled = true; nextBtn.className = "next"; nextBtn.innerHTML = "Choisis une réponse";
