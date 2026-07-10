@@ -212,15 +212,9 @@ const HAND = [
     ok:"past description → imparfait : il faisait beau.",
     no:"il faisait beau — imparfait for a past state; « il fait beau » is the present." },
 
-  /* pc_vs_imparfait — kept to two clean correct examples (full bank next session) */
-  { skill:"pc_vs_imparfait", diff:3, weeks:[11], prompt:"« I was sleeping when the phone rang » :",
-    opts:["je dormais / a sonné","j'ai dormi / sonnait","je dormais / sonnait","j'ai dormi / a sonné"], answer:0,
-    ok:"ongoing backdrop = imparfait (je dormais); the interrupting event = passé composé (a sonné).",
-    no:"The backdrop is imparfait (je dormais) and the single event is passé composé (a sonné)." },
-  { skill:"pc_vs_imparfait", diff:3, weeks:[11], prompt:"« Yesterday I visited the museum » (one finished event) :",
-    opts:["je visitais le musée","j'ai visité le musée","je vais visiter","je visite"], answer:1,
-    ok:"a single completed event → passé composé : j'ai visité.",
-    no:"One finished event → passé composé (j'ai visité); « je visitais » = was visiting / used to." },
+  /* pc_vs_imparfait — the flagship discrimination bank lives in PC_IMP_ITEMS
+     below (vetted, 20 items); it's spread into the export with its constant
+     tags, so it does NOT live here in HAND. */
 
   /* futur_proche */
   { skill:"futur_proche", diff:2, weeks:[10], prompt:"« We're going to eat » (on) :",
@@ -313,6 +307,100 @@ const HAND = [
     no:"They're identical : /mɑ̃ʒe/. The classic -é/-er/-ez trap." },
 ];
 
+/* ---------------------- flagship pc_vs_imparfait discrimination bank (vetted) */
+/* Wired VERBATIM — do not rewrite the items or their feedback. Each carries
+   the constant tags skill:"pc_vs_imparfait", diff:3, weeks:[8,9,11] via the
+   .map at the export. All band-3; answers balanced across both option slots. */
+const PC_IMP_ITEMS = [
+  { prompt:"Quand le téléphone a sonné, je ______ profondément. (dormir)",
+    opts:["dormais","ai dormi"], answer:0,
+    ok:"<b>dormais</b> — the sleeping was already ongoing (the background) when the phone rang. An action in progress → imparfait.",
+    no:"The sleeping is the backdrop already underway, interrupted by the ring → imparfait: <b>je dormais</b>. <em>j'ai dormi</em> would be one bounded, finished sleep." },
+  { prompt:"Nous marchions quand, tout à coup, il ______ à pleuvoir. (commencer)",
+    opts:["commençait","a commencé"], answer:1,
+    ok:"<b>a commencé</b> — <em>tout à coup</em> marks a sudden completed event breaking into the ongoing <em>nous marchions</em>. Sudden event → passé composé.",
+    no:"<em>tout à coup</em> signals a sharp completed event, not background → passé composé: <b>il a commencé</b>." },
+  { prompt:"Je lisais tranquillement quand quelqu'un ______ à la porte. (frapper)",
+    opts:["frappait","a frappé"], answer:1,
+    ok:"<b>a frappé</b> — the knock is the single completed event that interrupts the ongoing <em>je lisais</em>.",
+    no:"Reading is the background (imparfait <em>lisais</em>); the knock that cuts in is the completed event → <b>a frappé</b>." },
+  { prompt:"Quand j'étais petit, j'______ au parc tous les dimanches. (aller)",
+    opts:["allais","suis allé"], answer:0,
+    ok:"<b>allais</b> — <em>tous les dimanches</em> is a repeated childhood habit → imparfait. (<em>j'étais</em> is imparfait too — a past state.)",
+    no:"<em>tous les dimanches</em> is an open-ended habit, not one trip → imparfait: <b>j'allais</b>. <em>je suis allé</em> = a single visit." },
+  { prompt:"Dimanche dernier, je ______ au marché avec ma mère. (aller)",
+    opts:["allais","suis allé"], answer:1,
+    ok:"<b>suis allé</b> — <em>dimanche dernier</em> pins one specific completed trip → passé composé (aller takes être). Compare the habit <em>j'allais</em>.",
+    no:"<em>dimanche dernier</em> = one specific finished occasion → passé composé: <b>je suis allé(e)</b>." },
+  { prompt:"Tous les matins, elle ______ un croissant. (manger)",
+    opts:["mangeait","a mangé"], answer:0,
+    ok:"<b>mangeait</b> — <em>tous les matins</em> is a daily habit → imparfait.",
+    no:"A repeated daily habit → imparfait: <b>elle mangeait</b>. <em>elle a mangé</em> = one single time." },
+  { prompt:"Ce matin, elle ______ un croissant et un café. (manger)",
+    opts:["mangeait","a mangé"], answer:1,
+    ok:"<b>a mangé</b> — <em>ce matin</em> frames one completed breakfast → passé composé. Minimal pair with the habit <em>mangeait</em>.",
+    no:"<em>ce matin</em> = one specific finished action → passé composé: <b>elle a mangé</b>." },
+  { prompt:"La maison était calme et il ______ nuit. (faire)",
+    opts:["faisait","a fait"], answer:0,
+    ok:"<b>faisait</b> — setting the scene / describing a state (<em>il faisait nuit</em>) → imparfait.",
+    no:"Scene-setting description → imparfait: <b>il faisait nuit</b>, not the event-marking passé composé." },
+  { prompt:"Quand je suis entré, les enfants ______ contents. (être)",
+    opts:["étaient","ont été"], answer:0,
+    ok:"<b>étaient</b> — describing an ongoing state (how the children were) → imparfait. <em>je suis entré</em> is the completed event.",
+    no:"A description of a state → imparfait: <b>ils étaient</b>. The finished entry is <em>je suis entré</em>." },
+  { prompt:"Il ______ froid, alors j'ai mis un manteau. (faire)",
+    opts:["faisait","a fait"], answer:0,
+    ok:"<b>faisait</b> — the weather is the background state; <em>j'ai mis</em> is the completed reaction to it.",
+    no:"Weather as backdrop → imparfait: <b>il faisait froid</b>. The completed action is <em>j'ai mis un manteau</em>." },
+  { prompt:"Hier, je ______ à huit heures, puis j'ai pris le métro. (se lever)",
+    opts:["me levais","me suis levé"], answer:1,
+    ok:"<b>me suis levé</b> — a sequence of completed events (<em>puis j'ai pris</em>) moving forward → passé composé. Reflexives take être.",
+    no:"A chain of finished, ordered actions → passé composé: <b>je me suis levé(e)</b>." },
+  { prompt:"Elle est arrivée, elle ______ bonjour, et elle s'est assise. (dire)",
+    opts:["disait","a dit"], answer:1,
+    ok:"<b>a dit</b> — a series of single completed actions in sequence → passé composé throughout.",
+    no:"Sequenced completed events → passé composé: <b>elle a dit bonjour</b>. <em>disait</em> would be a habit." },
+  { prompt:"J'______ ce livre en deux jours. (lire)",
+    opts:["lisais","ai lu"], answer:1,
+    ok:"<b>ai lu</b> — <em>en deux jours</em> marks a completed action within a finished span → passé composé.",
+    no:"<em>en deux jours</em> = it got finished → passé composé: <b>j'ai lu</b>. Ongoing would be <em>je lisais</em>." },
+  { prompt:"Je ______ ce livre quand tu m'as appelé. (lire)",
+    opts:["lisais","ai lu"], answer:0,
+    ok:"<b>lisais</b> — the reading was in progress when the call interrupted → imparfait. Minimal pair with <em>j'ai lu en deux jours</em>.",
+    no:"Reading in progress, cut off by the call → imparfait: <b>je lisais</b>." },
+  { prompt:"Nous ______ trois fois à Paris cette année-là. (aller)",
+    opts:["allions","sommes allés"], answer:1,
+    ok:"<b>sommes allés</b> — a <em>counted, bounded</em> number of times (<em>trois fois</em>) is completed → passé composé, even though it repeated. Open-ended habits (<em>souvent</em>) take imparfait.",
+    no:"<em>trois fois</em> = a finished, countable number of occasions → passé composé: <b>nous sommes allés</b>. Only open-ended habits take imparfait." },
+  { prompt:"Pendant que je cuisinais, mon frère ______ la télé. (regarder)",
+    opts:["regardait","a regardé"], answer:0,
+    ok:"<b>regardait</b> — two ongoing actions at the same time (<em>pendant que je cuisinais</em>) → both imparfait.",
+    no:"Two simultaneous ongoing actions → imparfait: <b>il regardait</b>." },
+  { prompt:"Avant, les gens ______ des lettres; maintenant, ils envoient des e-mails. (écrire)",
+    opts:["écrivaient","ont écrit"], answer:0,
+    ok:"<b>écrivaient</b> — <em>avant</em> + a general past habit ('people used to write') → imparfait.",
+    no:"<em>Avant</em> + a habitual past truth → imparfait: <b>les gens écrivaient</b>. 'Used to' = imparfait." },
+  { prompt:"J'______ dix ans quand nous avons déménagé. (avoir)",
+    opts:["avais","ai eu"], answer:0,
+    ok:"<b>avais</b> — age is a background state → imparfait (<em>j'avais dix ans</em>); <em>nous avons déménagé</em> is the completed event.",
+    no:"Age = an ongoing past state → imparfait: <b>j'avais dix ans</b>. <em>j'ai eu</em> = 'I got/turned' at a point." },
+  { prompt:"Hier, mon ami ______ chez moi pour dîner. (venir)",
+    opts:["venait","est venu"], answer:1,
+    ok:"<b>est venu</b> — one completed visit pinned to <em>hier</em> → passé composé (venir takes être).",
+    no:"<em>hier</em> + one finished visit → passé composé: <b>il est venu</b>. <em>venait</em> = a repeated habit." },
+  { prompt:"Il faisait beau, les oiseaux chantaient, et soudain le ciel ______ noir. (devenir)",
+    opts:["devenait","est devenu"], answer:1,
+    ok:"<b>est devenu</b> — <em>soudain</em> marks a sudden completed change against the described backdrop (both <em>faisait</em>, <em>chantaient</em> imparfait) → passé composé (devenir takes être).",
+    no:"<em>soudain</em> = a sudden completed change → passé composé: <b>le ciel est devenu noir</b>. The surrounding description is imparfait." },
+];
+
 /* ------------------------------------------------------------------ export */
 /* Assign a stable id to every item (the engine tracks served/unserved by id). */
-export const QUIZ_BANK = [...generateLexical(), ...HAND].map((it, i) => ({ id: i, ...it }));
+const GENERATED = generateLexical();
+const PC_IMP = PC_IMP_ITEMS.map(it => ({ ...it, skill:"pc_vs_imparfait", diff:3, weeks:[8,9,11] }));
+const HAND_ALL = [...HAND, ...PC_IMP];
+export const QUIZ_BANK = [...GENERATED, ...HAND_ALL].map((it, i) => ({ id: i, ...it }));
+
+/* Exact source split, known at construction (no heuristic) — surfaced so the
+   dryrun harness can log it as a permanent bank regression line. */
+export const BANK_STATS = { total: QUIZ_BANK.length, generated: GENERATED.length, hand: HAND_ALL.length };
