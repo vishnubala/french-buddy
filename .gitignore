@@ -7,3 +7,6 @@ dist/
 !.env.example
 
 .DS_Store
+
+# Local preview-harness config (machine-specific dev-server port) — not shared.
+.claude/launch.json
