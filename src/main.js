@@ -5,7 +5,7 @@
    ===================================================================== */
 import "./styles.css";
 import { LESSONS } from "./lessons/index.mjs";
-import { completeLesson, isCompleted, registerItems, dueKeys, gradeItem, saveQuizResult, exportData, importData, validateImport } from "./storage.js";
+import { completeLesson, isCompleted, registerItems, dueKeys, gradeItem, saveQuizResult, appendQuizAttempt, getHistory, exportData, importData, validateImport } from "./storage.js";
 import { SKILL_BY_SLUG } from "./quiz/skills.mjs";
 import { QUIZ_BANK } from "./quiz/bank.mjs";
 import { createSession } from "./quiz/engine.mjs";
@@ -518,6 +518,17 @@ function renderEntrainementHome() {
 
   const list = document.createElement("div"); list.className = "practice";
 
+  /* Ma progression — read-only history of quiz attempts (not an exercise). */
+  const pcard = document.createElement("button"); pcard.className = "pcard";
+  const nAttempts = getHistory().length;
+  pcard.innerHTML =
+    `<span class="pcard-t">Ma progression</span>` +
+    `<span class="pcard-d">${nAttempts
+      ? "Ton évolution sur les quiz — score global et compétences dans le temps."
+      : "Ton évolution apparaîtra ici une fois un quiz terminé."}</span>`;
+  pcard.onclick = () => renderProgression();
+  list.appendChild(pcard);
+
   /* Reading comprehension — a separate practice module (not a quiz). Labelled
      honestly (§7): A1–A2 in the STYLE of a TEF reading task, NOT exam prep. */
   const rcard = document.createElement("button"); rcard.className = "pcard";
@@ -686,6 +697,14 @@ function renderQuizResults() {
     mode: quiz.meta.mode, at: Date.now(), overall: r.overall,
     perSkill: r.perSkill.map(s => ({ slug: s.slug, pct: s.pct, total: s.total })),
   });
+  /* Append a COMPACT trend record (same numbers as the screen below — reuse r,
+     don't recompute). Not the full per-question log. */
+  appendQuizAttempt({
+    at: new Date().toISOString(),
+    quiz: quiz.meta.mode,
+    overall: r.overall.pct,
+    skills: Object.fromEntries(r.perSkill.map(s => [s.slug, s.pct])),
+  });
 
   el("stationNum").textContent = "BILAN";
   el("lessonTitle").textContent = "Résultats — " + quiz.meta.label;
@@ -835,6 +854,110 @@ function renderReadingResults() {
   nextBtn.disabled = false; nextBtn.className = "next done";
   nextBtn.innerHTML = "Retour à l'entraînement";
   nextBtn.onclick = () => renderEntrainementHome();
+}
+
+/* =====================================================================
+   L'Entraînement · Ma progression — a READ-ONLY trend view over the quiz
+   results-history (storage.getHistory). No session, no MC engine; it renders
+   in the shared station surface (no forked renderer, §2) and draws its trend
+   with plain inline SVG (no charting dependency, §3). Diagnostic, not a
+   leaderboard — calm and factual.
+   ===================================================================== */
+
+const QUIZ_TITLES = { a1: "Quiz diagnostique · A1", a2: "Quiz diagnostique · A2", mega: "Quiz diagnostique · A1–A2 méga" };
+const QUIZ_ORDER = ["a1", "a2", "mega"];
+
+/* A tiny sparkline of overall %s (chronological, most-recent last). */
+function sparkline(vals) {
+  const w = 240, h = 46, pad = 6, n = vals.length;
+  const xs = i => n <= 1 ? w / 2 : pad + (i / (n - 1)) * (w - 2 * pad);
+  const ys = v => pad + (1 - v / 100) * (h - 2 * pad);
+  const pts = vals.map((v, i) => `${xs(i).toFixed(1)},${ys(v).toFixed(1)}`).join(" ");
+  const dots = vals.map((v, i) =>
+    `<circle cx="${xs(i).toFixed(1)}" cy="${ys(v).toFixed(1)}" r="${i === n - 1 ? 3.4 : 2}" class="${i === n - 1 ? "sl-last" : "sl-dot"}"/>`).join("");
+  const line = n > 1 ? `<polyline class="sl-line" points="${pts}"/>` : "";
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Évolution du score global">
+    <line class="sl-base" x1="${pad}" y1="${ys(0).toFixed(1)}" x2="${w - pad}" y2="${ys(0).toFixed(1)}"/>
+    ${line}${dots}</svg>`;
+}
+
+function deltaChip(d) {
+  if (d > 0) return `<span class="delta up">▲ +${d}</span>`;
+  if (d < 0) return `<span class="delta down">▼ ${d}</span>`;
+  return `<span class="delta flat">— 0</span>`;
+}
+
+function backToEntrainementBtn() {
+  nextBtn.disabled = false; nextBtn.className = "next done";
+  nextBtn.innerHTML = "Retour à l'entraînement";
+  nextBtn.onclick = () => renderEntrainementHome();
+}
+
+function renderProgression() {
+  appMode = "progress"; quiz = null; reading = null;
+  showControl(true);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  el("stationNum").textContent = "PROGRESSION";
+  el("lessonTitle").textContent = "Ma progression";
+  el("lessonDur").textContent = "historique des quiz";
+  el("platform").innerHTML = "";
+  stepEl.innerHTML = "";
+  stepEl.classList.remove("anim"); void stepEl.offsetWidth; stepEl.classList.add("anim");
+
+  const eb = document.createElement("div"); eb.className = "eyebrow"; eb.textContent = "Historique"; stepEl.appendChild(eb);
+  const h = document.createElement("h3"); h.textContent = "Ton évolution"; stepEl.appendChild(h);
+
+  const history = getHistory();
+  if (!history.length) {
+    const p = document.createElement("p"); p.className = "lede";
+    p.textContent = "Aucun résultat encore — termine un quiz pour voir ta progression.";
+    stepEl.appendChild(p);
+    backToEntrainementBtn();
+    return;
+  }
+
+  QUIZ_ORDER.forEach(id => {
+    const recs = history.filter(r => r.quiz === id);   /* chronological, recent last */
+    if (!recs.length) return;
+    const overalls = recs.map(r => r.overall);
+    const latest = overalls[overalls.length - 1];
+    const delta = latest - overalls[0];
+
+    const sub = document.createElement("div"); sub.className = "rsub";
+    sub.textContent = QUIZ_TITLES[id] || id;
+    stepEl.appendChild(sub);
+
+    const card = document.createElement("div"); card.className = "prog-card";
+    card.innerHTML =
+      `<div class="prog-head"><span class="prog-latest">${latest}%</span>` +
+      `<span class="prog-meta">${recs.length} tentative${recs.length > 1 ? "s" : ""}` +
+      (recs.length > 1 ? ` · depuis la 1<sup>re</sup> ${deltaChip(delta)}` : "") +
+      `</span></div><div class="prog-spark">${sparkline(overalls)}</div>`;
+    stepEl.appendChild(card);
+
+    /* per-skill: latest value + change vs its earliest recorded attempt */
+    const latestSkills = recs[recs.length - 1].skills || {};
+    const slugs = Object.keys(latestSkills).sort((a, b) => latestSkills[a] - latestSkills[b]);
+    if (slugs.length) {
+      const wrap = document.createElement("div"); wrap.className = "results prog-skills";
+      slugs.forEach(slug => {
+        const lv = latestSkills[slug];
+        const occ = recs.filter(r => r.skills && slug in r.skills).map(r => r.skills[slug]);
+        const d = occ.length > 1 ? lv - occ[0] : null;
+        const label = (SKILL_BY_SLUG[slug] || {}).label || slug;
+        const cls = lv >= 80 ? "hi" : lv >= 50 ? "mid" : "lo";
+        const row = document.createElement("div"); row.className = "rrow";
+        row.innerHTML =
+          `<div class="rhead"><span class="rlabel">${label}</span>` +
+          `<span class="rscore">${lv}%${d != null ? " " + deltaChip(d) : ""}</span></div>` +
+          `<div class="rbar"><div class="rfill ${cls}" style="width:${lv}%"></div></div>`;
+        wrap.appendChild(row);
+      });
+      stepEl.appendChild(wrap);
+    }
+  });
+
+  backToEntrainementBtn();
 }
 
 /* ---- boot: default to Le Cours, exactly today's experience ---- */

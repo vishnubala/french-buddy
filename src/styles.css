@@ -238,6 +238,24 @@ body[data-mode="entrainement"] .nav{display:none}
 .bk-status.confirm{color:var(--ink)}
 .bk-confirm-msg{font-family:"Newsreader",serif;font-size:15px;color:var(--ink);margin:0 0 10px}
 
+/* ---- Ma progression: read-only quiz trend ---- */
+.prog-card{background:var(--paper);border:1px solid var(--zinc-line);border-radius:12px;
+  padding:13px 15px;margin-bottom:12px}
+.prog-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.prog-latest{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:26px;color:var(--ink);line-height:1}
+.prog-meta{font-family:"Spline Sans Mono",monospace;font-size:11px;color:var(--ink-soft)}
+.prog-spark{width:100%}
+.spark{display:block;width:100%;max-width:260px;height:auto}
+.sl-base{stroke:var(--zinc-line);stroke-width:1}
+.sl-line{fill:none;stroke:var(--ink);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.sl-dot{fill:var(--ink-soft)}
+.sl-last{fill:var(--vert)}
+.delta{font-family:"Spline Sans Mono",monospace;font-size:10.5px;padding:1px 6px;border-radius:999px;margin-left:4px}
+.delta.up{color:var(--vert-deep);background:var(--paper-2);border:1px solid var(--vert)}
+.delta.down{color:var(--wrong);background:var(--paper-2);border:1px solid var(--wrong)}
+.delta.flat{color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--zinc-line)}
+.prog-skills{margin-bottom:6px}
+
 /* ---- reading passage (compréhension écrite): an intro/body block in a card ---- */
 .passage{background:var(--paper-2);border:1px solid var(--zinc-line);border-left:3px solid var(--gold);
   border-radius:11px;padding:14px 17px;margin:6px 0 20px}
