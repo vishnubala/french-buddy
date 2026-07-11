@@ -12,7 +12,39 @@ this conversation."
 
 ## [CURRENT PHASE]
 
-**NEW (this session): FIRST L'Entraînement practice module — READING
+**NEW (this session): EXPORT / IMPORT of learner progress — localStorage
+portability.** `src/storage.js` gains a versioned backup format as the SINGLE
+SOURCE OF TRUTH (results-history / future sync reuse it, no re-inventing):
+`exportData()` wraps the full store — lesson completion+streak, the Leitner SRS
+schedule, and the last quiz result — in
+`{ version:1, app:"french-buddy", exportedAt:<ISO>, data:{ progress, mastery, quiz } }`.
+`validateImport()` refuses (with clear French messages, WITHOUT touching storage)
+non-objects, foreign `app`, missing/non-integer version, `version<1`,
+`version>SCHEMA_VERSION` (newer file → "mets l'app à jour"), and dataless files;
+`importData()` validates first, then replaces the three stores — so a
+malformed/foreign file can never partially apply or corrupt existing state.
+Forward-compatible by design (a future version bumps `SCHEMA_VERSION` and adds
+fields without breaking v1). **UI: a "Sauvegarde de la progression" section on
+the L'Entraînement home** (a utility, NOT Le Cours chrome): **Exporter** →
+downloads `french-buddy-progress.json` via Blob+object URL (no server);
+**Importer** → file picker → parse+validate → **inline confirm** ("Ceci
+remplacera la progression… Continuer ?") because import overwrites → apply +
+`syncHeader()` so restored ✓/streak show at once; bad files show a clear
+non-destructive error. Reuses the home surface — no forked renderer (§2). Still
+**§3-pure: no backend, no accounts, no dependency.** **Verified for real:** node
+unit test of the format (correct wrapper; all 7 refusal cases; restore into a
+wiped store; malformed leaves state unchanged) AND a full browser run — completed
+Jour 01 + ran the A1 quiz (real streak/SRS/quiz-result), exported and inspected
+the file (version 1, real data, pretty-printed, filename correct), **wiped the
+store to simulate a fresh device and imported it back → completion, streak, 8 SRS
+items, and the a1 quiz result all restored and the Jour 1 nav ✓ reappeared**;
+garbage/foreign/`v99` imports each refused cleanly with storage byte-identical;
+the confirm CANCEL path applied nothing. Build green (22 modules); dryrun/counts
+unchanged. Committed in two focused commits (storage format; Entraînement UI) and
+pushed. (Screenshot subsystem hung on the lingering native file-picker at the
+end; DOM-level verification stood in — all functional checks passed.)
+
+**PREVIOUS session: FIRST L'Entraînement practice module — READING
 (Compréhension écrite, A1–A2, format TEF).** A new data module
 `src/reading/sets.mjs` holds **one reading set = 5 short French passages**
 (~51–64 words each: a note, a café menu, a rental ad, a formal email, a short
@@ -438,19 +470,19 @@ decisions, NOT new lessons. In rough priority:
    someone has to *listen*. Nothing ships to a real learner until this is
    done, and it also gates any B1/Block F work (§11.5). This is now the
    single biggest blocker; everything else is secondary.
-1b. **NEXT session (CONFIRMED with the person): export/import progress —
-   localStorage portability.** A downloadable JSON save + restore of the
-   localStorage store (streaks, Leitner SRS schedule, quiz results), §3-pure —
-   NO backend, NO accounts, NO new dependency. This makes progress portable
-   across devices/browsers (the stated non-goal was *automatic* sync, not manual
-   export). **THEN, on top of the now-exportable store: results-history** (per-
-   attempt quiz/reading history). Do results-history only AFTER export/import
-   lands, not before. — The TEF Reading practice module that used to sit here is
-   DONE (see phase note): first L'Entraînement module shipped this session.
+1b. **NEXT session: results-history.** Persist EACH quiz attempt (date, quiz
+   mode, overall %, per-skill scores) as an APPENDED array in the now-exportable
+   store — a new `fb.history.v1`-style key gathered through `storage.js`, added
+   to `exportData()`/`importData()`'s `data` blob (bump nothing — v1 can carry a
+   new optional section; a missing section already defaults cleanly on import).
+   Then a **"Progression" panel in L'Entraînement** showing the attempt history
+   (most recent first, sparkline/trend optional). Reuse the results/step surface
+   — do NOT fork a renderer (§2). Keep §3-pure (no backend/deps). — Export/import
+   (the prerequisite) is DONE this session; the TEF Reading module is DONE.
    SEPARATE standing review debt (grows, doesn't block the next build): the **7
    Claude-drafted mechanical quiz banks** (etre_avoir, present_verbs, reflexive,
    imparfait, futur_proche, imperative, prepositions — 78 items) AND the **15
-   new reading questions** are NOT native-reviewed; fold both into the §8.2
+   reading questions** are NOT native-reviewed; fold both into the §8.2
    listening/reading review gate before any real learner sees them.
 2. **Deploy decision** (Open Decision #1): GitHub Pages vs Netlify — keep
    both or disable GH Pages. Purely a "two URLs" call; no cost either way.
@@ -880,6 +912,32 @@ native review of all 12 weeks is still the hard gate.
   alongside the 7 mechanical quiz banks.** NEXT (confirmed with the person):
   export/import progress (localStorage portability), then results-history on the
   exportable store.
+- **Session (export/import progress — localStorage portability).** Added a
+  versioned backup format to `storage.js` as the single source of truth:
+  `exportData()` → `{ version:1, app:"french-buddy", exportedAt, data:{ progress,
+  mastery, quiz } }`; `validateImport()` (refuses non-object / foreign app /
+  missing-or-non-integer version / version<1 / version>SCHEMA_VERSION / no data,
+  each with a clear French message, without touching storage); `importData()`
+  (validate-then-replace, so a bad file never partially applies). Forward-compat
+  by design (future SCHEMA_VERSION bump + added fields won't break v1). UI: a
+  "Sauvegarde de la progression" section on the L'Entraînement home (Exporter →
+  Blob+objectURL download of french-buddy-progress.json; Importer → picker →
+  validate → inline confirm because it overwrites → apply + syncHeader refresh;
+  clear non-destructive error on bad files). Reused the home surface, no forked
+  renderer (§2); NOT added to Le Cours chrome. §3-pure (no backend/accounts/deps).
+  Verified for real: node unit test (wrapper shape; all 7 refusal cases; restore
+  into wiped store; malformed leaves state byte-unchanged) AND a full browser
+  run (completed Jour 01 + ran the A1 quiz for real progress; exported+inspected
+  the file; wiped the store to fake a fresh device and imported it back →
+  completion/streak/8 SRS items/a1 quiz result all restored + Jour 1 nav ✓
+  reappeared; garbage/foreign/v99 files each refused with storage intact; confirm
+  CANCEL applied nothing). Build green (22 modules); dryrun/counts unchanged.
+  Committed in two focused commits (storage format; Entraînement UI) and pushed.
+  Did NOT add a backend/accounts/sync, fork renderers, build results-history,
+  touch B1/Block F, or add deps. NEXT: results-history (append each quiz attempt
+  to the exportable store + a Progression panel in L'Entraînement). Note: the
+  browser screenshot tool hung on the lingering native file-picker at the very
+  end — used DOM-level verification instead; all functional checks passed.
 
 ---
 
