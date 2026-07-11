@@ -89,3 +89,76 @@ export function gradeItem(key, knew) {
    learner keeps their last per-skill picture. No accounts, no server. */
 export function saveQuizResult(res) { save(QUIZ_KEY, res); }
 export function getQuizResult() { return load(QUIZ_KEY, null); }
+
+/* ---------------- export / import (localStorage portability) ----------------
+   §3-pure: no backend, no accounts, no sync. This is the SINGLE SOURCE OF TRUTH
+   for the on-disk backup format, so results-history and any future sync reuse
+   it rather than re-inventing a wrapper.
+
+   Wrapper shape (versioned so a FUTURE version can add fields without breaking
+   a v1 import):
+     { version:1, app:"french-buddy", exportedAt:<ISO>, data:{ progress, mastery, quiz } }
+
+   Forward-compat rules:
+   - A reader accepts any file whose version it KNOWS (<= SCHEMA_VERSION here).
+   - A file from a NEWER version is refused cleanly (we can't guarantee we
+     understand its data) — never partially applied.
+   - Unknown extra fields inside `data` are carried through untouched, so a
+     newer file round-trips through an older reader's data sections without loss
+     of the sections it does understand. */
+
+const APP_ID = "french-buddy";
+const SCHEMA_VERSION = 1;   /* bump when the wrapper/data shape changes */
+
+/* Build the full backup object. Pure read — touches no state. */
+export function exportData() {
+  return {
+    version: SCHEMA_VERSION,
+    app: APP_ID,
+    exportedAt: new Date().toISOString(),
+    data: {
+      progress: getProgress(),
+      mastery: getMastery(),
+      quiz: getQuizResult(),
+    },
+  };
+}
+
+const isPlainObject = o => o != null && typeof o === "object" && !Array.isArray(o);
+
+/* Validate a parsed backup object WITHOUT touching storage.
+   Returns { ok:true, version, data } or { ok:false, error:<message> }.
+   Messages are user-facing (French, to match the UI chrome). */
+export function validateImport(obj) {
+  if (!isPlainObject(obj))
+    return { ok: false, error: "Fichier invalide : ce n'est pas un fichier de progression." };
+  if (obj.app !== APP_ID)
+    return { ok: false, error: "Ce fichier n'est pas un fichier de progression French Buddy." };
+  if (!Number.isInteger(obj.version))
+    return { ok: false, error: "Fichier invalide : version manquante ou illisible." };
+  if (obj.version < 1)
+    return { ok: false, error: "Version de fichier non reconnue." };
+  if (obj.version > SCHEMA_VERSION)
+    return { ok: false, error: `Ce fichier vient d'une version plus récente (v${obj.version}). Mets l'application à jour, puis réessaie.` };
+  if (!isPlainObject(obj.data))
+    return { ok: false, error: "Ce fichier ne contient aucune progression à restaurer." };
+  return { ok: true, version: obj.version, data: obj.data };
+}
+
+/* Validate, then REPLACE the local stores. Returns { ok:true } or
+   { ok:false, error }. On any validation failure nothing is written, so a
+   malformed/foreign file can never corrupt or partially overwrite existing
+   progress. Missing sections fall back to empty defaults so a restore never
+   leaves a half-old / half-new mix. */
+export function importData(obj) {
+  const v = validateImport(obj);
+  if (!v.ok) return v;
+  const d = v.data;
+  const progress = isPlainObject(d.progress) ? d.progress : { completed: {}, streak: 0, lastDay: null };
+  const mastery  = isPlainObject(d.mastery)  ? d.mastery  : {};
+  const quiz     = d.quiz ?? null;
+  save(PROGRESS_KEY, progress);
+  save(MASTERY_KEY, mastery);
+  save(QUIZ_KEY, quiz);
+  return { ok: true };
+}
