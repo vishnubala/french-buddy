@@ -195,15 +195,30 @@
 .wk .lk{margin-left:4px;font-size:9px;opacity:.7}
 .days{display:flex;gap:8px;flex-wrap:wrap}
 
-/* ---- diagnostic quiz launcher + results ---- */
-.quizbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:3px;
-  border-top:1px dashed var(--zinc);padding-top:10px}
-.qlabel{font-family:"Spline Sans Mono",monospace;font-size:10px;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--ink-soft);margin-right:2px}
-.qbtn{font-family:"Spline Sans Mono",monospace;font-size:11px;letter-spacing:.04em;padding:5px 12px;
-  border-radius:999px;border:1px solid var(--gold);background:var(--paper-2);color:#8a6410;
+/* ---- two-axis mode switch (Le Cours | L'Entraînement) ---- */
+.modeswitch{display:inline-flex;gap:4px;padding:4px;margin:2px 0 4px;border-radius:999px;
+  background:var(--paper-2);border:1px solid var(--zinc-line)}
+.modebtn{font-family:"Spline Sans Mono",monospace;font-size:11px;letter-spacing:.06em;
+  padding:6px 16px;border-radius:999px;border:1px solid transparent;background:transparent;
+  color:var(--ink-soft);cursor:pointer;transition:all .12s ease}
+.modebtn:hover{color:var(--ink)}
+.modebtn.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* course-only chrome: hidden in L'Entraînement */
+body[data-mode="entrainement"] .line,
+body[data-mode="entrainement"] .line-meta,
+body[data-mode="entrainement"] .nav{display:none}
+
+/* ---- L'Entraînement landing: practice entries ---- */
+.practice{display:flex;flex-direction:column;gap:11px;margin-top:6px}
+.pcard{display:flex;flex-direction:column;gap:5px;text-align:left;width:100%;
+  background:var(--paper);border:1px solid var(--zinc-line);border-radius:13px;padding:15px 17px;
   cursor:pointer;transition:all .12s ease}
-.qbtn:hover{background:var(--gold);color:#fff}
+.pcard:hover{border-color:var(--gold);transform:translateY(-1px)}
+.pcard-t{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:16px;color:var(--ink)}
+.pcard-d{font-family:"Newsreader",serif;font-size:14px;color:var(--ink-soft)}
+
+/* ---- diagnostic quiz results ---- */
 
 .rsub{font-family:"Spline Sans Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
   color:var(--ink-soft);margin:20px 0 10px}

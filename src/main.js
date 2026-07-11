@@ -96,8 +96,11 @@ let lesson = LESSONS[lessonIndex];
 let stepIndex = 0;
 let stepDone = new Array(lesson.steps.length).fill(false);
 let correct = 0, attempts = 0;
-let appMode = "lesson";   /* "lesson" | "quiz" — the step surface is shared */
+let appMode = "lesson";   /* "lesson" | "quiz" | "home" — what the STATION shows */
 let quiz = null;          /* active diagnostic session (see src/quiz/) */
+let mode = "cours";       /* TOP-LEVEL axis: "cours" | "entrainement". Chooses
+                             which nav chrome + station content renders. The
+                             course keeps its lessonIndex/stepIndex either way. */
 
 const el = id => document.getElementById(id);
 const stepEl = el("step"), nextBtn = el("nextBtn");
@@ -187,10 +190,14 @@ function switchLesson(i) {
   syncHeader(); renderStep();
 }
 
-/* Jump straight to a given day's lesson (used by results "revisit" links). */
+/* Jump straight to a given day's lesson (used by results "revisit" links).
+   Revisit links live in the quiz results, i.e. inside L'Entraînement — following
+   one takes the learner into Le Cours at that day. */
 function navigateToDay(day) {
   const i = LESSONS.findIndex(L => L.day === day);
-  if (i >= 0) switchLesson(i);
+  if (i < 0) return;
+  if (mode !== "cours") { mode = "cours"; document.body.dataset.mode = "cours"; renderModeSwitch(); }
+  switchLesson(i);
 }
 
 function renderPlatform() {
@@ -215,6 +222,7 @@ function sayBtn(text, key, slow) {
 
 /* ---- the ONE renderer ---- */
 function renderStep() {
+  showControl(true);
   const s = lesson.steps[stepIndex];
   stepEl.innerHTML = "";
   stepEl.classList.remove("anim"); void stepEl.offsetWidth; stepEl.classList.add("anim");
@@ -444,26 +452,82 @@ function advance() {
 }
 
 /* =====================================================================
-   DIAGNOSTIC QUIZ — renders in the shared step surface, drives #nextBtn.
-   Logic lives in src/quiz/ (data + engine); this is only the rendering,
-   and it reuses renderMCQuestion — the same MC primitive as recall (§2).
+   TWO-AXIS NAV — a top-level switch between Le Cours (the linear course) and
+   L'Entraînement (the practice home). `mode` chooses the nav chrome + station
+   content; it does NOT fork the lesson / quiz / step / MC renderers (§2). CSS
+   hides the course-only chrome (rail, line-meta, nav) when data-mode is
+   entrainement. The course keeps its lessonIndex/stepIndex across switches.
    ===================================================================== */
 
-const QUIZ_MODES = [["a1", "A1"], ["a2", "A2"], ["mega", "A1–A2"]];
+const MODES = [["cours", "Le Cours"], ["entrainement", "L'Entraînement"]];
 
-function renderQuizBar() {
-  const bar = el("quizbar"); if (!bar) return;
-  bar.innerHTML = '<span class="qlabel">Quiz diagnostique</span>';
-  QUIZ_MODES.forEach(([m, txt]) => {
-    const b = document.createElement("button"); b.className = "qbtn"; b.textContent = txt;
-    b.onclick = () => launchQuiz(m);
+/* Practice entries — the 3 diagnostic quizzes, relocated here from the old
+   temporary quiz bar. The quizzes themselves render exactly as before. */
+const PRACTICE = [
+  ["a1",   "Quiz diagnostique · A1",        "Les compétences des semaines 1–7. Adaptatif, sans minuteur."],
+  ["a2",   "Quiz diagnostique · A2",        "Semaines 8–12, plus les bases A1 sur lesquelles elles reposent."],
+  ["mega", "Quiz diagnostique · A1–A2 méga","Toutes les compétences — le bilan diagnostique complet."],
+];
+
+const control = el("control");
+function showControl(on) { if (control) control.style.display = on ? "" : "none"; }
+
+function renderModeSwitch() {
+  const bar = el("modeswitch"); if (!bar) return;
+  bar.innerHTML = "";
+  MODES.forEach(([m, label]) => {
+    const b = document.createElement("button");
+    b.className = "modebtn" + (m === mode ? " on" : "");
+    b.textContent = label;
+    b.onclick = () => setMode(m);
     bar.appendChild(b);
   });
 }
 
-function launchQuiz(mode) {
+function setMode(m) {
+  if (m === mode) return;
+  mode = m;
+  document.body.dataset.mode = m;
+  renderModeSwitch();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (m === "cours") {
+    /* restore the course exactly where it was — position was never touched */
+    appMode = "lesson"; quiz = null;
+    syncHeader(); renderStep();
+  } else {
+    renderEntrainementHome();
+  }
+}
+
+/* L'Entraînement landing: a list of practice entries in the shared station
+   surface. No rail (hidden via data-mode), no bottom control. */
+function renderEntrainementHome() {
+  appMode = "home"; quiz = null;
+  showControl(false);
+  el("stationNum").textContent = "ENTRAÎNEMENT";
+  el("lessonTitle").textContent = "L'Entraînement";
+  el("lessonDur").textContent = "choisis un exercice";
+  el("platform").innerHTML = "";
+  stepEl.innerHTML = "";
+  stepEl.classList.remove("anim"); void stepEl.offsetWidth; stepEl.classList.add("anim");
+
+  const eb = document.createElement("div"); eb.className = "eyebrow"; eb.textContent = "Exercices"; stepEl.appendChild(eb);
+  const h = document.createElement("h3"); h.textContent = "Teste-toi"; stepEl.appendChild(h);
+
+  const list = document.createElement("div"); list.className = "practice";
+  PRACTICE.forEach(([m, title, desc]) => {
+    const card = document.createElement("button"); card.className = "pcard";
+    card.innerHTML = `<span class="pcard-t">${title}</span><span class="pcard-d">${desc}</span>`;
+    card.onclick = () => launchQuiz(m);
+    list.appendChild(card);
+  });
+  stepEl.appendChild(list);
+}
+
+function launchQuiz(qmode) {
   appMode = "quiz";
-  quiz = createSession(mode, QUIZ_BANK);
+  quiz = createSession(qmode, QUIZ_BANK);
+  showControl(true);
   window.scrollTo({ top: 0, behavior: "smooth" });
   el("stationNum").textContent = "QUIZ";
   el("lessonTitle").textContent = quiz.meta.label;
@@ -562,10 +626,12 @@ function renderQuizResults() {
   stepEl.appendChild(weeks);
 
   nextBtn.disabled = false; nextBtn.className = "next done";
-  nextBtn.innerHTML = "Retour aux leçons";
-  nextBtn.onclick = () => switchLesson(lessonIndex);
+  nextBtn.innerHTML = "Retour à l'entraînement";
+  nextBtn.onclick = () => renderEntrainementHome();
 }
 
-renderQuizBar();
+/* ---- boot: default to Le Cours, exactly today's experience ---- */
+document.body.dataset.mode = mode;   /* "cours" */
+renderModeSwitch();
 syncHeader();
 renderStep();
