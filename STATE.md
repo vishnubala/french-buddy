@@ -12,7 +12,37 @@ this conversation."
 
 ## [CURRENT PHASE]
 
-**NEW (this session): RESULTS-HISTORY — every quiz attempt logged + a "Ma
+**NEW (this session): READING LIBRARY — leveled A1/A2 sets (4 sets, 19
+passages).** The reading module (`src/reading/sets.mjs`) grew from one 5-passage
+set into a leveled library: **two levels × two themed sets each** — A1 "Vie
+quotidienne" (5) + "En ville & services" (5), A2 "Messages & projets" (5) +
+"Découvertes & avis" (4) — **19 passages / 57 comprehension questions** total,
+same `{prompt,opts,answer,ok,no}` shape and the SAME `renderMCQuestion` shuffle
+path (no forked renderer, no new question type, §2). **Leveling held for accuracy
+(§8.4):** A1 = present tense only (+ A1 imperative / `il y a` / aller-as-motion),
+~42–64 words, notes/menus/signs/ads; A2 = present + passé composé + futur proche
++ imparfait, ~71–86 words (two reused legacy passages shorter), emails/articles/
+reviews/bios/itineraries. **The original 5 passages fold in verbatim, each placed
+by its ACTUAL grammar level** — present-only (menu/bio/studio) → A1; futur proche
+& passé composé (note/email) → A2 — so no A2 grammar leaks into A1 (verified by a
+structural scan). **Honest scope unchanged (§7):** still "niveau A1–A2, format
+TEF" with the explicit "Ce n'est pas une préparation à l'examen TEF" disclaimer;
+no real-exam claim. **UI:** the reading entry now leads to a level pick (A1/A2) →
+set pick → set run (landing screens on the shared surface with an in-surface back
+link; the run is unchanged: passage → shuffled questions → "Texte suivant" →
+end-of-set score, + an "Autres séries" link on results). Reading stays NOT
+skill-tagged. **Verified for real:** build green (22 modules), dryrun/counts
+unchanged, bank 848 unchanged; a structural check (all passages within their
+level's word band, every Q 3 opts + answer in range, no dup options, no dup
+passage ids, **0 real A1 grammar leaks**); and a browser run — level→set pick
+renders, an **A1 set (15/15) and an A2 set (15/15) each ran end to end with the
+correct answer landing in all 3 shuffled positions**, the original note+email
+passages present in the A2 set, "Retour à l'entraînement" returns home, Le Cours
+untouched, zero console errors. **The 19 reading passages are Claude-drafted and
+NOT native-reviewed** — folded into the §8.2 review debt. Two focused commits
+(reading data; level+set pick UI) pushed.
+
+**PREVIOUS session: RESULTS-HISTORY — every quiz attempt logged + a "Ma
 progression" trend panel.** `storage.js` gains `fb.history.v1`: a COMPACT
 per-attempt trend log (NOT the full question log), one record
 `{ at:<ISO>, quiz:"a1"|"a2"|"mega", overall:<int %>, skills:{ <slug>:<int %> } }`
@@ -503,11 +533,11 @@ decisions, NOT new lessons. In rough priority:
    single biggest blocker; everything else is secondary.
 1b. **NEXT session: OPEN — L'Entraînement is now feature-complete for A1–A2.**
    The practice side now has: 3 diagnostic quizzes (19-skill adaptive engine +
-   runtime shuffle), the TEF-format Reading module, results-history + the "Ma
-   progression" trend panel, and full localStorage export/import portability.
-   There is no obvious "next small unit" on the Entraînement side — the next real
-   moves are FORKS, each gated on a person-level decision AND the standing §8.2
-   native review:
+   runtime shuffle), the **leveled TEF-format Reading library (A1/A2, 4 sets, 19
+   passages)**, results-history + the "Ma progression" trend panel, and full
+   localStorage export/import portability. There is no obvious "next small unit"
+   on the Entraînement side — the next real moves are FORKS, each gated on a
+   person-level decision AND the standing §8.2 native review:
      - **TEF Writing** — self-assessment/rubric UI vs. needing a backend to grade
        (leans toward self-assess to stay §3-pure); decide the shape first.
      - **Listening comprehension** — a NEW step type (audio prompt → MC), the
@@ -518,9 +548,10 @@ decisions, NOT new lessons. In rough priority:
    Pick one WITH the person; don't self-select a fork.
    SEPARATE standing review debt (grows, doesn't block a build): the **7
    Claude-drafted mechanical quiz banks** (etre_avoir, present_verbs, reflexive,
-   imparfait, futur_proche, imperative, prepositions — 78 items) AND the **15
-   reading questions** are NOT native-reviewed; fold both into the §8.2
-   listening/reading review gate before any real learner sees them.
+   imparfait, futur_proche, imperative, prepositions — 78 items) AND the **19
+   reading passages / 57 questions** (was 15 — the reading library grew this
+   session) are NOT native-reviewed; fold both into the §8.2 listening/reading
+   review gate before any real learner sees them.
 2. **Deploy decision** (Open Decision #1): GitHub Pages vs Netlify — keep
    both or disable GH Pages. Purely a "two URLs" call; no cost either way.
 3. **Optional polish passes** (only if the person wants them), each its own
@@ -1000,6 +1031,34 @@ native review of all 12 weeks is still the hard gate.
   / B1 Block F), each gated on a person decision + the §8.2 native review. Note:
   the browser screenshot tool hung repeatedly this session (not just on a file
   dialog) — verified via DOM/eval instead; all functional checks passed.
+- **Session (reading library — leveled A1/A2 sets).** Grew `src/reading/sets.mjs`
+  from one 5-passage set into a leveled library: 2 levels × 2 themed sets (A1
+  "Vie quotidienne" 5 + "En ville & services" 5; A2 "Messages & projets" 5 +
+  "Découvertes & avis" 4) = 19 passages / 57 questions, same
+  `{prompt,opts,answer,ok,no}` shape and the same renderMCQuestion shuffle path
+  (no forked renderer/new type, §2). Held leveling for accuracy (§8.4): A1 =
+  present only (~42–64w, notes/menus/signs/ads); A2 = present+PC+futur proche+
+  imparfait (~71–86w, emails/articles/reviews/bios/itineraries). The original 5
+  passages fold in verbatim, each placed by ACTUAL grammar level (present →A1:
+  menu/bio/studio; futur proche & PC →A2: note/email) so no A2 grammar leaks
+  into A1. Honest scope unchanged (§7): "niveau A1–A2, format TEF" + the
+  "pas une préparation à l'examen TEF" disclaimer. UI: reading entry → level pick
+  (A1/A2) → set pick → set run (landing screens on the shared surface w/ an
+  in-surface back link; run unchanged; "Autres séries" on results). Reading stays
+  NOT skill-tagged. Verified: build green (22 modules), dryrun/counts unchanged,
+  bank 848 unchanged; a structural scan (word bands, 3 opts, answers in range, no
+  dup options, no dup passage ids, 0 real A1 grammar leaks — one flagged item was
+  a regex false positive on "ligne A jusqu…", confirmed present-tense); a browser
+  run (level→set pick renders; an A1 set 15/15 and an A2 set 15/15 each ran end
+  to end with the correct answer landing in all 3 shuffled positions; original
+  note+email present in the A2 set; Retour returns home; Le Cours untouched; zero
+  console errors). Two focused commits (data; level+set pick UI) pushed. Did NOT
+  claim real TEF prep, start B1/Block F, fork renderers, skill-tag reading, or add
+  deps. The 19 reading passages are Claude-drafted, still owed the §8.2 native
+  pass (logged with the 7 mechanical quiz banks). **L'Entraînement remains
+  feature-complete for A1–A2; NEXT stays OPEN** (forks: TEF Writing / Listening
+  step type / B1 Block F — B1 HARD-gated behind native review of Weeks 1–2).
+  Note: the browser screenshot tool again hung — verified via DOM/eval instead.
 
 ---
 
