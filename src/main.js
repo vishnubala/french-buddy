@@ -529,14 +529,14 @@ function renderEntrainementHome() {
   pcard.onclick = () => renderProgression();
   list.appendChild(pcard);
 
-  /* Reading comprehension — a separate practice module (not a quiz). Labelled
-     honestly (§7): A1–A2 in the STYLE of a TEF reading task, NOT exam prep. */
+  /* Reading comprehension — a leveled library (not a quiz). Labelled honestly
+     (§7): A1–A2 in the STYLE of a TEF reading task, NOT exam prep. */
   const rcard = document.createElement("button"); rcard.className = "pcard";
   rcard.innerHTML =
     `<span class="pcard-t">${READING.label} <span class="pbadge">${READING.format}</span></span>` +
-    `<span class="pcard-d">Lis un texte court et réponds aux questions. ` +
-    `Ce n'est pas une préparation à l'examen&nbsp;TEF.</span>`;
-  rcard.onclick = () => launchReading();
+    `<span class="pcard-d">Choisis un niveau et une série, puis lis les textes et réponds. ` +
+    `${READING.disclaimer}</span>`;
+  rcard.onclick = () => renderReadingLevels();
   list.appendChild(rcard);
 
   PRACTICE.forEach(([m, title, desc]) => {
@@ -768,37 +768,99 @@ function renderQuizResults() {
 }
 
 /* =====================================================================
-   L'Entraînement · Compréhension écrite — a reading SET run. Each screen shows
-   one short passage (rendered like an intro/body block) + its 2–4 comprehension
-   questions via renderMCQuestion WITH shuffle — the SAME MC path the quiz uses,
-   never forked (§2). Reading isn't skill-tagged, so the end screen is a plain
-   score, not the per-skill diagnostic surface.
+   L'Entraînement · Compréhension écrite — a LEVELED reading library. The entry
+   leads to a level pick (A1 / A2) → a set pick → a set run. A set run shows each
+   passage (rendered like an intro/body block) + its 2–4 comprehension questions
+   via renderMCQuestion WITH shuffle — the SAME MC path the quiz uses, never
+   forked (§2). Reading isn't skill-tagged, so the end screen is a plain score.
 
    HONEST SCOPE (§7): labelled "niveau A1–A2, format TEF" — A1–A2 reading in the
    STYLE of a TEF task, NOT preparation for the actual (A1–C2) TEF exam. Content
    is Claude-drafted and NOT native-reviewed (folds into the §8.2 review gate). */
 
-function launchReading() {
+/* Small in-surface back control for the pick screens (no bottom bar). */
+function backLink(label, onClick) {
+  const b = document.createElement("button"); b.className = "backlink";
+  b.innerHTML = "‹ " + label; b.onclick = onClick;
+  stepEl.appendChild(b);
+}
+
+function readingHead(stationLabel, title, dur) {
+  el("stationNum").textContent = stationLabel;
+  el("lessonTitle").textContent = title;
+  el("lessonDur").textContent = dur;
+  el("platform").innerHTML = "";
+  stepEl.innerHTML = "";
+  stepEl.classList.remove("anim"); void stepEl.offsetWidth; stepEl.classList.add("anim");
+}
+
+/* Level pick (A1 / A2) — a landing like the Entraînement home. */
+function renderReadingLevels() {
+  appMode = "home"; quiz = null; reading = null;
+  showControl(false);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  readingHead("LECTURE", READING.label, READING.format);
+
+  backLink("L'Entraînement", () => renderEntrainementHome());
+  const eb = document.createElement("div"); eb.className = "eyebrow"; eb.textContent = "Compréhension écrite"; stepEl.appendChild(eb);
+  const h = document.createElement("h3"); h.textContent = "Choisis ton niveau"; stepEl.appendChild(h);
+  const note = document.createElement("p"); note.className = "bk-note"; note.textContent = READING.disclaimer; stepEl.appendChild(note);
+
+  const list = document.createElement("div"); list.className = "practice";
+  READING.levels.forEach(lv => {
+    const nPass = lv.sets.reduce((n, s) => n + s.passages.length, 0);
+    const card = document.createElement("button"); card.className = "pcard";
+    card.innerHTML =
+      `<span class="pcard-t">${lv.label} <span class="pbadge">${lv.sets.length} séries · ${nPass} textes</span></span>` +
+      `<span class="pcard-d">${lv.blurb}</span>`;
+    card.onclick = () => renderReadingSets(lv);
+    list.appendChild(card);
+  });
+  stepEl.appendChild(list);
+}
+
+/* Set pick within a level. */
+function renderReadingSets(lv) {
+  appMode = "home"; quiz = null; reading = null;
+  showControl(false);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  readingHead("LECTURE", READING.label, lv.label);
+
+  backLink("Niveaux", () => renderReadingLevels());
+  const eb = document.createElement("div"); eb.className = "eyebrow"; eb.textContent = lv.label; stepEl.appendChild(eb);
+  const h = document.createElement("h3"); h.textContent = "Choisis une série"; stepEl.appendChild(h);
+
+  const list = document.createElement("div"); list.className = "practice";
+  lv.sets.forEach(set => {
+    const card = document.createElement("button"); card.className = "pcard";
+    card.innerHTML =
+      `<span class="pcard-t">${set.title} <span class="pbadge">${set.passages.length} textes</span></span>` +
+      `<span class="pcard-d">${set.theme}</span>`;
+    card.onclick = () => launchReadingSet(lv, set);
+    list.appendChild(card);
+  });
+  stepEl.appendChild(list);
+}
+
+function launchReadingSet(lv, set) {
   appMode = "reading";
-  reading = { pi: 0, correct: 0, total: 0 };
+  reading = { level: lv, set, pi: 0, correct: 0, total: 0 };
   showControl(true);
   window.scrollTo({ top: 0, behavior: "smooth" });
-  el("stationNum").textContent = "LECTURE";
-  el("lessonTitle").textContent = READING.label;
-  el("lessonDur").textContent = READING.format;
-  el("platform").innerHTML = "";
+  readingHead("LECTURE", set.title, lv.label + " · format TEF");
   renderReadingItem();
 }
 
 function renderReadingItem() {
   if (appMode !== "reading") return;
-  const p = READING.passages[reading.pi];
+  const passages = reading.set.passages;
+  const p = passages[reading.pi];
   if (!p) { renderReadingResults(); return; }
   stepEl.innerHTML = "";
   stepEl.classList.remove("anim"); void stepEl.offsetWidth; stepEl.classList.add("anim");
 
   const eb = document.createElement("div"); eb.className = "eyebrow";
-  eb.textContent = p.type + " · texte " + (reading.pi + 1) + " / " + READING.passages.length;
+  eb.textContent = p.type + " · texte " + (reading.pi + 1) + " / " + passages.length;
   stepEl.appendChild(eb);
   const h = document.createElement("h3"); h.textContent = p.title; stepEl.appendChild(h);
 
@@ -823,7 +885,7 @@ function renderReadingItem() {
 }
 
 function unlockReadingNext() {
-  const last = reading.pi === READING.passages.length - 1;
+  const last = reading.pi === reading.set.passages.length - 1;
   nextBtn.disabled = false; nextBtn.className = "next";
   nextBtn.innerHTML = last
     ? 'Voir le résultat <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
@@ -833,14 +895,10 @@ function unlockReadingNext() {
 
 function renderReadingResults() {
   const pct = reading.total ? Math.round(reading.correct / reading.total * 100) : 0;
-  el("stationNum").textContent = "BILAN";
-  el("lessonTitle").textContent = "Résultats — " + READING.label;
-  el("lessonDur").textContent = "";
-  el("platform").innerHTML = "";
-  stepEl.innerHTML = "";
-  stepEl.classList.remove("anim"); void stepEl.offsetWidth; stepEl.classList.add("anim");
+  const lv = reading.level;
+  readingHead("BILAN", "Résultats — " + reading.set.title, "");
 
-  const eb = document.createElement("div"); eb.className = "eyebrow"; eb.textContent = "Compréhension écrite"; stepEl.appendChild(eb);
+  const eb = document.createElement("div"); eb.className = "eyebrow"; eb.textContent = "Compréhension écrite · " + lv.label; stepEl.appendChild(eb);
   const h = document.createElement("h3");
   h.textContent = `Score : ${reading.correct} / ${reading.total} · ${pct}%`;
   stepEl.appendChild(h);
@@ -850,6 +908,9 @@ function renderReadingResults() {
                 : pct >= 50 ? "Pas mal. Relis les textes où tu as hésité, puis recommence."
                             : "Continue — relis chaque texte lentement, phrase par phrase.";
   stepEl.appendChild(msg);
+
+  /* offer another set at the same level without leaving the reading section */
+  backLink("Autres séries de " + lv.label, () => renderReadingSets(lv));
 
   nextBtn.disabled = false; nextBtn.className = "next done";
   nextBtn.innerHTML = "Retour à l'entraînement";

@@ -256,6 +256,12 @@ body[data-mode="entrainement"] .nav{display:none}
 .delta.flat{color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--zinc-line)}
 .prog-skills{margin-bottom:6px}
 
+/* ---- reading library: back link on the pick screens ---- */
+.backlink{font-family:"Spline Sans Mono",monospace;font-size:11px;letter-spacing:.04em;
+  background:transparent;border:none;color:var(--ink-soft);cursor:pointer;padding:2px 0;margin-bottom:10px;
+  transition:color .12s ease}
+.backlink:hover{color:var(--ink)}
+
 /* ---- reading passage (compréhension écrite): an intro/body block in a card ---- */
 .passage{background:var(--paper-2);border:1px solid var(--zinc-line);border-left:3px solid var(--gold);
   border-radius:11px;padding:14px 17px;margin:6px 0 20px}
