@@ -12,6 +12,41 @@ this conversation."
 
 ## [CURRENT PHASE]
 
+**NEW (this session): FIRST L'Entraînement practice module — READING
+(Compréhension écrite, A1–A2, format TEF).** A new data module
+`src/reading/sets.mjs` holds **one reading set = 5 short French passages**
+(~51–64 words each: a note, a café menu, a rental ad, a formal email, a short
+bio — realistic TEF-style text types) each with **3 MC comprehension questions**
+(15 total), same `{prompt,opts,answer,ok,no}` shape as lesson `recall`. A1–A2
+grammar only (present, passé composé, futur proche). **Honest scope held (§7):**
+labelled **"niveau A1–A2, format TEF"** everywhere and the card carries the
+explicit disclaimer **"Ce n'est pas une préparation à l'examen TEF"** — no claim
+it readies anyone for the real (A1–C2) exam. **Architecture (§2 one-engine):**
+the passage renders like an intro/body block (in a new `.passage` gold-accent
+card); the questions reuse **`renderMCQuestion` WITH shuffle:true — the exact
+quiz path, NO forked renderer, NO new question type.** It's an L'Entraînement
+entry: a **"Compréhension écrite (A1–A2)" card sits above the 3 quizzes** on the
+practice home. `appMode` gains a `"reading"` state (`launchReading` /
+`renderReadingItem` / `unlockReadingNext` / `renderReadingResults`); nav-away and
+mode-switch clear `reading`. **Reading is NOT skill-tagged** (per instruction) —
+the end screen is a **plain score** (`Score : n / 15 · %`), not the per-skill
+diagnostic surface. **Verified in-browser (real dev server, anim disabled to
+defeat the non-painting-preview opacity gotcha):** the card appears with the
+correct label+disclaimer; launching renders passage 1 + its 3 questions;
+**shuffle confirmed — the correct answer grades right in different slots (Q3's
+authored-index-1 answer landed at position 0 and still graded OK), a wrong click
+marks wrong and reveals the correct option**; ran the full 5-passage set with one
+deliberate miss → **results showed exactly 14/15 · 93%**; "Retour à
+l'entraînement" returns to the practice home (control hidden); **Le Cours
+untouched** (rail visible, Jour 01 renders). Build green (**22 modules**),
+`npm run dryrun`/`npm run counts` **unchanged** (84 lessons, 1216 keys, bank 848
+— reading is a separate module, doesn't touch either); a standalone structural
+check confirmed all 5 passages 40–90 words, 15 questions, 3 opts each, answers in
+range, no dup options. **The 15 reading questions are Claude-drafted and NOT
+native-reviewed — fold them into the same §8.2 listening/reading gate as the
+lessons and the 7 mechanical quiz banks.** Committed in two focused commits
+(reading data; entraînement card + wiring) and pushed on green.
+
 **CONTENT-COMPLETE.** All **12 weeks / 84 lessons** of the A1→A2 course are
 drafted, wired, building, and audio-generated (**1621 real Azure clips, 0 on
 browser-TTS fallback**). Week 12 (Days 78–84, "Putting it together" — six
@@ -403,16 +438,20 @@ decisions, NOT new lessons. In rough priority:
    someone has to *listen*. Nothing ships to a real learner until this is
    done, and it also gates any B1/Block F work (§11.5). This is now the
    single biggest blocker; everything else is secondary.
-1b. **Mega-Quiz — NEXT session: TEF Reading, the first L'Entraînement practice
-   module (recognition; reuses the step/recall engine).** The two-axis nav now
-   exists (Le Cours | L'Entraînement) with the 3 diagnostic quizzes on the
-   practice home; the next practice module is a TEF-style Reading (comprehension/
-   recognition) exercise that reuses the shared step + recall MC renderers (§2 —
-   do NOT fork them) and slots in as another L'Entraînement entry.
-   SEPARATE standing debt, NOT the module: the **7 Claude-drafted mechanical
-   banks** (etre_avoir, present_verbs, reflexive, imparfait, futur_proche,
-   imperative, prepositions — 78 items) are NOT native-reviewed; fold them into
-   the §8.2 listening/reading review gate before any real learner sees the quiz.
+1b. **NEXT session (CONFIRMED with the person): export/import progress —
+   localStorage portability.** A downloadable JSON save + restore of the
+   localStorage store (streaks, Leitner SRS schedule, quiz results), §3-pure —
+   NO backend, NO accounts, NO new dependency. This makes progress portable
+   across devices/browsers (the stated non-goal was *automatic* sync, not manual
+   export). **THEN, on top of the now-exportable store: results-history** (per-
+   attempt quiz/reading history). Do results-history only AFTER export/import
+   lands, not before. — The TEF Reading practice module that used to sit here is
+   DONE (see phase note): first L'Entraînement module shipped this session.
+   SEPARATE standing review debt (grows, doesn't block the next build): the **7
+   Claude-drafted mechanical quiz banks** (etre_avoir, present_verbs, reflexive,
+   imparfait, futur_proche, imperative, prepositions — 78 items) AND the **15
+   new reading questions** are NOT native-reviewed; fold both into the §8.2
+   listening/reading review gate before any real learner sees them.
 2. **Deploy decision** (Open Decision #1): GitHub Pages vs Netlify — keep
    both or disable GH Pages. Purely a "two URLs" call; no cost either way.
 3. **Optional polish passes** (only if the person wants them), each its own
@@ -810,6 +849,37 @@ native review of all 12 weeks is still the hard gate.
   CONTENT-COMPLETE.** No content remains; the #1 blocker to shipping is the
   standing native-speaker review of all 12 weeks (§8.2), which also gates B1
   (§11.5). Did NOT touch B1/Block F or add dependencies.
+- **Session (first L'Entraînement practice module — Reading, A1–A2 format
+  TEF).** Built the first non-quiz practice module: a Compréhension écrite
+  reading set. New data module `src/reading/sets.mjs` = one set of 5 short
+  passages (~51–64 words: note / café menu / rental ad / formal email / short
+  bio), 3 MC comprehension questions each (15 total), same
+  `{prompt,opts,answer,ok,no}` shape as lesson recall; A1–A2 grammar only
+  (present, PC, futur proche). Held honest scope (§7): labelled "niveau A1–A2,
+  format TEF" with an explicit "Ce n'est pas une préparation à l'examen TEF"
+  disclaimer on the card — no real-exam claim anywhere. Held the §2 one-engine
+  rule strictly: passage renders like an intro/body block (new `.passage` card),
+  questions reuse `renderMCQuestion` WITH shuffle:true — the exact quiz path, no
+  forked renderer, no new question type. Wired as an L'Entraînement card above
+  the 3 quizzes; added `appMode "reading"` + launchReading/renderReadingItem/
+  unlockReadingNext/renderReadingResults; reading is NOT skill-tagged so the end
+  screen is a plain score (n/15 · %). Verified for real (dev server, anim
+  disabled to beat the non-painting-preview opacity gotcha): card + label +
+  disclaimer present; passage 1 renders with its 3 Qs; shuffle grades the
+  correct answer in different slots (Q3 answer at position 0 graded OK); a wrong
+  click marks wrong and reveals the correct option; full 5-passage run with one
+  deliberate miss → results 14/15 · 93%; Retour returns to the practice home;
+  Le Cours untouched (rail visible, Jour 01 renders). Build green (22 modules);
+  dryrun/counts unchanged (84 lessons, 1216 keys, bank 848 — reading is a
+  separate module); standalone structural check passed (5 passages 40–90 words,
+  15 Qs, 3 opts, answers in range, no dup opts). Zero console errors. Committed
+  in two focused commits (reading data; entraînement card + wiring) and pushed
+  on green. Did NOT fork renderers, skill-tag reading, build results-history/
+  export, touch B1/Block F, or add dependencies. **The 15 reading questions are
+  Claude-drafted and NOT native-reviewed — added to the §8.2 review gate
+  alongside the 7 mechanical quiz banks.** NEXT (confirmed with the person):
+  export/import progress (localStorage portability), then results-history on the
+  exportable store.
 
 ---
 
