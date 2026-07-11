@@ -12,7 +12,38 @@ this conversation."
 
 ## [CURRENT PHASE]
 
-**NEW (this session): EXPORT / IMPORT of learner progress — localStorage
+**NEW (this session): RESULTS-HISTORY — every quiz attempt logged + a "Ma
+progression" trend panel.** `storage.js` gains `fb.history.v1`: a COMPACT
+per-attempt trend log (NOT the full question log), one record
+`{ at:<ISO>, quiz:"a1"|"a2"|"mega", overall:<int %>, skills:{ <slug>:<int %> } }`
+appended on every finished quiz — built from the SAME `overall`/`per-skill`
+numbers the results screen shows (reuse `r`, no recompute). `appendQuizAttempt()`
+caps to the last **50 records PER quiz id** (oldest dropped) so exports stay
+bounded; `capHistory()` also sanitises malformed records. **history rides in the
+existing versioned store as an OPTIONAL `data.history` section — still
+SCHEMA_VERSION 1 (adding an optional field is not a breaking change): an OLD v1
+export with no history imports cleanly as an empty log, verified explicitly.**
+UI: a read-only **"Ma progression"** entry on the L'Entraînement home → per quiz
+taken, an **overall-% sparkline** across recent attempts (plain inline SVG, NO
+charting dep §3), attempt count + change-since-first, and **per-skill latest value
+with its delta vs the earliest attempt** (weakest-first). Renders in the shared
+station surface — no forked renderer (§2). Empty state before any quiz; calm/
+diagnostic, not a leaderboard. Still **§3-pure: localStorage only, no backend/
+accounts/deps.** **Verified for real:** node unit test (append + chronological
+order; CAP = 50/id with oldest dropped and other ids untouched; export includes
+history; **old no-history file imports as empty, no error**; junk records
+sanitised) AND a full browser run — took the A1 quiz **3× with different scores
+(38/38/29), all appended**, the panel showed the **3-point trend (not just the
+last)** with "3 tentatives · depuis la 1re ▼ -9" and 11 per-skill rows with
+deltas; exported (history in the file) → wiped → imported → history + panel
+restored; an old no-history file imported cleanly (streak restored, history
+empty); empty state shown before any quiz; **Le Cours untouched** (lesson renders,
+day-1 ✓, rail visible). Build green (22 modules); dryrun/counts unchanged.
+Committed in two focused commits (storage history+cap+export; Progression UI) and
+pushed. (Browser screenshot tool hung again — DOM/eval verification stood in;
+all functional checks passed.)
+
+**PREVIOUS session: EXPORT / IMPORT of learner progress — localStorage
 portability.** `src/storage.js` gains a versioned backup format as the SINGLE
 SOURCE OF TRUTH (results-history / future sync reuse it, no re-inventing):
 `exportData()` wraps the full store — lesson completion+streak, the Leitner SRS
@@ -470,16 +501,22 @@ decisions, NOT new lessons. In rough priority:
    someone has to *listen*. Nothing ships to a real learner until this is
    done, and it also gates any B1/Block F work (§11.5). This is now the
    single biggest blocker; everything else is secondary.
-1b. **NEXT session: results-history.** Persist EACH quiz attempt (date, quiz
-   mode, overall %, per-skill scores) as an APPENDED array in the now-exportable
-   store — a new `fb.history.v1`-style key gathered through `storage.js`, added
-   to `exportData()`/`importData()`'s `data` blob (bump nothing — v1 can carry a
-   new optional section; a missing section already defaults cleanly on import).
-   Then a **"Progression" panel in L'Entraînement** showing the attempt history
-   (most recent first, sparkline/trend optional). Reuse the results/step surface
-   — do NOT fork a renderer (§2). Keep §3-pure (no backend/deps). — Export/import
-   (the prerequisite) is DONE this session; the TEF Reading module is DONE.
-   SEPARATE standing review debt (grows, doesn't block the next build): the **7
+1b. **NEXT session: OPEN — L'Entraînement is now feature-complete for A1–A2.**
+   The practice side now has: 3 diagnostic quizzes (19-skill adaptive engine +
+   runtime shuffle), the TEF-format Reading module, results-history + the "Ma
+   progression" trend panel, and full localStorage export/import portability.
+   There is no obvious "next small unit" on the Entraînement side — the next real
+   moves are FORKS, each gated on a person-level decision AND the standing §8.2
+   native review:
+     - **TEF Writing** — self-assessment/rubric UI vs. needing a backend to grade
+       (leans toward self-assess to stay §3-pure); decide the shape first.
+     - **Listening comprehension** — a NEW step type (audio prompt → MC), the
+       first genuinely new renderer since the engine was built; scope it against
+       §2 before writing it.
+     - **B1 content (Block F)** — HARD-gated behind the native review of Weeks
+       1–2 (§11.5); do not start drafting until that feedback is back.
+   Pick one WITH the person; don't self-select a fork.
+   SEPARATE standing review debt (grows, doesn't block a build): the **7
    Claude-drafted mechanical quiz banks** (etre_avoir, present_verbs, reflexive,
    imparfait, futur_proche, imperative, prepositions — 78 items) AND the **15
    reading questions** are NOT native-reviewed; fold both into the §8.2
@@ -938,6 +975,31 @@ native review of all 12 weeks is still the hard gate.
   to the exportable store + a Progression panel in L'Entraînement). Note: the
   browser screenshot tool hung on the lingering native file-picker at the very
   end — used DOM-level verification instead; all functional checks passed.
+- **Session (results-history + Ma progression panel).** Added `fb.history.v1`
+  to `storage.js`: a compact per-attempt log (`{ at, quiz, overall, skills }`),
+  appended on every finished quiz from the same numbers the results screen
+  computes (no recompute). `appendQuizAttempt()`/`capHistory()` cap to the last
+  50 per quiz id and sanitise junk. Wired history into `exportData()`/
+  `importData()` as an OPTIONAL `data.history` section — no SCHEMA_VERSION bump,
+  and an old v1 file with no history imports cleanly as empty (back-compat
+  verified). Built a read-only "Ma progression" panel in L'Entraînement (entry
+  on the home): per quiz, an overall-% sparkline (plain inline SVG, no charting
+  dep), attempt count + change-since-first, and per-skill latest+delta-vs-
+  earliest (weakest-first). Shared surface, no forked renderer (§2). Empty state
+  before any quiz. Verified for real: node unit test (append/order; cap 50/id
+  drops oldest, other ids intact; export carries history; old no-history file →
+  empty, no error; junk sanitised) AND a browser run (A1 quiz ×3 = 38/38/29 all
+  appended; panel showed the 3-point trend + 11 per-skill deltas; export→wipe→
+  import restored history + panel; old no-history import clean w/ streak restored;
+  empty state pre-quiz; Le Cours untouched). Build green (22 modules); dryrun/
+  counts unchanged. Two focused commits (storage; UI) pushed. Did NOT add a
+  backend/accounts/sync, use a charting lib, log per-question history, break
+  old-file import, touch B1/Block F, or add deps. **L'Entraînement is now
+  feature-complete for A1–A2** (quizzes + reading + history + portability); NEXT
+  is left OPEN — the real next moves are forks (TEF Writing / Listening step type
+  / B1 Block F), each gated on a person decision + the §8.2 native review. Note:
+  the browser screenshot tool hung repeatedly this session (not just on a file
+  dialog) — verified via DOM/eval instead; all functional checks passed.
 
 ---
 
