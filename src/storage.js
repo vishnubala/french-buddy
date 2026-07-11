@@ -8,6 +8,7 @@
 const PROGRESS_KEY = "fb.progress.v1";
 const MASTERY_KEY  = "fb.mastery.v1";
 const QUIZ_KEY     = "fb.quiz.v1";
+const HISTORY_KEY  = "fb.history.v1";
 
 /* Leitner intervals (days until next review), indexed by level.
    Matches docs/curriculum-spec.md §5. */
@@ -90,6 +91,46 @@ export function gradeItem(key, knew) {
 export function saveQuizResult(res) { save(QUIZ_KEY, res); }
 export function getQuizResult() { return load(QUIZ_KEY, null); }
 
+/* ---------------- quiz results-history (compact, capped) ----------------
+   A trend log: one COMPACT record per finished quiz attempt (NOT the full
+   per-question log). Record shape:
+     { at:"<ISO>", quiz:"a1"|"a2"|"mega", overall:<int %>, skills:{ "<slug>":<int %> } }
+   Bounded growth: at most HISTORY_CAP records PER quiz id (oldest dropped), so
+   an export stays a reasonable size. localStorage only — no backend. */
+
+const HISTORY_CAP = 50;   /* per quiz id */
+const isPlainObject = o => o != null && typeof o === "object" && !Array.isArray(o);
+
+export function getHistory() {
+  const h = load(HISTORY_KEY, []);
+  return Array.isArray(h) ? h : [];
+}
+
+/* Keep only the last HISTORY_CAP records of each quiz id, preserving the array's
+   overall chronological order. Also drops any malformed record (defensive: an
+   imported file could carry junk). */
+function capHistory(arr) {
+  if (!Array.isArray(arr)) return [];
+  const perId = {};
+  for (const r of arr) {
+    if (!isPlainObject(r) || typeof r.quiz !== "string") continue;
+    (perId[r.quiz] ||= []).push(r);
+  }
+  const keep = new Set();
+  for (const id in perId) {
+    const a = perId[id];
+    for (let i = Math.max(0, a.length - HISTORY_CAP); i < a.length; i++) keep.add(a[i]);
+  }
+  return arr.filter(r => keep.has(r));
+}
+
+/* Append one attempt record; returns the new (capped) history array. */
+export function appendQuizAttempt(rec) {
+  const capped = capHistory([...getHistory(), rec]);
+  save(HISTORY_KEY, capped);
+  return capped;
+}
+
 /* ---------------- export / import (localStorage portability) ----------------
    §3-pure: no backend, no accounts, no sync. This is the SINGLE SOURCE OF TRUTH
    for the on-disk backup format, so results-history and any future sync reuse
@@ -97,7 +138,11 @@ export function getQuizResult() { return load(QUIZ_KEY, null); }
 
    Wrapper shape (versioned so a FUTURE version can add fields without breaking
    a v1 import):
-     { version:1, app:"french-buddy", exportedAt:<ISO>, data:{ progress, mastery, quiz } }
+     { version:1, app:"french-buddy", exportedAt:<ISO>,
+       data:{ progress, mastery, quiz, history } }
+   `history` is an OPTIONAL section added after the first v1 files shipped —
+   still SCHEMA_VERSION 1 (adding an optional field is NOT a breaking change):
+   an old file lacking it imports cleanly as an empty log (see importData).
 
    Forward-compat rules:
    - A reader accepts any file whose version it KNOWS (<= SCHEMA_VERSION here).
@@ -120,11 +165,10 @@ export function exportData() {
       progress: getProgress(),
       mastery: getMastery(),
       quiz: getQuizResult(),
+      history: getHistory(),
     },
   };
 }
-
-const isPlainObject = o => o != null && typeof o === "object" && !Array.isArray(o);
 
 /* Validate a parsed backup object WITHOUT touching storage.
    Returns { ok:true, version, data } or { ok:false, error:<message> }.
@@ -157,8 +201,13 @@ export function importData(obj) {
   const progress = isPlainObject(d.progress) ? d.progress : { completed: {}, streak: 0, lastDay: null };
   const mastery  = isPlainObject(d.mastery)  ? d.mastery  : {};
   const quiz     = d.quiz ?? null;
+  /* history is an OPTIONAL section added after the first v1 files shipped:
+     an old export with no `history` restores cleanly as an empty log, never
+     a validation failure. capHistory also sanitises any junk records. */
+  const history  = capHistory(Array.isArray(d.history) ? d.history : []);
   save(PROGRESS_KEY, progress);
   save(MASTERY_KEY, mastery);
   save(QUIZ_KEY, quiz);
+  save(HISTORY_KEY, history);
   return { ok: true };
 }
