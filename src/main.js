@@ -9,6 +9,7 @@ import { completeLesson, isCompleted, registerItems, dueKeys, gradeItem, saveQui
 import { SKILL_BY_SLUG } from "./quiz/skills.mjs";
 import { QUIZ_BANK } from "./quiz/bank.mjs";
 import { createSession } from "./quiz/engine.mjs";
+import { READING } from "./reading/sets.mjs";
 
 const CURRICULUM = { totalLessons: 84, weeks: 12 };
 
@@ -96,8 +97,9 @@ let lesson = LESSONS[lessonIndex];
 let stepIndex = 0;
 let stepDone = new Array(lesson.steps.length).fill(false);
 let correct = 0, attempts = 0;
-let appMode = "lesson";   /* "lesson" | "quiz" | "home" — what the STATION shows */
+let appMode = "lesson";   /* "lesson" | "quiz" | "reading" | "home" — what the STATION shows */
 let quiz = null;          /* active diagnostic session (see src/quiz/) */
+let reading = null;       /* active reading set run (see src/reading/) */
 let mode = "cours";       /* TOP-LEVEL axis: "cours" | "entrainement". Chooses
                              which nav chrome + station content renders. The
                              course keeps its lessonIndex/stepIndex either way. */
@@ -179,8 +181,8 @@ function renderNav() {
 }
 
 function switchLesson(i) {
-  const wasQuiz = appMode === "quiz";
-  appMode = "lesson"; quiz = null;         /* any nav click leaves the quiz */
+  const wasQuiz = appMode === "quiz" || appMode === "reading";
+  appMode = "lesson"; quiz = null; reading = null;  /* any nav click leaves practice */
   if (i === lessonIndex && !wasQuiz) return;
   lessonIndex = i; lesson = LESSONS[i];
   stepIndex = 0;
@@ -492,7 +494,7 @@ function setMode(m) {
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (m === "cours") {
     /* restore the course exactly where it was — position was never touched */
-    appMode = "lesson"; quiz = null;
+    appMode = "lesson"; quiz = null; reading = null;
     syncHeader(); renderStep();
   } else {
     renderEntrainementHome();
@@ -515,6 +517,17 @@ function renderEntrainementHome() {
   const h = document.createElement("h3"); h.textContent = "Teste-toi"; stepEl.appendChild(h);
 
   const list = document.createElement("div"); list.className = "practice";
+
+  /* Reading comprehension — a separate practice module (not a quiz). Labelled
+     honestly (§7): A1–A2 in the STYLE of a TEF reading task, NOT exam prep. */
+  const rcard = document.createElement("button"); rcard.className = "pcard";
+  rcard.innerHTML =
+    `<span class="pcard-t">${READING.label} <span class="pbadge">${READING.format}</span></span>` +
+    `<span class="pcard-d">Lis un texte court et réponds aux questions. ` +
+    `Ce n'est pas une préparation à l'examen&nbsp;TEF.</span>`;
+  rcard.onclick = () => launchReading();
+  list.appendChild(rcard);
+
   PRACTICE.forEach(([m, title, desc]) => {
     const card = document.createElement("button"); card.className = "pcard";
     card.innerHTML = `<span class="pcard-t">${title}</span><span class="pcard-d">${desc}</span>`;
@@ -624,6 +637,95 @@ function renderQuizResults() {
     weeks.appendChild(row);
   });
   stepEl.appendChild(weeks);
+
+  nextBtn.disabled = false; nextBtn.className = "next done";
+  nextBtn.innerHTML = "Retour à l'entraînement";
+  nextBtn.onclick = () => renderEntrainementHome();
+}
+
+/* =====================================================================
+   L'Entraînement · Compréhension écrite — a reading SET run. Each screen shows
+   one short passage (rendered like an intro/body block) + its 2–4 comprehension
+   questions via renderMCQuestion WITH shuffle — the SAME MC path the quiz uses,
+   never forked (§2). Reading isn't skill-tagged, so the end screen is a plain
+   score, not the per-skill diagnostic surface.
+
+   HONEST SCOPE (§7): labelled "niveau A1–A2, format TEF" — A1–A2 reading in the
+   STYLE of a TEF task, NOT preparation for the actual (A1–C2) TEF exam. Content
+   is Claude-drafted and NOT native-reviewed (folds into the §8.2 review gate). */
+
+function launchReading() {
+  appMode = "reading";
+  reading = { pi: 0, correct: 0, total: 0 };
+  showControl(true);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  el("stationNum").textContent = "LECTURE";
+  el("lessonTitle").textContent = READING.label;
+  el("lessonDur").textContent = READING.format;
+  el("platform").innerHTML = "";
+  renderReadingItem();
+}
+
+function renderReadingItem() {
+  if (appMode !== "reading") return;
+  const p = READING.passages[reading.pi];
+  if (!p) { renderReadingResults(); return; }
+  stepEl.innerHTML = "";
+  stepEl.classList.remove("anim"); void stepEl.offsetWidth; stepEl.classList.add("anim");
+
+  const eb = document.createElement("div"); eb.className = "eyebrow";
+  eb.textContent = p.type + " · texte " + (reading.pi + 1) + " / " + READING.passages.length;
+  stepEl.appendChild(eb);
+  const h = document.createElement("h3"); h.textContent = p.title; stepEl.appendChild(h);
+
+  /* the passage — rendered like an intro/body block, inside a reading card */
+  const box = document.createElement("div"); box.className = "passage";
+  p.text.forEach(line => {
+    const par = document.createElement("p"); par.innerHTML = line; box.appendChild(par);
+  });
+  stepEl.appendChild(box);
+
+  /* comprehension questions — shared MC primitive, shuffled like the quiz */
+  let answered = 0;
+  p.questions.forEach(q => {
+    const node = renderMCQuestion(q, isCorrect => {
+      reading.total++; if (isCorrect) reading.correct++;
+      answered++; if (answered === p.questions.length) unlockReadingNext();
+    }, true);
+    stepEl.appendChild(node);
+  });
+
+  nextBtn.disabled = true; nextBtn.className = "next"; nextBtn.innerHTML = "Réponds à tout";
+}
+
+function unlockReadingNext() {
+  const last = reading.pi === READING.passages.length - 1;
+  nextBtn.disabled = false; nextBtn.className = "next";
+  nextBtn.innerHTML = last
+    ? 'Voir le résultat <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+    : 'Texte suivant <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  nextBtn.onclick = () => { reading.pi++; window.scrollTo({ top: 0, behavior: "smooth" }); renderReadingItem(); };
+}
+
+function renderReadingResults() {
+  const pct = reading.total ? Math.round(reading.correct / reading.total * 100) : 0;
+  el("stationNum").textContent = "BILAN";
+  el("lessonTitle").textContent = "Résultats — " + READING.label;
+  el("lessonDur").textContent = "";
+  el("platform").innerHTML = "";
+  stepEl.innerHTML = "";
+  stepEl.classList.remove("anim"); void stepEl.offsetWidth; stepEl.classList.add("anim");
+
+  const eb = document.createElement("div"); eb.className = "eyebrow"; eb.textContent = "Compréhension écrite"; stepEl.appendChild(eb);
+  const h = document.createElement("h3");
+  h.textContent = `Score : ${reading.correct} / ${reading.total} · ${pct}%`;
+  stepEl.appendChild(h);
+
+  const msg = document.createElement("p"); msg.className = "lede";
+  msg.innerHTML = pct >= 80 ? "Très bien — tu comprends l'essentiel de ces textes courts."
+                : pct >= 50 ? "Pas mal. Relis les textes où tu as hésité, puis recommence."
+                            : "Continue — relis chaque texte lentement, phrase par phrase.";
+  stepEl.appendChild(msg);
 
   nextBtn.disabled = false; nextBtn.className = "next done";
   nextBtn.innerHTML = "Retour à l'entraînement";

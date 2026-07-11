@@ -217,6 +217,15 @@ body[data-mode="entrainement"] .nav{display:none}
 .pcard:hover{border-color:var(--gold);transform:translateY(-1px)}
 .pcard-t{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:16px;color:var(--ink)}
 .pcard-d{font-family:"Newsreader",serif;font-size:14px;color:var(--ink-soft)}
+.pbadge{font-family:"Spline Sans Mono",monospace;font-weight:400;font-size:9.5px;letter-spacing:.06em;
+  text-transform:uppercase;vertical-align:middle;margin-left:7px;padding:2px 7px;border-radius:999px;
+  background:var(--paper-2);border:1px solid var(--zinc-line);color:var(--ink-soft)}
+
+/* ---- reading passage (compréhension écrite): an intro/body block in a card ---- */
+.passage{background:var(--paper-2);border:1px solid var(--zinc-line);border-left:3px solid var(--gold);
+  border-radius:11px;padding:14px 17px;margin:6px 0 20px}
+.passage p{font-family:"Newsreader",serif;font-size:16px;line-height:1.55;margin:0 0 8px}
+.passage p:last-child{margin-bottom:0}
 
 /* ---- diagnostic quiz results ---- */
 
