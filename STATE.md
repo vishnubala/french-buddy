@@ -24,7 +24,27 @@ terminus (100%) with all 12 nodes lit; the day-84 wrap reads as course
 completion ("Parcours A2 — complet. Félicitations 🎉", 84/84 stations), no
 week-13 tease.
 
-**Mega-Quiz diagnostic ENGINE (built + verified, prior session).**
+**NEW (this session): TWO-AXIS NAV — Le Cours | L'Entraînement.** A top-level
+mode switch (`mode` = "cours" | "entrainement", DEFAULT "cours") sits above the
+nav in `index.html` (`#modeswitch`). **Le Cours is behaviourally identical to
+the old app** — level→week→day nav, rail/marker, day chips, lessons, completion
+all unchanged; the switch sits ABOVE it and was NOT refactored. **L'Entraînement**
+is a simple landing (`renderEntrainementHome`) listing the 3 diagnostic quizzes
+as `.pcard` entries; the old temporary `#quizbar` is DELETED and the quizzes
+render exactly as before, only their launch point moved. `mode` only chooses the
+nav chrome + station content — it does NOT fork the shared renderStep /
+renderMCQuestion / quiz renderers (§2). CSS hides course-only chrome (`.line`
+rail, `.line-meta`, `.nav`) via `body[data-mode="entrainement"]`; the bottom
+`#control` is hidden on the practice home. Switching modes preserves each side's
+position (verified: the course returned to the exact STEP, not just lesson, after
+a round-trip). Quiz results "Retour à l'entraînement" returns to the home; revisit
+links flip to Le Cours at the target day. **Verified in-browser:** default Cours
+(rail moves, steps advance, week nav works), Entraînement (3 cards launch, no
+rail, control hidden), round-trip (neither side reset), and a full mega quiz
+end-to-end from the home (40 items → 19-skill results → Retour). Build green;
+dryrun/counts unchanged (848 bank items).
+
+**Mega-Quiz diagnostic ENGINE (built + verified, earlier session).**
 A separate `src/quiz/` module (skills taxonomy + item bank + adaptive engine)
 that renders through the SAME recall MC primitive as lessons (§2 one-engine).
 Three entry points (A1 / A2 / A1–A2 méga) are filters over one engine;
@@ -383,15 +403,16 @@ decisions, NOT new lessons. In rough priority:
    someone has to *listen*. Nothing ships to a real learner until this is
    done, and it also gates any B1/Block F work (§11.5). This is now the
    single biggest blocker; everything else is secondary.
-1b. **Mega-Quiz — NEXT session: the two-axis Cours/Entraînement nav.** The
-   item bank is now COMPLETE — all 19 skills have real hand-authored sets and
-   the runtime shuffle is in. The deliberately-deferred piece is the two-axis
-   navigation (Cours = the 84-lesson track; Entraînement = the diagnostic
-   quiz), replacing the current minimal quiz launcher bar. Start there.
-   SEPARATE standing debt, NOT nav: the **7 Claude-drafted mechanical banks**
-   (etre_avoir, present_verbs, reflexive, imparfait, futur_proche, imperative,
-   prepositions — 78 items) are NOT native-reviewed; fold them into the §8.2
-   listening/reading review gate before any real learner sees the quiz.
+1b. **Mega-Quiz — NEXT session: TEF Reading, the first L'Entraînement practice
+   module (recognition; reuses the step/recall engine).** The two-axis nav now
+   exists (Le Cours | L'Entraînement) with the 3 diagnostic quizzes on the
+   practice home; the next practice module is a TEF-style Reading (comprehension/
+   recognition) exercise that reuses the shared step + recall MC renderers (§2 —
+   do NOT fork them) and slots in as another L'Entraînement entry.
+   SEPARATE standing debt, NOT the module: the **7 Claude-drafted mechanical
+   banks** (etre_avoir, present_verbs, reflexive, imparfait, futur_proche,
+   imperative, prepositions — 78 items) are NOT native-reviewed; fold them into
+   the §8.2 listening/reading review gate before any real learner sees the quiz.
 2. **Deploy decision** (Open Decision #1): GitHub Pages vs Netlify — keep
    both or disable GH Pages. Purely a "two URLs" call; no cost either way.
 3. **Optional polish passes** (only if the person wants them), each its own
