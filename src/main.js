@@ -5,7 +5,7 @@
    ===================================================================== */
 import "./styles.css";
 import { LESSONS } from "./lessons/index.mjs";
-import { completeLesson, isCompleted, registerItems, dueKeys, gradeItem, saveQuizResult } from "./storage.js";
+import { completeLesson, isCompleted, registerItems, dueKeys, gradeItem, saveQuizResult, exportData, importData, validateImport } from "./storage.js";
 import { SKILL_BY_SLUG } from "./quiz/skills.mjs";
 import { QUIZ_BANK } from "./quiz/bank.mjs";
 import { createSession } from "./quiz/engine.mjs";
@@ -535,6 +535,111 @@ function renderEntrainementHome() {
     list.appendChild(card);
   });
   stepEl.appendChild(list);
+
+  renderBackupPanel();
+}
+
+/* ---- progress backup: export/import (localStorage portability) ----
+   A small utility in L'Entraînement, NOT course chrome. Reuses the home
+   surface — no forked renderer (§2). Import overwrites, so it goes through an
+   inline confirm; malformed/foreign files are refused without touching state. */
+function renderBackupPanel() {
+  const sub = document.createElement("div"); sub.className = "rsub";
+  sub.textContent = "Sauvegarde de la progression";
+  stepEl.appendChild(sub);
+
+  const note = document.createElement("p"); note.className = "bk-note";
+  note.innerHTML = "Télécharge un fichier <code>.json</code> pour sauvegarder ta progression " +
+    "(leçons, séries, quiz) ou la transférer sur un autre appareil. " +
+    "<b>L'import remplace</b> la progression enregistrée sur cet appareil.";
+  stepEl.appendChild(note);
+
+  const row = document.createElement("div"); row.className = "backup";
+  const exp = document.createElement("button"); exp.className = "bk-btn";
+  exp.textContent = "Exporter ma progression";
+  exp.onclick = exportProgress;
+  const imp = document.createElement("button"); imp.className = "bk-btn";
+  imp.textContent = "Importer une progression";
+  imp.onclick = () => getImportInput().click();
+  row.appendChild(exp); row.appendChild(imp);
+  stepEl.appendChild(row);
+
+  const status = document.createElement("div"); status.className = "bk-status"; status.id = "bkStatus";
+  stepEl.appendChild(status);
+}
+
+function setBackupStatus(kind, msg) {
+  const s = el("bkStatus"); if (!s) return;
+  s.className = "bk-status" + (kind ? " " + kind : "");
+  s.textContent = msg;
+}
+
+function exportProgress() {
+  try {
+    const blob = new Blob([JSON.stringify(exportData(), null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "french-buddy-progress.json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+    setBackupStatus("ok", "Progression exportée : french-buddy-progress.json");
+  } catch {
+    setBackupStatus("err", "L'export a échoué sur cet appareil.");
+  }
+}
+
+/* One hidden file input, created lazily and reused. */
+let importInput = null;
+function getImportInput() {
+  if (importInput) return importInput;
+  importInput = document.createElement("input");
+  importInput.type = "file";
+  importInput.accept = "application/json,.json";
+  importInput.style.display = "none";
+  importInput.onchange = () => {
+    const file = importInput.files && importInput.files[0];
+    importInput.value = "";   /* let the user re-pick the same file later */
+    if (file) readImportFile(file);
+  };
+  document.body.appendChild(importInput);
+  return importInput;
+}
+
+function readImportFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    let obj;
+    try { obj = JSON.parse(reader.result); }
+    catch { setBackupStatus("err", "Fichier illisible : ce n'est pas un JSON valide."); return; }
+    const check = validateImport(obj);   /* validate BEFORE any confirm/apply */
+    if (!check.ok) { setBackupStatus("err", check.error); return; }
+    confirmImport(obj);
+  };
+  reader.onerror = () => setBackupStatus("err", "Impossible de lire le fichier.");
+  reader.readAsText(file);
+}
+
+/* Inline confirm (no native dialog, no forked renderer) — import overwrites. */
+function confirmImport(obj) {
+  const s = el("bkStatus"); if (!s) return;
+  s.className = "bk-status confirm"; s.innerHTML = "";
+  const msg = document.createElement("p"); msg.className = "bk-confirm-msg";
+  msg.textContent = "Ceci remplacera la progression enregistrée sur cet appareil. Continuer ?";
+  const row = document.createElement("div"); row.className = "backup";
+  const yes = document.createElement("button"); yes.className = "bk-btn danger"; yes.textContent = "Oui, remplacer";
+  const no  = document.createElement("button"); no.className = "bk-btn"; no.textContent = "Annuler";
+  yes.onclick = () => {
+    const res = importData(obj);
+    if (res.ok) {
+      setBackupStatus("ok", "Progression restaurée sur cet appareil.");
+      syncHeader();   /* rebuild nav ✓ marks / rail from the restored store */
+    } else {
+      setBackupStatus("err", res.error || "Import impossible.");
+    }
+  };
+  no.onclick = () => setBackupStatus("", "Import annulé — rien n'a changé.");
+  row.appendChild(yes); row.appendChild(no);
+  s.appendChild(msg); s.appendChild(row);
 }
 
 function launchQuiz(qmode) {
