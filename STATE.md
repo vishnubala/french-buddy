@@ -12,7 +12,46 @@ this conversation."
 
 ## [CURRENT PHASE]
 
-**NEW (this session): READING LIBRARY — leveled A1/A2 sets (4 sets, 19
+**NEW (this session): LISTENING MODULE — the first NEW step type
+(Compréhension orale, A1/A2, format TEF).** New `src/listening/sets.mjs`: a
+leveled library of **4 themed sets × 4 passages = 16 passages / 48 questions**,
+split A1/A2 like reading. A1 (present tense only): station/shop/airport/museum
+announcements, a doctor voicemail, bakery/directions exchanges, a park message.
+A2 (+ passé composé / futur proche / imparfait): phone messages, a breakdown
+story, a restaurant booking, weather, invitations, a holiday exchange. Each
+passage = a list of `lines` {who, say, key} (**27 audio clips, all `l_`-prefixed
+and globally unique — no collision with lesson `d…` keys**) + 2–4 MC questions
+(3 opts, French prompts, English ok/no); the `say` text doubles as the
+reveal-after transcript. **THE ONE NEW STEP TYPE (`listening`):** each passage
+PLAYS audio (a sequential back-to-back player over the lines, real clip or
+browser-TTS fallback, run-token-guarded so replays/nav never overlap) with **NO
+visible French**; **replay is UNLIMITED**; the questions reuse the EXISTING
+`renderMCQuestion` shuffle path (no forked renderer, §2); and the **transcript is
+built into the DOM ONLY AFTER the questions are answered** — that reveal-after is
+the sole new rendering behaviour. Multi-speaker transcripts show A/B badges.
+**Audio reuses the existing pipeline** — `generate-audio.mjs` collects listening
+clips (voice by `who`, strips display `&nbsp;` for TTS); **`npm run audio` was run
+(27 clips generated, in clips.json = 1648 total, mp3s committed)**. `dryrun.mjs`
+now checks listening keys in the same global namespace as lessons. Entry: a
+"Compréhension orale (A1–A2)" card badged "niveau A1–A2, format TEF" + the
+"Ce n'est pas une préparation à l'examen TEF" disclaimer (§7); level pick (A1/A2)
+→ set → run, consistent with reading. **Verified for real:** build green (23
+modules), **dryrun PASS — 1243 unique audio keys incl. 27 listening, all
+recall/listening answers in range**, counts unchanged for lessons, bank 848
+unchanged; a browser run — card+disclaimer present, level→set pick works, **audio
+plays real clips (l_gare.mp3 / l_boulangerie_1.mp3 → 206, not TTS)**, replay
+works, **the transcript is genuinely absent from the DOM before answering
+(checked transcript-only phrases + hidden attrs) and reveals only after
+answering** (A1 12/12 and A2 12/12, shuffle grading in all 3 positions), the
+5-line exchange shows 5 speaker badges, Retour returns home, Le Cours untouched
+(mode-switch stops audio), zero console errors. Committed in 4 focused commits
+(data → pipeline/dryrun → renderer/UI → generated audio) and pushed. **The 16
+listening passages are Claude-drafted and NOT native-reviewed** — added to the
+§8.2 review debt (a listening pass matters most here — the whole point is the
+ear). **Parked idea:** a future "exam-mode listening" with CAPPED replays (this
+module is deliberately unlimited).
+
+**PREVIOUS session: READING LIBRARY — leveled A1/A2 sets (4 sets, 19
 passages).** The reading module (`src/reading/sets.mjs`) grew from one 5-passage
 set into a leveled library: **two levels × two themed sets each** — A1 "Vie
 quotidienne" (5) + "En ville & services" (5), A2 "Messages & projets" (5) +
@@ -531,26 +570,26 @@ decisions, NOT new lessons. In rough priority:
    someone has to *listen*. Nothing ships to a real learner until this is
    done, and it also gates any B1/Block F work (§11.5). This is now the
    single biggest blocker; everything else is secondary.
-1b. **NEXT session: OPEN — L'Entraînement is now feature-complete for A1–A2.**
+1b. **NEXT session: OPEN — L'Entraînement now spans all four skills for A1–A2.**
    The practice side now has: 3 diagnostic quizzes (19-skill adaptive engine +
-   runtime shuffle), the **leveled TEF-format Reading library (A1/A2, 4 sets, 19
-   passages)**, results-history + the "Ma progression" trend panel, and full
-   localStorage export/import portability. There is no obvious "next small unit"
-   on the Entraînement side — the next real moves are FORKS, each gated on a
-   person-level decision AND the standing §8.2 native review:
+   runtime shuffle), the **leveled Reading library (A1/A2, 4 sets, 19 passages)**,
+   the **leveled Listening library (A1/A2, 4 sets, 16 passages) — the new
+   `listening` step type**, results-history + "Ma progression", and full
+   localStorage export/import portability. The remaining real moves are FORKS,
+   each gated on a person-level decision AND the standing §8.2 native review:
      - **TEF Writing** — self-assessment/rubric UI vs. needing a backend to grade
-       (leans toward self-assess to stay §3-pure); decide the shape first.
-     - **Listening comprehension** — a NEW step type (audio prompt → MC), the
-       first genuinely new renderer since the engine was built; scope it against
-       §2 before writing it.
+       (leans toward self-assess to stay §3-pure); decide the shape first. This
+       is the last of the four skills not yet built.
+     - **Exam-mode listening (parked idea)** — a variant with CAPPED replays +
+       maybe a timer; the current listening module is deliberately unlimited.
      - **B1 content (Block F)** — HARD-gated behind the native review of Weeks
-       1–2 (§11.5); do not start drafting until that feedback is back.
+       1–2 (§11.5); do NOT start drafting until that feedback is back.
    Pick one WITH the person; don't self-select a fork.
    SEPARATE standing review debt (grows, doesn't block a build): the **7
    Claude-drafted mechanical quiz banks** (etre_avoir, present_verbs, reflexive,
-   imparfait, futur_proche, imperative, prepositions — 78 items) AND the **19
-   reading passages / 57 questions** (was 15 — the reading library grew this
-   session) are NOT native-reviewed; fold both into the §8.2 listening/reading
+   imparfait, futur_proche, imperative, prepositions — 78 items), the **19
+   reading passages / 57 questions**, AND the **16 listening passages / 48
+   questions** are NOT native-reviewed; fold all into the §8.2 listening/reading
    review gate before any real learner sees them.
 2. **Deploy decision** (Open Decision #1): GitHub Pages vs Netlify — keep
    both or disable GH Pages. Purely a "two URLs" call; no cost either way.
@@ -1059,6 +1098,31 @@ native review of all 12 weeks is still the hard gate.
   feature-complete for A1–A2; NEXT stays OPEN** (forks: TEF Writing / Listening
   step type / B1 Block F — B1 HARD-gated behind native review of Weeks 1–2).
   Note: the browser screenshot tool again hung — verified via DOM/eval instead.
+- **Session (listening module — the first new step type).** Built
+  Compréhension orale (A1/A2, format TEF): new `src/listening/sets.mjs` (4 sets ×
+  4 passages = 16 passages / 48 questions, split A1/A2; A1 present-only, A2 +PC/
+  futur proche/imparfait; 27 `l_`-prefixed audio keys). Added exactly ONE new
+  step type (`listening`) to `main.js`: a level→set→run shell like reading, but
+  each passage plays audio (sequential run-token-guarded player over the lines,
+  real clip or TTS fallback) with NO visible French, unlimited replay, questions
+  via the existing renderMCQuestion shuffle, and — the sole new behaviour — the
+  transcript built into the DOM ONLY after answering. Reused the audio pipeline
+  (generate-audio collects listening clips, voice by `who`, strips &nbsp; for
+  TTS) and extended dryrun to check listening keys in the lesson namespace. Ran
+  `npm run audio` (27 clips generated + committed). Verified: build green (23
+  modules), dryrun PASS (1243 unique keys incl. 27 listening), counts/bank
+  unchanged; browser — card+disclaimer, level→set pick, real clips play
+  (l_gare/l_boulangerie_1 → 206), replay works, transcript genuinely absent from
+  the DOM pre-answer (checked transcript-only phrases + hidden attrs) and reveals
+  only after answering, A1 12/12 + A2 12/12 with shuffle in all positions, 5-line
+  exchange shows 5 speaker badges, Retour returns home, Le Cours untouched
+  (mode-switch stops audio), zero console errors. 4 focused commits (data →
+  pipeline/dryrun → renderer/UI → audio) pushed. Did NOT claim real TEF prep, cap
+  replays, show transcript before answering, fork the question renderer, start
+  B1/Block F, or add deps. The 16 listening passages join the §8.2 review debt.
+  **Infra note:** the safety classifier was down for ~15 min mid-session (all
+  command execution blocked); the person ran build/dryrun/counts/audio, then I
+  re-ran and re-verified everything myself once it recovered before committing.
 
 ---
 
