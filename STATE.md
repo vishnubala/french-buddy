@@ -12,7 +12,31 @@ this conversation."
 
 ## [CURRENT PHASE]
 
-**NEW (this session): LISTENING MODULE — the first NEW step type
+**NEW (this session): NAV PROGRESS-COLOUR LANGUAGE — one completion-driven
+colour across all three nav tiers (day chips, week pills, level tabs).** Added
+`weekComplete()` / `levelComplete()` to `main.js` (**by `isCompleted()`, NEVER by
+position**) and applied a fixed precedence in the existing `renderNav` (no fork):
+**current item → ink (`.on`), else fully complete → green (`.done`, var(--vert),
+matching the rail's done nodes), else built → light, else locked (unchanged).** A
+day chip greens only when `isCompleted(day)`; a week only when every built day in
+it is done; a level (A1/A2) only when all its built weeks are done. **Blue/ink
+wins over green for whatever contains the active lesson.** The current-week pill
+was previously green — moved to ink so green now unambiguously means "complete".
+No partial-progress indicators; a partially-done week/level stays light. The ✓
+tick is unchanged (white on a green chip). Locked B1/B2 + unbuilt weeks and the
+rail/marker are untouched. **Verified for real in-browser with seeded completion
+state:** partial week (days 8–10 done in wk2) → those chips green, rest light,
+current ink, the week pill stays ink-because-current (not green), A1 stays ink
+(current, not all done); **SKIP-AHEAD — jumped day 9→13 without doing 11/12 →
+11/12 stayed light (no tick, not green), only genuinely-done 8/9/10 green**;
+whole-week done + not current → green pill (Sem 2–7 green while Sem 1 current);
+**whole-level done + not current → green tab (A1 went green once I moved to A2)**;
+current always ink; B1/B2 dashed/locked unchanged; computed colours confirmed
+(done = `#0A7C5A` var(--vert), current = `#14263B` var(--ink)); Entraînement +
+round-trip fine; zero console errors. Build green, dryrun/counts pass. Two focused
+commits (renderNav completion+colour; nav CSS) pushed.
+
+**PREVIOUS session: LISTENING MODULE — the first NEW step type
 (Compréhension orale, A1/A2, format TEF).** New `src/listening/sets.mjs`: a
 leveled library of **4 themed sets × 4 passages = 16 passages / 48 questions**,
 split A1/A2 like reading. A1 (present tense only): station/shop/airport/museum
@@ -1123,6 +1147,21 @@ native review of all 12 weeks is still the hard gate.
   **Infra note:** the safety classifier was down for ~15 min mid-session (all
   command execution blocked); the person ran build/dryrun/counts/audio, then I
   re-ran and re-verified everything myself once it recovered before committing.
+- **Session (nav progress-colour language).** Made the level→week→day nav speak
+  one completion-driven colour: added weekComplete()/levelComplete() (by
+  isCompleted(), never by position) and a fixed precedence in renderNav (current
+  → ink `.on`; else complete → green `.done` = var(--vert); else light; else
+  locked). Moved the current-week pill from green to ink so green = complete
+  everywhere; added .chip/.wk/.level `.done` styles + white tick on green chips;
+  left locked B1/B2, unbuilt weeks, and the rail untouched. No partial
+  indicators. Verified in-browser with seeded completion incl. the key
+  skip-ahead test (jumping past uncompleted days never greens them) and a
+  whole-level-complete test (A1 tab greens only once it's no longer current);
+  computed colours matched var(--vert)/var(--ink); zero console errors. Build/
+  dryrun/counts green. Two focused commits (renderNav; nav CSS) pushed. main.js +
+  styles.css only — no content, no new module, no deps. Did NOT color by
+  position, add partial indicators, change the rail, fork renderers, or touch
+  B1/Block F.
 
 ---
 
