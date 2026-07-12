@@ -31,6 +31,20 @@ const levelLive = lvl => lvl.weeks.some(w => builtWeeks.has(w));
 const levelOfWeek = w => LEVELS.find(l => l.weeks.includes(w)) || LEVELS[0];
 const firstLessonOfWeek = w => LESSONS.findIndex(L => L.week === w);
 
+/* Completion by isCompleted(), NEVER by position — this is what drives the nav's
+   green "done" state, so skipping ahead can never fake completion.
+   - a week is complete iff EVERY built day in it is isCompleted()
+   - a level is complete iff ALL its built weeks are complete */
+const daysInWeek = w => LESSONS.filter(L => L.week === w).map(L => L.day);
+const weekComplete = w => {
+  const days = daysInWeek(w);
+  return days.length > 0 && days.every(d => isCompleted(d));
+};
+const levelComplete = L => {
+  const built = L.weeks.filter(w => builtWeeks.has(w));
+  return built.length > 0 && built.every(weekComplete);
+};
+
 /* Index every vocab item by audio key so the SRS can turn a due key
    back into a renderable card, regardless of which lesson it came from. */
 const ITEM_INDEX = {};
@@ -140,12 +154,18 @@ function syncHeader() {
 function renderNav() {
   const curLevel = levelOfWeek(lesson.week).id;
 
-  /* tier 1 — level tabs (A1/A2 live as built, B1/B2 greyed "à venir") */
+  /* tier 1 — level tabs (A1/A2 live as built, B1/B2 greyed "à venir").
+     Colour precedence: current level → on (ink); else fully complete → done
+     (green); else built → light; else locked. */
   const lv = el("levels"); lv.innerHTML = "";
   LEVELS.forEach(L => {
     const live = levelLive(L);
     const b = document.createElement(live ? "button" : "div");
-    b.className = "level" + (live && L.id === curLevel ? " on" : "") + (live ? "" : " locked");
+    let cls = "level";
+    if (!live) cls += " locked";
+    else if (L.id === curLevel) cls += " on";
+    else if (levelComplete(L)) cls += " done";
+    b.className = cls;
     if (live) {
       b.textContent = L.id;
       b.onclick = () => {
@@ -159,12 +179,18 @@ function renderNav() {
     lv.appendChild(b);
   });
 
-  /* tier 2 — week pills for the current level (built active, unbuilt locked) */
+  /* tier 2 — week pills for the current level. Colour precedence: current week
+     → on (ink); else all-days-complete → done (green); else built → light; else
+     locked. A partially-done week stays LIGHT (no partial indicator). */
   const wkRow = el("weeks"); wkRow.innerHTML = "";
   levelOfWeek(lesson.week).weeks.forEach(w => {
     const built = builtWeeks.has(w);
     const b = document.createElement(built ? "button" : "div");
-    b.className = "wk" + (w === lesson.week ? " on" : "") + (built ? "" : " locked");
+    let cls = "wk";
+    if (!built) cls += " locked";
+    else if (w === lesson.week) cls += " on";
+    else if (weekComplete(w)) cls += " done";
+    b.className = cls;
     b.innerHTML = "Sem " + w + (built ? "" : '<span class="lk">🔒</span>');
     if (built) b.onclick = () => { if (w !== lesson.week) switchLesson(firstLessonOfWeek(w)); };
     wkRow.appendChild(b);
@@ -175,7 +201,12 @@ function renderNav() {
   LESSONS.forEach((L, i) => {
     if (L.week !== lesson.week) return;
     const c = document.createElement("button");
-    c.className = "chip" + (i === lessonIndex ? " on" : "");
+    /* current day → on (ink); else genuinely completed → done (green); else
+       light. Green is by isCompleted(), never by being before the current day. */
+    let cls = "chip";
+    if (i === lessonIndex) cls += " on";
+    else if (isCompleted(L.day)) cls += " done";
+    c.className = cls;
     c.innerHTML = "Jour " + L.day + (isCompleted(L.day) ? '<span class="tickmark">✓</span>' : "");
     c.onclick = () => switchLesson(i);
     dy.appendChild(c);
