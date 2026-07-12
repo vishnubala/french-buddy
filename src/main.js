@@ -10,6 +10,7 @@ import { SKILL_BY_SLUG } from "./quiz/skills.mjs";
 import { QUIZ_BANK } from "./quiz/bank.mjs";
 import { createSession } from "./quiz/engine.mjs";
 import { READING } from "./reading/sets.mjs";
+import { LISTENING } from "./listening/sets.mjs";
 
 const CURRICULUM = { totalLessons: 84, weeks: 12 };
 
@@ -97,9 +98,10 @@ let lesson = LESSONS[lessonIndex];
 let stepIndex = 0;
 let stepDone = new Array(lesson.steps.length).fill(false);
 let correct = 0, attempts = 0;
-let appMode = "lesson";   /* "lesson" | "quiz" | "reading" | "home" — what the STATION shows */
+let appMode = "lesson";   /* "lesson"|"quiz"|"reading"|"listening"|"progress"|"home" — what the STATION shows */
 let quiz = null;          /* active diagnostic session (see src/quiz/) */
 let reading = null;       /* active reading set run (see src/reading/) */
+let listening = null;     /* active listening set run (see src/listening/) */
 let mode = "cours";       /* TOP-LEVEL axis: "cours" | "entrainement". Chooses
                              which nav chrome + station content renders. The
                              course keeps its lessonIndex/stepIndex either way. */
@@ -181,9 +183,10 @@ function renderNav() {
 }
 
 function switchLesson(i) {
-  const wasQuiz = appMode === "quiz" || appMode === "reading";
-  appMode = "lesson"; quiz = null; reading = null;  /* any nav click leaves practice */
-  if (i === lessonIndex && !wasQuiz) return;
+  const wasPractice = appMode === "quiz" || appMode === "reading" || appMode === "listening";
+  stopListening();
+  appMode = "lesson"; quiz = null; reading = null; listening = null;  /* any nav click leaves practice */
+  if (i === lessonIndex && !wasPractice) return;
   lessonIndex = i; lesson = LESSONS[i];
   stepIndex = 0;
   stepDone = new Array(lesson.steps.length).fill(false);
@@ -491,10 +494,11 @@ function setMode(m) {
   mode = m;
   document.body.dataset.mode = m;
   renderModeSwitch();
+  stopListening();
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (m === "cours") {
     /* restore the course exactly where it was — position was never touched */
-    appMode = "lesson"; quiz = null; reading = null;
+    appMode = "lesson"; quiz = null; reading = null; listening = null;
     syncHeader(); renderStep();
   } else {
     renderEntrainementHome();
@@ -504,7 +508,8 @@ function setMode(m) {
 /* L'Entraînement landing: a list of practice entries in the shared station
    surface. No rail (hidden via data-mode), no bottom control. */
 function renderEntrainementHome() {
-  appMode = "home"; quiz = null;
+  appMode = "home"; quiz = null; reading = null; listening = null;
+  stopListening();
   showControl(false);
   el("stationNum").textContent = "ENTRAÎNEMENT";
   el("lessonTitle").textContent = "L'Entraînement";
@@ -538,6 +543,15 @@ function renderEntrainementHome() {
     `${READING.disclaimer}</span>`;
   rcard.onclick = () => renderReadingLevels();
   list.appendChild(rcard);
+
+  /* Listening comprehension — the audio counterpart to reading (§7 honest scope). */
+  const lcard = document.createElement("button"); lcard.className = "pcard";
+  lcard.innerHTML =
+    `<span class="pcard-t">${LISTENING.label} <span class="pbadge">${LISTENING.format}</span></span>` +
+    `<span class="pcard-d">Écoute un audio et réponds — sans lire le texte. ` +
+    `${LISTENING.disclaimer}</span>`;
+  lcard.onclick = () => renderListeningLevels();
+  list.appendChild(lcard);
 
   PRACTICE.forEach(([m, title, desc]) => {
     const card = document.createElement("button"); card.className = "pcard";
@@ -911,6 +925,200 @@ function renderReadingResults() {
 
   /* offer another set at the same level without leaving the reading section */
   backLink("Autres séries de " + lv.label, () => renderReadingSets(lv));
+
+  nextBtn.disabled = false; nextBtn.className = "next done";
+  nextBtn.innerHTML = "Retour à l'entraînement";
+  nextBtn.onclick = () => renderEntrainementHome();
+}
+
+/* =====================================================================
+   L'Entraînement · Compréhension orale — the ONE new step type. Same leveled
+   level→set→run shell as reading, but each passage PLAYS audio with NO visible
+   French; the transcript is revealed ONLY after the questions are answered (the
+   sole new rendering behaviour). Questions reuse renderMCQuestion WITH shuffle —
+   the SAME MC path as quiz/reading, never forked (§2). Replay is UNLIMITED.
+
+   Audio reuses the existing map + browser-TTS fallback; a passage is a sequence
+   of `lines` (speaker voice baked in by generate-audio via `who`), played back
+   to back by playPassage below. HONEST SCOPE (§7): "niveau A1–A2, format TEF",
+   NOT real-exam prep. Content is Claude-drafted, NOT native-reviewed (§8.2). */
+
+/* Sequential passage player — plays each line's clip (or browser-TTS fallback)
+   back to back. A run token invalidates in-flight callbacks when the learner
+   replays, navigates, or the passage changes, so sequences never overlap. */
+let listenAudio = null, listenRun = 0;
+function stopListening() {
+  listenRun++;
+  if (listenAudio) { try { listenAudio.pause(); } catch {} listenAudio = null; }
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  document.querySelectorAll(".listen-play.playing").forEach(b => b.classList.remove("playing"));
+}
+function playPassage(lines, btn) {
+  stopListening();
+  const myRun = listenRun;
+  if (btn) btn.classList.add("playing");
+  let i = 0;
+  const finish = () => { if (myRun === listenRun) { if (btn) btn.classList.remove("playing"); listenAudio = null; } };
+  const next = () => {
+    if (myRun !== listenRun) return;              /* superseded by a newer play/stop */
+    if (i >= lines.length) { finish(); return; }
+    const ln = lines[i++];
+    const clip = AUDIO_CLIPS[ln.key];
+    if (clip) {
+      const a = new Audio(clip); listenAudio = a;
+      a.onended = next; a.onerror = next;
+      a.play().catch(() => next());
+    } else if ("speechSynthesis" in window) {
+      if (!cachedVoices.length) refreshVoices();
+      const u = new SpeechSynthesisUtterance(ln.say.replace(/&nbsp;/g, " "));
+      u.lang = "fr-FR"; u.rate = 0.95;
+      const fr = cachedVoices.find(v => v.lang && v.lang.startsWith("fr"));
+      if (fr) u.voice = fr;
+      u.onend = next; u.onerror = next;
+      speechSynthesis.speak(u);
+    } else { next(); }
+  };
+  next();
+}
+
+function renderListeningLevels() {
+  appMode = "home"; quiz = null; reading = null; listening = null; stopListening();
+  showControl(false);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  readingHead("ÉCOUTE", LISTENING.label, LISTENING.format);
+
+  backLink("L'Entraînement", () => renderEntrainementHome());
+  const eb = document.createElement("div"); eb.className = "eyebrow"; eb.textContent = "Compréhension orale"; stepEl.appendChild(eb);
+  const h = document.createElement("h3"); h.textContent = "Choisis ton niveau"; stepEl.appendChild(h);
+  const note = document.createElement("p"); note.className = "bk-note"; note.textContent = LISTENING.disclaimer; stepEl.appendChild(note);
+
+  const list = document.createElement("div"); list.className = "practice";
+  LISTENING.levels.forEach(lv => {
+    const nPass = lv.sets.reduce((n, s) => n + s.passages.length, 0);
+    const card = document.createElement("button"); card.className = "pcard";
+    card.innerHTML =
+      `<span class="pcard-t">${lv.label} <span class="pbadge">${lv.sets.length} séries · ${nPass} audios</span></span>` +
+      `<span class="pcard-d">${lv.blurb}</span>`;
+    card.onclick = () => renderListeningSets(lv);
+    list.appendChild(card);
+  });
+  stepEl.appendChild(list);
+}
+
+function renderListeningSets(lv) {
+  appMode = "home"; quiz = null; reading = null; listening = null; stopListening();
+  showControl(false);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  readingHead("ÉCOUTE", LISTENING.label, lv.label);
+
+  backLink("Niveaux", () => renderListeningLevels());
+  const eb = document.createElement("div"); eb.className = "eyebrow"; eb.textContent = lv.label; stepEl.appendChild(eb);
+  const h = document.createElement("h3"); h.textContent = "Choisis une série"; stepEl.appendChild(h);
+
+  const list = document.createElement("div"); list.className = "practice";
+  lv.sets.forEach(set => {
+    const card = document.createElement("button"); card.className = "pcard";
+    card.innerHTML =
+      `<span class="pcard-t">${set.title} <span class="pbadge">${set.passages.length} audios</span></span>` +
+      `<span class="pcard-d">${set.theme}</span>`;
+    card.onclick = () => launchListeningSet(lv, set);
+    list.appendChild(card);
+  });
+  stepEl.appendChild(list);
+}
+
+function launchListeningSet(lv, set) {
+  appMode = "listening";
+  listening = { level: lv, set, pi: 0, correct: 0, total: 0 };
+  showControl(true);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  readingHead("ÉCOUTE", set.title, lv.label + " · format TEF");
+  renderListeningItem();
+}
+
+function renderListeningItem() {
+  if (appMode !== "listening") return;
+  stopListening();
+  const passages = listening.set.passages;
+  const p = passages[listening.pi];
+  if (!p) { renderListeningResults(); return; }
+  stepEl.innerHTML = "";
+  stepEl.classList.remove("anim"); void stepEl.offsetWidth; stepEl.classList.add("anim");
+
+  const eb = document.createElement("div"); eb.className = "eyebrow";
+  eb.textContent = p.type + " · audio " + (listening.pi + 1) + " / " + passages.length;
+  stepEl.appendChild(eb);
+  const h = document.createElement("h3"); h.textContent = p.title; stepEl.appendChild(h);
+
+  const hint = document.createElement("p"); hint.className = "listen-hint";
+  hint.textContent = "Écoute l'audio, puis réponds. Tu peux réécouter autant de fois que tu veux — le texte n'apparaît qu'après tes réponses.";
+  stepEl.appendChild(hint);
+
+  /* the play control — NO French text is placed in the DOM here */
+  const row = document.createElement("div"); row.className = "listen-row";
+  const play = document.createElement("button"); play.className = "listen-play";
+  play.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Écouter</span>';
+  play.onclick = () => playPassage(p.lines, play);
+  row.appendChild(play);
+  stepEl.appendChild(row);
+
+  /* comprehension questions — shared MC primitive, shuffled like the quiz */
+  let answered = 0;
+  p.questions.forEach(q => {
+    const node = renderMCQuestion(q, isCorrect => {
+      listening.total++; if (isCorrect) listening.correct++;
+      answered++;
+      if (answered === p.questions.length) { revealTranscript(p); unlockListeningNext(); }
+    }, true);
+    stepEl.appendChild(node);
+  });
+
+  nextBtn.disabled = true; nextBtn.className = "next"; nextBtn.innerHTML = "Réponds à tout";
+}
+
+/* The ONE new behaviour: the transcript is built into the DOM only now, AFTER
+   the questions are answered — never before (revealing it early would turn
+   listening into reading). */
+function revealTranscript(p) {
+  const wrap = document.createElement("div"); wrap.className = "transcript";
+  const lab = document.createElement("div"); lab.className = "transcript-label"; lab.textContent = "Transcription";
+  wrap.appendChild(lab);
+  const multi = new Set(p.lines.map(l => l.who)).size > 1;
+  p.lines.forEach(ln => {
+    const line = document.createElement("p"); line.className = "tline";
+    line.innerHTML = (multi ? `<span class="who-badge ${ln.who === "B" ? "b" : "a"}">${ln.who}</span>` : "") + ln.say;
+    wrap.appendChild(line);
+  });
+  stepEl.appendChild(wrap);
+}
+
+function unlockListeningNext() {
+  const last = listening.pi === listening.set.passages.length - 1;
+  nextBtn.disabled = false; nextBtn.className = "next";
+  nextBtn.innerHTML = last
+    ? 'Voir le résultat <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+    : 'Audio suivant <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  nextBtn.onclick = () => { listening.pi++; window.scrollTo({ top: 0, behavior: "smooth" }); renderListeningItem(); };
+}
+
+function renderListeningResults() {
+  stopListening();
+  const pct = listening.total ? Math.round(listening.correct / listening.total * 100) : 0;
+  const lv = listening.level;
+  readingHead("BILAN", "Résultats — " + listening.set.title, "");
+
+  const eb = document.createElement("div"); eb.className = "eyebrow"; eb.textContent = "Compréhension orale · " + lv.label; stepEl.appendChild(eb);
+  const h = document.createElement("h3");
+  h.textContent = `Score : ${listening.correct} / ${listening.total} · ${pct}%`;
+  stepEl.appendChild(h);
+
+  const msg = document.createElement("p"); msg.className = "lede";
+  msg.innerHTML = pct >= 80 ? "Très bien — ton oreille suit bien ces audios courts."
+                : pct >= 50 ? "Pas mal. Réécoute les audios en lisant la transcription, puis recommence."
+                            : "Continue — réécoute chaque audio plusieurs fois, puis lis la transcription.";
+  stepEl.appendChild(msg);
+
+  backLink("Autres séries de " + lv.label, () => renderListeningSets(lv));
 
   nextBtn.disabled = false; nextBtn.className = "next done";
   nextBtn.innerHTML = "Retour à l'entraînement";

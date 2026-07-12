@@ -262,6 +262,28 @@ body[data-mode="entrainement"] .nav{display:none}
   transition:color .12s ease}
 .backlink:hover{color:var(--ink)}
 
+/* ---- listening (compréhension orale): play control + reveal-after transcript ---- */
+.listen-hint{font-family:"Newsreader",serif;font-size:14px;color:var(--ink-soft);margin:2px 0 14px}
+.listen-row{display:flex;justify-content:center;margin:4px 0 22px}
+.listen-play{display:inline-flex;align-items:center;gap:10px;font-family:"Bricolage Grotesque",sans-serif;
+  font-weight:700;font-size:16px;padding:13px 26px;border-radius:999px;border:none;cursor:pointer;
+  background:var(--ink);color:var(--paper);transition:transform .12s ease,opacity .12s ease}
+.listen-play svg{width:20px;height:20px}
+.listen-play:hover{transform:translateY(-1px)}
+.listen-play.playing{opacity:.65}
+.listen-play.playing svg{animation:listenpulse 1s ease-in-out infinite}
+@keyframes listenpulse{0%,100%{opacity:1}50%{opacity:.4}}
+.transcript{background:var(--paper-2);border:1px solid var(--zinc-line);border-left:3px solid var(--vert);
+  border-radius:11px;padding:12px 16px 14px;margin:20px 0 6px}
+.transcript-label{font-family:"Spline Sans Mono",monospace;font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--vert-deep);margin-bottom:8px}
+.tline{font-family:"Newsreader",serif;font-size:15.5px;line-height:1.55;margin:0 0 7px}
+.tline:last-child{margin-bottom:0}
+.who-badge{display:inline-block;min-width:18px;text-align:center;font-family:"Spline Sans Mono",monospace;
+  font-size:10px;font-weight:600;padding:1px 5px;border-radius:5px;margin-right:7px;vertical-align:middle;
+  background:var(--paper);border:1px solid var(--zinc-line);color:var(--ink-soft)}
+.who-badge.b{border-color:var(--gold);color:var(--gold-deep,var(--ink))}
+
 /* ---- reading passage (compréhension écrite): an intro/body block in a card ---- */
 .passage{background:var(--paper-2);border:1px solid var(--zinc-line);border-left:3px solid var(--gold);
   border-radius:11px;padding:14px 17px;margin:6px 0 20px}
