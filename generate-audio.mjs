@@ -47,6 +47,7 @@
    ============================================================================= */
 
 import { LESSONS } from "./src/lessons/index.mjs";
+import { LISTENING } from "./src/listening/sets.mjs";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
@@ -113,6 +114,23 @@ function collectClips() {
       }
     }
   }
+
+  /* L'Entraînement · listening passages — one clip per line, speaker voice by
+     `who`, exactly like dialogue turns (no _slow: replay is unlimited at normal
+     speed). Same content-hash cache + dup-key guard as everything else. */
+  for (const level of LISTENING.levels) {
+    for (const set of level.sets) {
+      for (const p of set.passages) {
+        for (const ln of p.lines ?? []) {
+          const voice = VOICES[ln.who] ?? VOICES.default;
+          /* `say` carries display niceties (&nbsp; before ?!:) — strip to a
+             plain space so TTS never voices the entity. */
+          push({ key: ln.key, text: ln.say.replace(/&nbsp;/g, " "), voice, rate: "0%" });
+        }
+      }
+    }
+  }
+
   return clips;
 }
 

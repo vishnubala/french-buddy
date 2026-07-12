@@ -12,6 +12,7 @@
 
 import { LESSONS } from "./src/lessons/index.mjs";
 import { BANK_STATS } from "./src/quiz/bank.mjs";
+import { LISTENING } from "./src/listening/sets.mjs";
 
 const errors = [];
 const seenKeys = new Set();
@@ -51,13 +52,35 @@ for (const lesson of LESSONS) {
   }
 }
 
+/* Listening passages share the SAME global audio-key namespace as lessons — a
+   duplicate key would break both the pipeline and clip playback. Check the line
+   keys here too, plus each passage's question answer ranges. */
+let listeningKeys = 0, listeningQs = 0;
+for (const level of LISTENING.levels) {
+  for (const set of level.sets) {
+    for (const p of set.passages) {
+      for (const ln of p.lines ?? []) { checkKey(ln.key, ln.say, `Listening ${set.id}/${p.id}`); listeningKeys++; }
+      for (const [qi, q] of (p.questions ?? []).entries()) {
+        listeningQs++;
+        const where = `Listening ${p.id} Q${qi + 1}`;
+        if (!Array.isArray(q.opts) || !q.opts.length) errors.push(`${where}: missing/empty opts`);
+        else if (typeof q.answer !== "number" || q.answer < 0 || q.answer >= q.opts.length)
+          errors.push(`${where}: answer index ${q.answer} out of range for ${q.opts.length} opts`);
+        if (new Set(q.opts).size !== q.opts.length) errors.push(`${where}: duplicate option`);
+      }
+    }
+  }
+}
+
 if (errors.length) {
   console.error(`DRY-RUN FAILED — ${errors.length} problem(s):\n`);
   for (const e of errors) console.error("  ✗ " + e);
   process.exit(1);
 }
 
-console.log(`DRY-RUN PASS — ${LESSONS.length} lessons, ${seenKeys.size} unique audio keys, all recall answers in range.`);
+console.log(`DRY-RUN PASS — ${LESSONS.length} lessons, ${seenKeys.size} unique audio keys ` +
+  `(incl. ${listeningKeys} listening line keys), all recall/listening answers in range.`);
+console.log(`LISTENING — ${listeningKeys} clips, ${listeningQs} comprehension questions.`);
 
 /* Bank regression line — must reconcile: generated + hand === total. */
 const { total, generated, hand } = BANK_STATS;
