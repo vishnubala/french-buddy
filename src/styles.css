@@ -29,6 +29,11 @@
   .brand h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:19px;letter-spacing:-.01em}
   .brand .tag{font-family:"Spline Sans Mono",monospace;font-size:10.5px;letter-spacing:.14em;
      text-transform:uppercase;color:var(--ink-soft);margin-left:auto}
+  .gear{background:transparent;border:none;color:var(--ink-soft);cursor:pointer;padding:5px;
+     border-radius:8px;display:grid;place-items:center;transition:all .12s ease}
+  .gear svg{width:18px;height:18px;display:block}
+  .gear:hover{color:var(--ink);background:var(--paper-2)}
+  .gear.on{color:var(--vert);background:var(--paper-2)}
 
   .line{position:relative;height:34px;margin-top:2px}
   .rail{position:absolute;top:16px;left:6px;right:6px;height:3px;background:var(--zinc-line);border-radius:3px}
@@ -241,6 +246,18 @@ body[data-mode="entrainement"] .nav{display:none}
 .bk-status.err{color:var(--wrong)}
 .bk-status.confirm{color:var(--ink)}
 .bk-confirm-msg{font-family:"Newsreader",serif;font-size:15px;color:var(--ink);margin:0 0 10px}
+
+/* ---- settings form fields (Azure key) ---- */
+.set-field{display:flex;flex-direction:column;gap:4px;margin:0 0 10px}
+.set-flabel{font-family:"Spline Sans Mono",monospace;font-size:10.5px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-soft)}
+.set-input{font-family:"Spline Sans Mono",monospace;font-size:13px;padding:9px 12px;border-radius:9px;
+  border:1px solid var(--zinc-line);background:var(--paper);color:var(--ink);width:100%}
+.set-input:focus{outline:none;border-color:var(--ink-soft)}
+.set-steps{font-family:"Newsreader",serif;font-size:13.5px;color:var(--ink-soft);line-height:1.5;
+  margin:12px 0 4px;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.set-steps code{font-family:"Spline Sans Mono",monospace;font-size:12px;background:var(--paper-2);
+  padding:1px 5px;border-radius:4px;border:1px solid var(--zinc-line)}
 
 /* ---- Ma progression: read-only quiz trend ---- */
 .prog-card{background:var(--paper);border:1px solid var(--zinc-line);border-radius:12px;

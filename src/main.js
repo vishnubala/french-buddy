@@ -5,7 +5,7 @@
    ===================================================================== */
 import "./styles.css";
 import { LESSONS } from "./lessons/index.mjs";
-import { completeLesson, isCompleted, registerItems, dueKeys, gradeItem, saveQuizResult, appendQuizAttempt, getHistory, exportData, importData, validateImport } from "./storage.js";
+import { completeLesson, isCompleted, registerItems, dueKeys, gradeItem, saveQuizResult, appendQuizAttempt, getHistory, exportData, importData, validateImport, getAzureCreds, setAzureCreds, validateAzureKey, resetProgress } from "./storage.js";
 import { SKILL_BY_SLUG } from "./quiz/skills.mjs";
 import { QUIZ_BANK } from "./quiz/bank.mjs";
 import { createSession } from "./quiz/engine.mjs";
@@ -214,8 +214,9 @@ function renderNav() {
 }
 
 function switchLesson(i) {
-  const wasPractice = appMode === "quiz" || appMode === "reading" || appMode === "listening";
+  const wasPractice = appMode === "quiz" || appMode === "reading" || appMode === "listening" || settingsOpen;
   stopListening();
+  settingsOpen = false; gearOff();
   appMode = "lesson"; quiz = null; reading = null; listening = null;  /* any nav click leaves practice */
   if (i === lessonIndex && !wasPractice) return;
   lessonIndex = i; lesson = LESSONS[i];
@@ -521,7 +522,8 @@ function renderModeSwitch() {
 }
 
 function setMode(m) {
-  if (m === mode) return;
+  if (m === mode && !settingsOpen) return;
+  settingsOpen = false; gearOff();
   mode = m;
   document.body.dataset.mode = m;
   renderModeSwitch();
@@ -591,37 +593,6 @@ function renderEntrainementHome() {
     list.appendChild(card);
   });
   stepEl.appendChild(list);
-
-  renderBackupPanel();
-}
-
-/* ---- progress backup: export/import (localStorage portability) ----
-   A small utility in L'Entraînement, NOT course chrome. Reuses the home
-   surface — no forked renderer (§2). Import overwrites, so it goes through an
-   inline confirm; malformed/foreign files are refused without touching state. */
-function renderBackupPanel() {
-  const sub = document.createElement("div"); sub.className = "rsub";
-  sub.textContent = "Sauvegarde de la progression";
-  stepEl.appendChild(sub);
-
-  const note = document.createElement("p"); note.className = "bk-note";
-  note.innerHTML = "Télécharge un fichier <code>.json</code> pour sauvegarder ta progression " +
-    "(leçons, séries, quiz) ou la transférer sur un autre appareil. " +
-    "<b>L'import remplace</b> la progression enregistrée sur cet appareil.";
-  stepEl.appendChild(note);
-
-  const row = document.createElement("div"); row.className = "backup";
-  const exp = document.createElement("button"); exp.className = "bk-btn";
-  exp.textContent = "Exporter ma progression";
-  exp.onclick = exportProgress;
-  const imp = document.createElement("button"); imp.className = "bk-btn";
-  imp.textContent = "Importer une progression";
-  imp.onclick = () => getImportInput().click();
-  row.appendChild(exp); row.appendChild(imp);
-  stepEl.appendChild(row);
-
-  const status = document.createElement("div"); status.className = "bk-status"; status.id = "bkStatus";
-  stepEl.appendChild(status);
 }
 
 function setBackupStatus(kind, msg) {
@@ -694,6 +665,142 @@ function confirmImport(obj) {
     }
   };
   no.onclick = () => setBackupStatus("", "Import annulé — rien n'a changé.");
+  row.appendChild(yes); row.appendChild(no);
+  s.appendChild(msg); s.appendChild(row);
+}
+
+/* =====================================================================
+   SETTINGS — a utility drawer (NOT a third mode tab). Opened by the header gear,
+   rendered into the SHARED station surface (no forked renderer, §2); closing
+   returns to the current mode's view. Exactly three things live here: the BYO
+   Azure Speech key, export/import (migrated out of L'Entraînement), and reset.
+   ===================================================================== */
+
+let settingsOpen = false;
+const gearOff = () => { const g = el("gearBtn"); if (g) g.classList.remove("on"); };
+
+function openSettings() {
+  if (settingsOpen) { exitSettings(); return; }   /* gear toggles */
+  settingsOpen = true;
+  const g = el("gearBtn"); if (g) g.classList.add("on");
+  stopListening();
+  showControl(false);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  renderSettings();
+}
+
+/* Leave settings, returning to where you were (exact lesson step in Le Cours;
+   the practice home in L'Entraînement). */
+function exitSettings() {
+  settingsOpen = false; gearOff();
+  if (mode === "cours") { appMode = "lesson"; showControl(true); syncHeader(); renderStep(); }
+  else { renderEntrainementHome(); }
+}
+
+function setStatus(id, kind, msg) {
+  const s = el(id); if (!s) return;
+  s.className = "bk-status" + (kind ? " " + kind : ""); s.textContent = msg;
+}
+
+function renderSettings() {
+  el("stationNum").textContent = "RÉGLAGES";
+  el("lessonTitle").textContent = "Réglages";
+  el("lessonDur").textContent = "";
+  el("platform").innerHTML = "";
+  stepEl.innerHTML = "";
+  stepEl.classList.remove("anim"); void stepEl.offsetWidth; stepEl.classList.add("anim");
+
+  const sub = t => { const d = document.createElement("div"); d.className = "rsub"; d.textContent = t; stepEl.appendChild(d); };
+  const note = html => { const p = document.createElement("p"); p.className = "bk-note"; p.innerHTML = html; stepEl.appendChild(p); };
+  const statusDiv = id => { const d = document.createElement("div"); d.className = "bk-status"; d.id = id; stepEl.appendChild(d); };
+
+  backLink("Fermer", () => exitSettings());
+  const eb = document.createElement("div"); eb.className = "eyebrow"; eb.textContent = "Utilitaires"; stepEl.appendChild(eb);
+  const h = document.createElement("h3"); h.textContent = "Réglages"; stepEl.appendChild(h);
+
+  /* ---- 1. Azure Speech key (BYO, for the upcoming Speaking module) ---- */
+  sub("Clé Azure Speech · expression orale (à venir)");
+  note("Le futur module d'expression orale utilise <b>ta</b> clé Azure Speech. " +
+    "Le tarif <b>Free&nbsp;F0</b> est gratuit (500&nbsp;000 caractères/mois). " +
+    "La clé reste dans <b>ce navigateur</b> (localStorage)&nbsp;: si tu effaces les données du site " +
+    "(ou lors d'une purge iOS&nbsp;Safari), il faudra la recoller.");
+
+  const creds = getAzureCreds();
+  const field = (labelTxt, val, ph) => {
+    const wrap = document.createElement("label"); wrap.className = "set-field";
+    const lab = document.createElement("span"); lab.className = "set-flabel"; lab.textContent = labelTxt;
+    const inp = document.createElement("input"); inp.className = "set-input"; inp.type = "text";
+    inp.autocomplete = "off"; inp.spellcheck = false; inp.value = val || ""; inp.placeholder = ph;
+    wrap.appendChild(lab); wrap.appendChild(inp); stepEl.appendChild(wrap);
+    return inp;
+  };
+  const keyInp = field("Clé (KEY 1)", creds.key, "colle ta clé Azure ici");
+  const regInp = field("Région", creds.region, "francecentral");
+
+  const azRow = document.createElement("div"); azRow.className = "backup";
+  const saveBtn = document.createElement("button"); saveBtn.className = "bk-btn"; saveBtn.textContent = "Enregistrer et vérifier";
+  azRow.appendChild(saveBtn); stepEl.appendChild(azRow);
+  statusDiv("azStatus");
+  saveBtn.onclick = async () => {
+    const key = keyInp.value.trim(), region = regInp.value.trim();
+    setAzureCreds(key, region);                 /* save to its OWN store */
+    setStatus("azStatus", "", "Vérification auprès d'Azure…");
+    saveBtn.disabled = true;
+    const r = await validateAzureKey(key, region);
+    saveBtn.disabled = false;
+    if (r.ok) setStatus("azStatus", "ok", "✓ Clé valide · région " + region);
+    else setStatus("azStatus", "err", "✗ " + r.error);
+  };
+
+  const steps = document.createElement("ol"); steps.className = "set-steps";
+  steps.innerHTML =
+    "<li>Va sur <code>portal.azure.com</code></li>" +
+    "<li>Clique « Créer une ressource »</li>" +
+    "<li>Cherche « Speech » et choisis le service <b>Speech</b> (ressource autonome — <b>pas</b> via AI Foundry, qui impose le tarif payant S0)</li>" +
+    "<li>Tarif&nbsp;: choisis <b>Free F0</b></li>" +
+    "<li>« Vérifier + créer », puis « Créer »</li>" +
+    "<li>« Accéder à la ressource » → « Clés et point de terminaison »</li>" +
+    "<li>Copie <b>KEY 1</b> et la <b>Région</b>, colle-les ci-dessus</li>";
+  stepEl.appendChild(steps);
+
+  /* ---- 2. Export / import (migrated from L'Entraînement) ---- */
+  sub("Sauvegarde de la progression");
+  note("Télécharge un fichier <code>.json</code> pour sauvegarder ta progression " +
+    "(leçons, révisions, quiz) ou la transférer sur un autre appareil. " +
+    "<b>L'import remplace</b> la progression de cet appareil. " +
+    "<i>La clé Azure n'est jamais incluse dans l'export.</i>");
+  const bkRow = document.createElement("div"); bkRow.className = "backup";
+  const exp = document.createElement("button"); exp.className = "bk-btn"; exp.textContent = "Exporter ma progression"; exp.onclick = exportProgress;
+  const imp = document.createElement("button"); imp.className = "bk-btn"; imp.textContent = "Importer une progression"; imp.onclick = () => getImportInput().click();
+  bkRow.appendChild(exp); bkRow.appendChild(imp); stepEl.appendChild(bkRow);
+  statusDiv("bkStatus");
+
+  /* ---- 3. Reset progress ---- */
+  sub("Réinitialiser");
+  note("Efface ta progression (leçons, révisions, quiz) sur cet appareil. " +
+    "<b>Ta clé Azure n'est pas effacée</b> (c'est une identité, pas une progression).");
+  const rsRow = document.createElement("div"); rsRow.className = "backup";
+  const rsBtn = document.createElement("button"); rsBtn.className = "bk-btn danger"; rsBtn.textContent = "Réinitialiser ma progression";
+  rsBtn.onclick = confirmReset;
+  rsRow.appendChild(rsBtn); stepEl.appendChild(rsRow);
+  statusDiv("resetStatus");
+}
+
+function confirmReset() {
+  const s = el("resetStatus"); if (!s) return;
+  s.className = "bk-status confirm"; s.innerHTML = "";
+  const msg = document.createElement("p"); msg.className = "bk-confirm-msg";
+  msg.innerHTML = "Ceci efface définitivement ta progression sur cet appareil. " +
+    "<b>Exporte ta progression d'abord si tu veux la garder.</b> Continuer ?";
+  const row = document.createElement("div"); row.className = "backup";
+  const yes = document.createElement("button"); yes.className = "bk-btn danger"; yes.textContent = "Oui, tout effacer";
+  const no  = document.createElement("button"); no.className = "bk-btn"; no.textContent = "Annuler";
+  yes.onclick = () => {
+    resetProgress();          /* wipes progress/SRS/quiz/history — NOT the Azure key */
+    syncHeader();             /* nav ✓ marks / rail reflect the wipe immediately */
+    setStatus("resetStatus", "ok", "Progression réinitialisée. Ta clé Azure est conservée.");
+  };
+  no.onclick = () => setStatus("resetStatus", "", "Annulé — rien n'a changé.");
   row.appendChild(yes); row.appendChild(no);
   s.appendChild(msg); s.appendChild(row);
 }
@@ -1262,6 +1369,7 @@ function renderProgression() {
 
 /* ---- boot: default to Le Cours, exactly today's experience ---- */
 document.body.dataset.mode = mode;   /* "cours" */
+const gearBtn = el("gearBtn"); if (gearBtn) gearBtn.onclick = openSettings;
 renderModeSwitch();
 syncHeader();
 renderStep();
