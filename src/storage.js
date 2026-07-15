@@ -9,6 +9,7 @@ const PROGRESS_KEY = "fb.progress.v1";
 const MASTERY_KEY  = "fb.mastery.v1";
 const QUIZ_KEY     = "fb.quiz.v1";
 const HISTORY_KEY  = "fb.history.v1";
+const AZURE_KEY    = "fb.azure.v1";   /* BYO Speech credential — see §credentials */
 
 /* Leitner intervals (days until next review), indexed by level.
    Matches docs/curriculum-spec.md §5. */
@@ -209,5 +210,56 @@ export function importData(obj) {
   save(MASTERY_KEY, mastery);
   save(QUIZ_KEY, quiz);
   save(HISTORY_KEY, history);
+  /* NOTE: the Azure key (AZURE_KEY) is deliberately NOT written here — an import
+     never touches the credential (see §credentials). */
   return { ok: true };
+}
+
+/* ---------------- §credentials: Azure Speech key (bring-your-own) ------------
+   Stored in its OWN key, deliberately SEPARATE from the progress store, for the
+   upcoming Speaking module. CRITICAL: this is NEVER included in exportData() and
+   NEVER read/written by importData() — the export file gets moved around (email,
+   cloud, shared), and a key inside it is a silent credential leak. resetProgress()
+   also leaves it untouched: a credential is not progress. */
+
+export function getAzureCreds() {
+  const c = load(AZURE_KEY, null);
+  return isPlainObject(c) ? { key: c.key || "", region: c.region || "" } : { key: "", region: "" };
+}
+export function setAzureCreds(key, region) {
+  save(AZURE_KEY, { key: (key || "").trim(), region: (region || "").trim() });
+}
+export function clearAzureCreds() { try { localStorage.removeItem(AZURE_KEY); } catch {} }
+
+/* Validate a key+region cheaply via the token endpoint (issueToken) — consumes
+   NO TTS characters. Endpoint + browser-CORS behaviour verified against live
+   Azure this session: a browser fetch to the regional endpoint is allowed and
+   returns a readable 401 for a bad key, while a wrong region fails to resolve
+   (network error). No dependency, no backend of ours (the call goes straight to
+   the user's own Azure resource). */
+export async function validateAzureKey(key, region) {
+  key = (key || "").trim(); region = (region || "").trim();
+  if (!key || !region) return { ok: false, error: "Entre une clé ET une région (ex. francecentral)." };
+  if (/^https?:\/\//i.test(key) || key.includes("."))
+    return { ok: false, error: "On dirait une URL. Colle la CLÉ (KEY 1), pas le point de terminaison." };
+  let res;
+  try {
+    res = await fetch(`https://${region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`,
+      { method: "POST", headers: { "Ocp-Apim-Subscription-Key": key }, body: "" });
+  } catch {
+    return { ok: false, error: `Région introuvable : « ${region} ». Vérifie la région (ex. francecentral, westeurope).` };
+  }
+  if (res.ok) return { ok: true, region };
+  if (res.status === 401 || res.status === 403)
+    return { ok: false, error: "Clé refusée par Azure. Vérifie que tu as copié KEY 1 (pas l'URL) et la bonne région." };
+  return { ok: false, error: `Azure a répondu ${res.status}. Vérifie la clé et la région.` };
+}
+
+/* ---------------- reset progress ----------------
+   Wipes learner progress (progress + SRS + last quiz + history). Does NOT touch
+   the Azure credential — that's a credential, not progress. */
+export function resetProgress() {
+  for (const k of [PROGRESS_KEY, MASTERY_KEY, QUIZ_KEY, HISTORY_KEY]) {
+    try { localStorage.removeItem(k); } catch {}
+  }
 }
