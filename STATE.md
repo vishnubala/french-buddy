@@ -12,7 +12,39 @@ this conversation."
 
 ## [CURRENT PHASE]
 
-**NEW (this session): NAV PROGRESS-COLOUR LANGUAGE — one completion-driven
+**NEW (this session): SETTINGS DRAWER (header gear) — Azure key + export/import +
+reset.** A small gear near the brand tag (`index.html` `#gearBtn`) opens Settings
+in the **shared station surface** (no forked renderer, §2; **NOT a third mode
+tab** — Le Cours | L'Entraînement stay the two co-equal axes); closing returns to
+the **exact lesson** in Le Cours or the **practice home** in L'Entraînement.
+Exactly **three** things live in it (no speculative toggles):
+1. **BYO Azure Speech key** — key + region fields (new `fb.azure.v1` store via
+   `storage.js`, deliberately separate from progress), an "Enregistrer et
+   vérifier" that validates against Azure and shows a clear **✓/✗** at entry (a
+   URL-paste guard + a bad-key `401` message + a bad-region network message),
+   plus a step-by-step to get a **free F0** key (standalone Speech resource, not
+   via Foundry) and an honest "lives in this browser's localStorage" note.
+   Validation uses the **issueToken** endpoint (no TTS chars) — **endpoint +
+   browser-CORS verified against live Azure this session** (a bad key returns a
+   readable 401; a wrong region fails to resolve in ~0.7s), so it's a real,
+   dependency-free check.
+2. **Export / import** — MIGRATED out of L'Entraînement into Settings (behaviour
+   unchanged: versioned JSON, validate-before-apply, confirm-before-overwrite);
+   **removed from the Entraînement home**.
+3. **Reset progress** — inline confirm that points at Export first; wipes
+   progress/SRS/quiz/history and **never touches the Azure key**.
+**CRITICAL SECURITY — verified for real:** the key is **never in exportData()**
+(export file has only progress/mastery/quiz/history; the key + region strings
+appear nowhere in it), and **import never writes the key** — even a crafted file
+carrying a `data.azure` section leaves the saved key intact (the injected
+"EVILKEY" did not land) while its progress still imported. Reset kept the key;
+malformed import still refused cleanly. Settings opens/closes from both modes,
+returns you where you were, zero console errors. Build green, dryrun/counts pass,
+bank/lessons untouched. Two focused commits (storage key store/validation/reset;
+Settings UI + gear + migration) pushed. **Screenshot tool hung again** — verified
+via DOM/eval + a live raw-fetch CORS probe.
+
+**PREVIOUS session: NAV PROGRESS-COLOUR LANGUAGE — one completion-driven
 colour across all three nav tiers (day chips, week pills, level tabs).** Added
 `weekComplete()` / `levelComplete()` to `main.js` (**by `isCompleted()`, NEVER by
 position**) and applied a fixed precedence in the existing `renderNav` (no fork):
@@ -594,21 +626,24 @@ decisions, NOT new lessons. In rough priority:
    someone has to *listen*. Nothing ships to a real learner until this is
    done, and it also gates any B1/Block F work (§11.5). This is now the
    single biggest blocker; everything else is secondary.
-1b. **NEXT session: OPEN — L'Entraînement now spans all four skills for A1–A2.**
-   The practice side now has: 3 diagnostic quizzes (19-skill adaptive engine +
-   runtime shuffle), the **leveled Reading library (A1/A2, 4 sets, 19 passages)**,
-   the **leveled Listening library (A1/A2, 4 sets, 16 passages) — the new
-   `listening` step type**, results-history + "Ma progression", and full
-   localStorage export/import portability. The remaining real moves are FORKS,
-   each gated on a person-level decision AND the standing §8.2 native review:
-     - **TEF Writing** — self-assessment/rubric UI vs. needing a backend to grade
-       (leans toward self-assess to stay §3-pure); decide the shape first. This
-       is the last of the four skills not yet built.
-     - **Exam-mode listening (parked idea)** — a variant with CAPPED replays +
-       maybe a timer; the current listening module is deliberately unlimited.
+1b. **NEXT session (SET): SPEAKING — read-aloud pronunciation scoring, BYO-key.**
+   Browser-side **Azure Pronunciation Assessment** using the key the learner now
+   saves in Settings (`getAzureCreds()`); **static-host compatible (GitHub Pages),
+   NO backend of ours** — the call goes straight to the user's own Azure resource.
+   The Settings key store + `validateAzureKey()` (issueToken, CORS-verified this
+   session) are the groundwork. Open scoping questions to settle first: the Speech
+   SDK-vs-REST path for Pronunciation Assessment from the browser (verify the
+   current SDK/REST surface against live docs — do NOT trust remembered names),
+   whether it needs a mic-permission + recording flow, and how it slots into the
+   engine (likely a new practice step like `listening`, §2 — do NOT fork the
+   question renderer). Still §3: no dependency unless a concrete wall is hit.
+   OTHER remaining forks (each gated on the §8.2 native review):
+     - **TEF Writing** — self-assessment/rubric UI vs. needing a backend (leans
+       self-assess to stay §3-pure). The last of the four skills after Speaking.
+     - **Exam-mode listening (parked)** — a variant with CAPPED replays + a timer;
+       the current listening module is deliberately unlimited.
      - **B1 content (Block F)** — HARD-gated behind the native review of Weeks
        1–2 (§11.5); do NOT start drafting until that feedback is back.
-   Pick one WITH the person; don't self-select a fork.
    SEPARATE standing review debt (grows, doesn't block a build): the **7
    Claude-drafted mechanical quiz banks** (etre_avoir, present_verbs, reflexive,
    imparfait, futur_proche, imperative, prepositions — 78 items), the **19
@@ -1162,6 +1197,28 @@ native review of all 12 weeks is still the hard gate.
   styles.css only — no content, no new module, no deps. Did NOT color by
   position, add partial indicators, change the rail, fork renderers, or touch
   B1/Block F.
+- **Session (Settings drawer — Azure key, export/import, reset).** Added a header
+  gear opening Settings in the shared surface (not a third mode tab; returns you
+  where you were). Storage: new fb.azure.v1 key store (get/set/clearAzureCreds),
+  validateAzureKey() via the issueToken endpoint, resetProgress(); the key is
+  excluded from exportData() and never written by importData(). BEFORE coding,
+  verified the Azure endpoint + browser-CORS against LIVE docs AND a real
+  raw-fetch probe (dummy key → readable 401 on francecentral = CORS allowed;
+  bad-region host → TypeError in ~0.7s) — so the cheap validation is genuinely
+  feasible in-browser, no SDK/dependency. UI: key+region fields with validate-
+  on-save (✓/✗, URL-paste guard), a free-F0 walkthrough, the localStorage note;
+  export/import migrated out of L'Entraînement (removed from its home); reset with
+  an inline confirm that points at Export first and keeps the key. Verified for
+  real in-browser: settings open/close from both modes; export/import round-trip;
+  KEY EXCLUSION (key absent from the export file; import — even a crafted file
+  carrying data.azure — never clobbers the saved key; EVILKEY did not land); all
+  validation paths (401 bad key, network bad region, URL-paste); reset wipes
+  progress but keeps the key; malformed import still refused; zero console errors.
+  Build/dryrun/counts green, bank/lessons untouched. Two focused commits (storage;
+  settings UI) pushed. NEXT set to Speaking (BYO-key browser-side Azure
+  Pronunciation Assessment, static-host, no backend). Did NOT add speculative
+  settings, make it a third tab, put the key in exports, add a backend or deps,
+  fork renderers, or touch B1/Block F. Screenshot tool hung again — DOM/eval only.
 
 ---
 
