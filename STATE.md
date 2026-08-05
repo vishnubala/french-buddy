@@ -12,7 +12,41 @@ this conversation."
 
 ## [CURRENT PHASE]
 
-**NEW (this session): SETTINGS DRAWER (header gear) — Azure key + export/import +
+**NEW (this session): SPEAKING — SESSION 1 of 4 (content curation ONLY).** Built
+`src/speaking/sets.mjs`, a leveled A1/A2 **read-aloud** library, mirroring the
+EXACT outer shape of `reading/sets.mjs` + `listening/sets.mjs`
+(`{ label, format, disclaimer, levels:[{id,label,blurb,sets:[…]}] }`) so the
+future entry card + level/set pickers reuse the existing chrome with no new
+renderer (§2). **NO SDK, NO install, NO dependency, NO mic code, NO new audio** —
+that's session 3. A speaking item = `{ id, ref, say, key }`: `ref` = the French
+sentence the learner reads, `say` = the TTS-clean reference text (later the
+assessment's reference text), **`key` = an EXISTING lesson dialogue-turn key** so
+reference-audio playback reuses a clip already in `clips.json`. **CURATED, not
+authored:** all **28 items** are existing lesson dialogue turns
+(`d{day}_d{n}`) whose clips already exist — verified every key resolves in both
+`LESSONS` and `clips.json` (0 missing) and spot-checked 4 keys → real `.mp3` on
+disk. **4 sets × 7 = 28:** A1 "Se présenter" + "Au café et en ville" (present /
+A1 imperative / « je voudrais » / aller-motion — **kept level-pure, no PC/futur
+proche/imparfait leaking in**, §8.4); A2 "Le week-end dernier" (passé composé)
++ "Projets et souvenirs" (futur proche + imparfait + opinion frames).
+**`dryrun.mjs` extended** with the INVERSE of the uniqueness check: every
+speaking `key` must ALREADY EXIST in the audio-key namespace (intentional
+reuse — dangling key = error), no new key introduced, no duplicate speaking
+`id`, `ref`/`say`/`key` all present. **Verified for real:** `npm run build`
+0 errors; `npm run dryrun` PASS (84 lessons, 1243 unique keys incl. 27
+listening, **+ 28 speaking read-aloud items, all keys resolve to existing
+audio, no new clips**); `npm run counts` UNCHANGED (speaking is a separate
+module, doesn't touch LESSONS — still 1621 clips / 42,753 chars); lessons/quiz
+bank (848) untouched. One focused commit (speaking data + dryrun key-existence
+check) pushed on green. **Review debt (§8.2):** the content is reused verbatim
+from already-in-debt lessons, so nothing net-new to native-review EXCEPT the
+**curation choice** (which sentences, at which level) — folded into the same
+§8.2 gate. **This is a design already reviewed** — see the DESIGN SKETCH and the
+live-docs INVESTIGATION earlier this session for the full 4-session plan, the
+fr-FR word-level-only scope, and the §3 dependency amendment (drafted, not yet
+applied — lands in session 3 when the SDK actually arrives).
+
+**PREVIOUS session: SETTINGS DRAWER (header gear) — Azure key + export/import +
 reset.** A small gear near the brand tag (`index.html` `#gearBtn`) opens Settings
 in the **shared station surface** (no forked renderer, §2; **NOT a third mode
 tab** — Le Cours | L'Entraînement stay the two co-equal axes); closing returns to
@@ -626,17 +660,30 @@ decisions, NOT new lessons. In rough priority:
    someone has to *listen*. Nothing ships to a real learner until this is
    done, and it also gates any B1/Block F work (§11.5). This is now the
    single biggest blocker; everything else is secondary.
-1b. **NEXT session (SET): SPEAKING — read-aloud pronunciation scoring, BYO-key.**
-   Browser-side **Azure Pronunciation Assessment** using the key the learner now
-   saves in Settings (`getAzureCreds()`); **static-host compatible (GitHub Pages),
-   NO backend of ours** — the call goes straight to the user's own Azure resource.
-   The Settings key store + `validateAzureKey()` (issueToken, CORS-verified this
-   session) are the groundwork. Open scoping questions to settle first: the Speech
-   SDK-vs-REST path for Pronunciation Assessment from the browser (verify the
-   current SDK/REST surface against live docs — do NOT trust remembered names),
-   whether it needs a mic-permission + recording flow, and how it slots into the
-   engine (likely a new practice step like `listening`, §2 — do NOT fork the
-   question renderer). Still §3: no dependency unless a concrete wall is hit.
+1b. **NEXT — SPEAKING SESSION 2 of 4: the render branch in `main.js` (behind a
+   dev key, NO SDK yet).** Content (session 1) is DONE — `src/speaking/sets.mjs`
+   is built, curated, and dryrun-checked (28 read-aloud items, all keys reuse
+   existing audio). Session 2 wires the UI ONLY: add `"speaking"` to `appMode`
+   + a `let speaking = null;` run-object; the entry card on the Entraînement home
+   (reuse the `pcard` pattern, `SPEAKING.label`/`.format`/`.disclaimer`); the
+   `renderSpeakingLevels → renderSpeakingSets → launchSpeakingSet →
+   renderSpeakingItem → renderSpeakingResults` ladder (parallel to listening);
+   `stopSpeaking()` wired into every nav-reset/mode-switch site; the record view
+   (show `ref`, an "écouter le modèle" button reusing `speak(item.say,item.key)`,
+   a record button) and a **stubbed/mock** result view (word coloring + Accuracy/
+   Fluidité/Complétude readouts fed by FAKE scores so the UI is reviewable) — its
+   own render branch like listening's reveal-after, **NO fork of renderMCQuestion,
+   NO `if(day===N)` (§2)**. The keyless gate (`getAzureCreds().key===""` → card
+   shows "Clé Azure requise → Ouvrir les Réglages", never launches). **Still NO
+   SDK, NO install, NO mic code** — that's session 3 (SDK wiring + real mic +
+   §3 dependency amendment to CLAUDE.md). Session 4 = end-to-end verify with a
+   real key/mic + STATE/CLAUDE wrap. Full design + fr-FR word-level-only scope +
+   error table are in this session's DESIGN SKETCH (above / in the transcript).
+   Groundwork already in place: Settings key store + `getAzureCreds()` +
+   `validateAzureKey()` (issueToken, CORS-verified). Still §3: no dependency
+   until session 3's concrete wall (browser mic-encoding + undocumented
+   recognition-endpoint CORS — evidenced by this session's live-docs
+   investigation).
    OTHER remaining forks (each gated on the §8.2 native review):
      - **TEF Writing** — self-assessment/rubric UI vs. needing a backend (leans
        self-assess to stay §3-pure). The last of the four skills after Speaking.
@@ -647,9 +694,12 @@ decisions, NOT new lessons. In rough priority:
    SEPARATE standing review debt (grows, doesn't block a build): the **7
    Claude-drafted mechanical quiz banks** (etre_avoir, present_verbs, reflexive,
    imparfait, futur_proche, imperative, prepositions — 78 items), the **19
-   reading passages / 57 questions**, AND the **16 listening passages / 48
-   questions** are NOT native-reviewed; fold all into the §8.2 listening/reading
-   review gate before any real learner sees them.
+   reading passages / 57 questions**, the **16 listening passages / 48
+   questions**, AND now the **Speaking curation choice (28 read-aloud items —
+   the sentences themselves are reused verbatim from already-in-debt lessons, so
+   only the level-placement/selection is net-new)** are NOT native-reviewed; fold
+   all into the §8.2 listening/reading review gate before any real learner sees
+   them.
 2. **Deploy decision** (Open Decision #1): GitHub Pages vs Netlify — keep
    both or disable GH Pages. Purely a "two URLs" call; no cost either way.
 3. **Optional polish passes** (only if the person wants them), each its own
