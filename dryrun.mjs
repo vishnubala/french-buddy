@@ -13,6 +13,7 @@
 import { LESSONS } from "./src/lessons/index.mjs";
 import { BANK_STATS } from "./src/quiz/bank.mjs";
 import { LISTENING } from "./src/listening/sets.mjs";
+import { SPEAKING } from "./src/speaking/sets.mjs";
 
 const errors = [];
 const seenKeys = new Set();
@@ -72,6 +73,31 @@ for (const level of LISTENING.levels) {
   }
 }
 
+/* Speaking items REUSE existing lesson audio keys on purpose (read-aloud
+   reference playback reuses an already-generated clip — no new audio). So the
+   check here is the INVERSE of the uniqueness check above: every speaking
+   `key` MUST already exist in the audio-key namespace (no dangling keys), it
+   must NOT introduce a new key, and each speaking `id`/`say` must be present.
+   `seenKeys` at this point holds every lesson + listening key. */
+let speakingItems = 0;
+const speakingIds = new Set();
+for (const level of SPEAKING.levels) {
+  for (const set of level.sets) {
+    for (const it of set.items ?? []) {
+      speakingItems++;
+      const where = `Speaking ${set.id}/${it.id ?? "?"}`;
+      if (!it.id) errors.push(`${where}: missing id`);
+      else if (speakingIds.has(it.id)) errors.push(`${where}: duplicate speaking id "${it.id}"`);
+      else speakingIds.add(it.id);
+      if (!it.say) errors.push(`${where}: missing say`);
+      if (!it.ref) errors.push(`${where}: missing ref`);
+      if (!it.key) errors.push(`${where}: missing key`);
+      else if (!seenKeys.has(it.key))
+        errors.push(`${where}: audio key "${it.key}" does not exist in the curriculum audio-key namespace (dangling — no clip will be generated)`);
+    }
+  }
+}
+
 if (errors.length) {
   console.error(`DRY-RUN FAILED — ${errors.length} problem(s):\n`);
   for (const e of errors) console.error("  ✗ " + e);
@@ -81,6 +107,7 @@ if (errors.length) {
 console.log(`DRY-RUN PASS — ${LESSONS.length} lessons, ${seenKeys.size} unique audio keys ` +
   `(incl. ${listeningKeys} listening line keys), all recall/listening answers in range.`);
 console.log(`LISTENING — ${listeningKeys} clips, ${listeningQs} comprehension questions.`);
+console.log(`SPEAKING — ${speakingItems} read-aloud items, all keys resolve to existing audio (no new clips).`);
 
 /* Bank regression line — must reconcile: generated + hand === total. */
 const { total, generated, hand } = BANK_STATS;
