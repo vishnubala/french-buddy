@@ -12,7 +12,61 @@ this conversation."
 
 ## [CURRENT PHASE]
 
-**NEW (this session): SPEAKING — SESSION 1 of 4 (content curation ONLY).** Built
+**NEW (this session): SPEAKING — SESSION 2 of 4 (render branch, MOCK-driven —
+still NO SDK).** Built the entire read-aloud visual flow in `main.js` +
+`styles.css`, driven by stubbed scores so it's fully reviewable before the SDK
+lands (session 3). **NO SDK, NO install, NO dependency, NO mic capture, NO Azure
+call.** What shipped:
+- `appMode` gains `"speaking"` + a `speaking` run-object; **`stopSpeaking()`
+  wired into the SAME nav-reset sites `stopListening()` uses** (`switchLesson`,
+  `setMode`, `renderEntrainementHome`, `openSettings`) — leaving the module
+  cancels any pending mock timer + TTS (verified: nav-away mid-record leaks
+  nothing).
+- **Entry card** in L'Entraînement ("Lecture à voix haute", badge "niveau
+  A1–A2", the honest word-level disclaimer). **Keyless gate:**
+  `getAzureCreds().key === ""` → the card shows "Clé Azure requise" + a BYO-key
+  explanation and routes to **Réglages** (`openSettings()`) instead of
+  launching. The record flow is unreachable without a key.
+- **Ladder** `renderSpeakingLevels → Sets → launchSpeakingSet → Item → Results`,
+  mirroring listening, reusing `readingHead()`/`backLink()` — **§2 one-engine:
+  NO forked question renderer, NO `if(day===N)`.** The record+score display is
+  its own render branch, like listening's reveal-after.
+- **Record view:** the reference sentence shown VISIBLY (the task is reading it),
+  each word in its own `span.sp-w` (punctuation tagged `.punct`, not scored);
+  **"Écouter le modèle"** reuses the existing `speak(item.say, item.key)` path
+  (real clip, TTS fallback only if missing — verified 206 on `d02_d1.mp3`); a
+  record button that runs **`mockAssess()`** after a short fake "Analyse…" delay.
+- **`mockAssess()` is the session-3 swap seam** (marked `// MOCK`): it returns
+  the EXACT shape the real Azure PA call will map to —
+  `{ pronScore, accuracy, fluency, completeness, words:[{accuracyScore,
+  errorType:"None"|"Mispronunciation"|"Omission"|"Insertion", w?}] }` — seeded
+  (not random) so **all five word states are guaranteed visible** for review.
+- **Result view:** words recolored IN PLACE by accuracy (green ≥80 / amber
+  60–79 / red <60; **Omission** dimmed + struck; **Insertion** spliced in as an
+  extra red word); **tap any word → replays the WHOLE sentence's real clip
+  (decision A** — real Azure voice in context, no per-word TTS); three
+  **inline-SVG ring dials** (Précision / Fluidité / Complétude, **no charting
+  dep §3**) + the **PronScore headline**; **Réessayer** (re-record, resets the
+  spans) + **Phrase suivante**. End-of-set = a calm **average-score** screen
+  ("Score moyen : n / 100"), NO letter grade, NO leaderboard.
+- **Verified for real in-browser** (dev server, key seeded in localStorage so
+  the gate opens — the mock doesn't validate the key, only presence): keyless
+  gate shows "Clé Azure requise" and opens Settings; with a key, **A1 and A2
+  level→set→item** both work; model plays the real clip (206); record→mock
+  paints **every word state** (checked classes: `hi/mid/lo/omit/ins` on both an
+  A1 and an A2 sentence); 3 SVG dials + PronScore render; **tap-word replays the
+  whole clip (206)**; Réessayer resets to a fresh record view; a **full 7-phrase
+  A1 set ran to the results screen** (Score moyen 81); Retour returns home;
+  **nav-away mid-record cancelled the pending mock (no leak)**; **Le Cours
+  untouched** (switched back → Jour 01, rail visible); **zero console errors**.
+  Fixed one cosmetic bug found in review: the record button used to sit stuck on
+  "Analyse…" after a result — now hidden on the result view (Réessayer is the
+  re-record path). Build green, dryrun/counts pass, **lessons/quiz bank (848)/
+  listening untouched**. One focused commit (render branch + mock + styles)
+  pushed. **Screenshot tool still hung** (pane not compositing) — verified via
+  DOM/eval + network tab, as prior sessions.
+
+**PREVIOUS session: SPEAKING — SESSION 1 of 4 (content curation ONLY).** Built
 `src/speaking/sets.mjs`, a leveled A1/A2 **read-aloud** library, mirroring the
 EXACT outer shape of `reading/sets.mjs` + `listening/sets.mjs`
 (`{ label, format, disclaimer, levels:[{id,label,blurb,sets:[…]}] }`) so the
@@ -660,30 +714,39 @@ decisions, NOT new lessons. In rough priority:
    someone has to *listen*. Nothing ships to a real learner until this is
    done, and it also gates any B1/Block F work (§11.5). This is now the
    single biggest blocker; everything else is secondary.
-1b. **NEXT — SPEAKING SESSION 2 of 4: the render branch in `main.js` (behind a
-   dev key, NO SDK yet).** Content (session 1) is DONE — `src/speaking/sets.mjs`
-   is built, curated, and dryrun-checked (28 read-aloud items, all keys reuse
-   existing audio). Session 2 wires the UI ONLY: add `"speaking"` to `appMode`
-   + a `let speaking = null;` run-object; the entry card on the Entraînement home
-   (reuse the `pcard` pattern, `SPEAKING.label`/`.format`/`.disclaimer`); the
-   `renderSpeakingLevels → renderSpeakingSets → launchSpeakingSet →
-   renderSpeakingItem → renderSpeakingResults` ladder (parallel to listening);
-   `stopSpeaking()` wired into every nav-reset/mode-switch site; the record view
-   (show `ref`, an "écouter le modèle" button reusing `speak(item.say,item.key)`,
-   a record button) and a **stubbed/mock** result view (word coloring + Accuracy/
-   Fluidité/Complétude readouts fed by FAKE scores so the UI is reviewable) — its
-   own render branch like listening's reveal-after, **NO fork of renderMCQuestion,
-   NO `if(day===N)` (§2)**. The keyless gate (`getAzureCreds().key===""` → card
-   shows "Clé Azure requise → Ouvrir les Réglages", never launches). **Still NO
-   SDK, NO install, NO mic code** — that's session 3 (SDK wiring + real mic +
-   §3 dependency amendment to CLAUDE.md). Session 4 = end-to-end verify with a
-   real key/mic + STATE/CLAUDE wrap. Full design + fr-FR word-level-only scope +
-   error table are in this session's DESIGN SKETCH (above / in the transcript).
-   Groundwork already in place: Settings key store + `getAzureCreds()` +
-   `validateAzureKey()` (issueToken, CORS-verified). Still §3: no dependency
-   until session 3's concrete wall (browser mic-encoding + undocumented
-   recognition-endpoint CORS — evidenced by this session's live-docs
-   investigation).
+1b. **NEXT — SPEAKING SESSION 3 of 4: SDK wiring (install + real Pronunciation
+   Assessment call replacing the mock, verified with the real France Central key
+   in a real browser).** Sessions 1–2 are DONE: `src/speaking/sets.mjs` (28
+   curated items) + the full render branch, which currently runs on
+   **`mockAssess()`**. Session 3 is a **drop-in swap at that one seam** — the mock
+   already returns the exact shape the real call maps to. Steps:
+   - **`npm i microsoft-cognitiveservices-speech-sdk`** — the FIRST runtime dep
+     beyond Vite. **Apply the §3 amendment to CLAUDE.md** (drafted in this
+     session's DESIGN SKETCH: scoped to `src/speaking/`, dynamic-`import()`ed so
+     Vite code-splits it out of the main bundle, justified by the concrete wall =
+     browser mic-encoding + undocumented recognition-endpoint CORS, per the
+     live-docs investigation). Add the §9 decisions-log line too.
+   - In the `rec.onclick` handler (currently the `// MOCK` block in
+     `renderSpeakingItem`), replace the `mockAssess()` + `setTimeout` with:
+     `const sdk = await import("microsoft-cognitiveservices-speech-sdk")` →
+     `SpeechConfig.fromSubscription(getAzureCreds().key, getAzureCreds().region)`
+     (**key-direct auth** — recommended over token: learner's own key, SDK
+     refreshes internally, dodges the token host-scoping footgun) →
+     `speechRecognitionLanguage="fr-FR"` → mic `AudioConfig` →
+     `PronunciationAssessmentConfig(referenceText=item.say, HundredMark, Word,
+     enableMiscue=true)` → `recognizeOnceAsync` → map the JSON `NBest[0]`
+     (PronScore/AccuracyScore/FluencyScore/CompletenessScore + `Words[]` with
+     AccuracyScore/ErrorType) into the SAME `{pronScore,accuracy,fluency,
+     completeness,words}` object `paintSpeakingResult`/`renderSpeakingScores`
+     already consume. **fr-FR = word-level only** (no phoneme/prosody — do NOT
+     add phoneme UI).
+   - **The full error table** (from the DESIGN SKETCH): mic-permission denied,
+     `NoMatch`/silence (retry, not error), 401/403 (key → Réglages), network,
+     no-mic/unsupported browser. Each honest, in French, leaves a retry.
+   - **Verify with the REAL key** (person's France Central key in `.env`/Settings)
+     in a real browser: mic prompt, speak a sentence, real scores paint, each
+     error path. This is the one step that can't be faked (mic + live Azure).
+   Session 4 = polish + end-to-end verification pass + STATE/CLAUDE wrap.
    OTHER remaining forks (each gated on the §8.2 native review):
      - **TEF Writing** — self-assessment/rubric UI vs. needing a backend (leans
        self-assess to stay §3-pure). The last of the four skills after Speaking.
