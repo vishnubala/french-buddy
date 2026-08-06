@@ -11,6 +11,7 @@ import { QUIZ_BANK } from "./quiz/bank.mjs";
 import { createSession } from "./quiz/engine.mjs";
 import { READING } from "./reading/sets.mjs";
 import { LISTENING } from "./listening/sets.mjs";
+import { SPEAKING } from "./speaking/sets.mjs";
 
 const CURRICULUM = { totalLessons: 84, weeks: 12 };
 
@@ -112,10 +113,11 @@ let lesson = LESSONS[lessonIndex];
 let stepIndex = 0;
 let stepDone = new Array(lesson.steps.length).fill(false);
 let correct = 0, attempts = 0;
-let appMode = "lesson";   /* "lesson"|"quiz"|"reading"|"listening"|"progress"|"home" — what the STATION shows */
+let appMode = "lesson";   /* "lesson"|"quiz"|"reading"|"listening"|"speaking"|"progress"|"home" — what the STATION shows */
 let quiz = null;          /* active diagnostic session (see src/quiz/) */
 let reading = null;       /* active reading set run (see src/reading/) */
 let listening = null;     /* active listening set run (see src/listening/) */
+let speaking = null;      /* active speaking (read-aloud) set run (see src/speaking/) */
 let mode = "cours";       /* TOP-LEVEL axis: "cours" | "entrainement". Chooses
                              which nav chrome + station content renders. The
                              course keeps its lessonIndex/stepIndex either way. */
@@ -214,10 +216,10 @@ function renderNav() {
 }
 
 function switchLesson(i) {
-  const wasPractice = appMode === "quiz" || appMode === "reading" || appMode === "listening" || settingsOpen;
-  stopListening();
+  const wasPractice = appMode === "quiz" || appMode === "reading" || appMode === "listening" || appMode === "speaking" || settingsOpen;
+  stopListening(); stopSpeaking();
   settingsOpen = false; gearOff();
-  appMode = "lesson"; quiz = null; reading = null; listening = null;  /* any nav click leaves practice */
+  appMode = "lesson"; quiz = null; reading = null; listening = null; speaking = null;  /* any nav click leaves practice */
   if (i === lessonIndex && !wasPractice) return;
   lessonIndex = i; lesson = LESSONS[i];
   stepIndex = 0;
@@ -527,11 +529,11 @@ function setMode(m) {
   mode = m;
   document.body.dataset.mode = m;
   renderModeSwitch();
-  stopListening();
+  stopListening(); stopSpeaking();
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (m === "cours") {
     /* restore the course exactly where it was — position was never touched */
-    appMode = "lesson"; quiz = null; reading = null; listening = null;
+    appMode = "lesson"; quiz = null; reading = null; listening = null; speaking = null;
     syncHeader(); renderStep();
   } else {
     renderEntrainementHome();
@@ -541,8 +543,8 @@ function setMode(m) {
 /* L'Entraînement landing: a list of practice entries in the shared station
    surface. No rail (hidden via data-mode), no bottom control. */
 function renderEntrainementHome() {
-  appMode = "home"; quiz = null; reading = null; listening = null;
-  stopListening();
+  appMode = "home"; quiz = null; reading = null; listening = null; speaking = null;
+  stopListening(); stopSpeaking();
   showControl(false);
   el("stationNum").textContent = "ENTRAÎNEMENT";
   el("lessonTitle").textContent = "L'Entraînement";
@@ -585,6 +587,26 @@ function renderEntrainementHome() {
     `${LISTENING.disclaimer}</span>`;
   lcard.onclick = () => renderListeningLevels();
   list.appendChild(lcard);
+
+  /* Speaking — read-aloud pronunciation practice (§7 honest scope: word-level,
+     not phoneme coaching, not TEF speaking prep). Needs the learner's OWN Azure
+     Speech key (BYO, saved in Réglages). If no key is set, the card shows a
+     needs-key state and routes to Settings instead of launching. */
+  const hasKey = getAzureCreds().key !== "";
+  const spcard = document.createElement("button"); spcard.className = "pcard" + (hasKey ? "" : " locked");
+  if (hasKey) {
+    spcard.innerHTML =
+      `<span class="pcard-t">${SPEAKING.label} <span class="pbadge">${SPEAKING.format}</span></span>` +
+      `<span class="pcard-d">Lis une phrase à voix haute et reçois un score. ${SPEAKING.disclaimer}</span>`;
+    spcard.onclick = () => renderSpeakingLevels();
+  } else {
+    spcard.innerHTML =
+      `<span class="pcard-t">${SPEAKING.label} <span class="pbadge needs">Clé Azure requise</span></span>` +
+      `<span class="pcard-d">La lecture à voix haute utilise TA propre clé Azure Speech (gratuite, niveau F0), ` +
+      `enregistrée dans les Réglages — rien ne passe par un serveur à nous. Ouvre les Réglages pour l'ajouter.</span>`;
+    spcard.onclick = () => openSettings();
+  }
+  list.appendChild(spcard);
 
   PRACTICE.forEach(([m, title, desc]) => {
     const card = document.createElement("button"); card.className = "pcard";
@@ -683,7 +705,7 @@ function openSettings() {
   if (settingsOpen) { exitSettings(); return; }   /* gear toggles */
   settingsOpen = true;
   const g = el("gearBtn"); if (g) g.classList.add("on");
-  stopListening();
+  stopListening(); stopSpeaking();
   showControl(false);
   window.scrollTo({ top: 0, behavior: "smooth" });
   renderSettings();
@@ -1257,6 +1279,298 @@ function renderListeningResults() {
   stepEl.appendChild(msg);
 
   backLink("Autres séries de " + lv.label, () => renderListeningSets(lv));
+
+  nextBtn.disabled = false; nextBtn.className = "next done";
+  nextBtn.innerHTML = "Retour à l'entraînement";
+  nextBtn.onclick = () => renderEntrainementHome();
+}
+
+/* =====================================================================
+   L'Entraînement · Lecture à voix haute (SPEAKING) — read-aloud pronunciation
+   practice, BYO Azure key. Shares the station surface (§2 one-engine): the
+   record + score display is ITS OWN render branch, like listening's
+   reveal-after — NO forked question renderer, NO if(day===N).
+
+   SESSION 2 SCOPE: the full VISUAL flow, driven by MOCK scores. There is NO
+   SDK, NO mic capture, NO Azure call yet — pressing record runs mockAssess()
+   after a short fake delay so every result state is reviewable. Session 3
+   swaps mockAssess() for the real Azure Speech SDK pronunciation-assessment
+   call (see the // MOCK seam below); nothing else in this branch should need
+   to change.
+
+   fr-FR SCOPE (honest): word-level feedback only — accuracy / fluency /
+   completeness + a per-word error type. Phoneme drilldown and prosody are
+   en-US-only, so this UI never promises phoneme-by-phoneme coaching.
+   ===================================================================== */
+
+let spkTimer = null;   /* pending mock-assessment timer */
+let spkRun = 0;        /* run token — a nav-away / retry supersedes a pending mock */
+
+function stopSpeaking() {
+  spkRun++;
+  if (spkTimer) { clearTimeout(spkTimer); spkTimer = null; }
+  if ("speechSynthesis" in window) speechSynthesis.cancel();   /* kill any TTS-fallback playback */
+  document.querySelectorAll(".sp-model.playing").forEach(b => b.classList.remove("playing"));
+}
+
+/* Split a display sentence into tokens, tagging which are real words (contain a
+   letter) vs bare punctuation — only word tokens carry a pronunciation score. */
+function spkTokens(ref) {
+  return ref.split(/\s+/).filter(Boolean).map(t => ({ t, word: /\p{L}/u.test(t) }));
+}
+
+function renderSpeakingLevels() {
+  appMode = "home"; quiz = null; reading = null; listening = null; speaking = null;
+  stopListening(); stopSpeaking();
+  showControl(false);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  readingHead("PAROLE", SPEAKING.label, SPEAKING.format);
+
+  backLink("L'Entraînement", () => renderEntrainementHome());
+  const eb = document.createElement("div"); eb.className = "eyebrow"; eb.textContent = "Lecture à voix haute"; stepEl.appendChild(eb);
+  const h = document.createElement("h3"); h.textContent = "Choisis ton niveau"; stepEl.appendChild(h);
+  const note = document.createElement("p"); note.className = "bk-note"; note.textContent = SPEAKING.disclaimer; stepEl.appendChild(note);
+
+  const list = document.createElement("div"); list.className = "practice";
+  SPEAKING.levels.forEach(lv => {
+    const nItems = lv.sets.reduce((n, s) => n + s.items.length, 0);
+    const card = document.createElement("button"); card.className = "pcard";
+    card.innerHTML =
+      `<span class="pcard-t">${lv.label} <span class="pbadge">${lv.sets.length} séries · ${nItems} phrases</span></span>` +
+      `<span class="pcard-d">${lv.blurb}</span>`;
+    card.onclick = () => renderSpeakingSets(lv);
+    list.appendChild(card);
+  });
+  stepEl.appendChild(list);
+}
+
+function renderSpeakingSets(lv) {
+  appMode = "home"; quiz = null; reading = null; listening = null; speaking = null;
+  stopListening(); stopSpeaking();
+  showControl(false);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  readingHead("PAROLE", SPEAKING.label, lv.label);
+
+  backLink("Niveaux", () => renderSpeakingLevels());
+  const eb = document.createElement("div"); eb.className = "eyebrow"; eb.textContent = lv.label; stepEl.appendChild(eb);
+  const h = document.createElement("h3"); h.textContent = "Choisis une série"; stepEl.appendChild(h);
+
+  const list = document.createElement("div"); list.className = "practice";
+  lv.sets.forEach(set => {
+    const card = document.createElement("button"); card.className = "pcard";
+    card.innerHTML =
+      `<span class="pcard-t">${set.title} <span class="pbadge">${set.items.length} phrases</span></span>` +
+      `<span class="pcard-d">${set.theme}</span>`;
+    card.onclick = () => launchSpeakingSet(lv, set);
+    list.appendChild(card);
+  });
+  stepEl.appendChild(list);
+}
+
+function launchSpeakingSet(lv, set) {
+  appMode = "speaking";
+  speaking = { level: lv, set, pi: 0, scores: [] };
+  showControl(true);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  readingHead("PAROLE", set.title, lv.label);
+  renderSpeakingItem();
+}
+
+/* MOCK — replaced by the real Azure Speech SDK pronunciation-assessment call in
+   session 3. Returns the SAME shape the real call will map to, so the swap is a
+   drop-in: { pronScore, accuracy, fluency, completeness,
+     words:[{ accuracyScore, errorType:"None"|"Mispronunciation"|"Omission"|"Insertion", w? }] }.
+   `words` is in spoken order; an Insertion is an EXTRA entry (carries its own
+   `w`), an Omission is a reference word left unspoken. Values are seeded (not
+   pure random) so every UI state — green / amber / red / omission / insertion —
+   is guaranteed visible for review. */
+function mockAssess(nWords) {
+  const words = [];
+  for (let i = 0; i < nWords; i++) {
+    let acc;
+    if (i === 1) acc = 54;                        /* one clearly weak → red + Mispronunciation */
+    else if (i === 2) acc = 67;                   /* amber */
+    else if (i === 3 && nWords > 4) acc = 74;     /* amber */
+    else acc = 88 + ((i * 7) % 12);               /* greens 88–99, varied */
+    words.push({ accuracyScore: acc, errorType: acc < 60 ? "Mispronunciation" : "None" });
+  }
+  if (nWords >= 6) words[nWords - 2] = { accuracyScore: 0, errorType: "Omission" };   /* skipped a word */
+  if (nWords >= 4) words.splice(2, 0, { w: "euh", accuracyScore: 42, errorType: "Insertion" });  /* filler */
+
+  const spoken = words.filter(x => x.errorType !== "Insertion" && x.errorType !== "Omission");
+  const accuracy = Math.round(spoken.reduce((s, x) => s + x.accuracyScore, 0) / Math.max(1, spoken.length));
+  const completeness = Math.round(100 * spoken.length / nWords);
+  const fluency = 82;
+  const arr = [accuracy, fluency, completeness].sort((a, b) => a - b);   /* Azure reading weighting: lowest weighs most */
+  const pronScore = Math.round(0.6 * arr[0] + 0.2 * arr[1] + 0.2 * arr[2]);
+  return { pronScore, accuracy, fluency, completeness, words };
+}
+
+/* An inline-SVG ring gauge (no charting dep, §3). */
+function scoreDial(label, val) {
+  const R = 20, C = 2 * Math.PI * R, off = C * (1 - Math.max(0, Math.min(100, val)) / 100);
+  const cls = val >= 80 ? "hi" : val >= 60 ? "mid" : "lo";
+  const d = document.createElement("div"); d.className = "sp-dial " + cls;
+  d.innerHTML =
+    `<svg viewBox="0 0 52 52" aria-hidden="true">` +
+    `<circle class="sp-ring-bg" cx="26" cy="26" r="${R}"/>` +
+    `<circle class="sp-ring" cx="26" cy="26" r="${R}" ` +
+    `stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 26 26)"/></svg>` +
+    `<span class="sp-dial-v">${val}</span><span class="sp-dial-l">${label}</span>`;
+  return d;
+}
+
+function renderSpeakingItem() {
+  if (appMode !== "speaking") return;
+  stopSpeaking();
+  const items = speaking.set.items;
+  const item = items[speaking.pi];
+  if (!item) { renderSpeakingResults(); return; }
+  stepEl.innerHTML = "";
+  stepEl.classList.remove("anim"); void stepEl.offsetWidth; stepEl.classList.add("anim");
+
+  const eb = document.createElement("div"); eb.className = "eyebrow";
+  eb.textContent = "Phrase " + (speaking.pi + 1) + " / " + items.length;
+  stepEl.appendChild(eb);
+  const hint = document.createElement("p"); hint.className = "sp-hint";
+  hint.textContent = "Lis la phrase à voix haute. Écoute le modèle si tu veux, puis enregistre-toi.";
+  stepEl.appendChild(hint);
+
+  /* the reference sentence — VISIBLE (the task is reading it aloud). Each word
+     token is its own span so the result can recolor it in place. */
+  const sent = document.createElement("p"); sent.className = "sp-sentence";
+  let wi = 0;
+  spkTokens(item.ref).forEach(tok => {
+    const span = document.createElement("span");
+    span.className = "sp-w" + (tok.word ? "" : " punct");
+    if (tok.word) span.dataset.wi = wi++;
+    span.textContent = tok.t;
+    sent.appendChild(span);
+    sent.appendChild(document.createTextNode(" "));
+  });
+  stepEl.appendChild(sent);
+
+  /* actions: model playback + record */
+  const actions = document.createElement("div"); actions.className = "sp-actions";
+  const model = document.createElement("button"); model.className = "sp-model";
+  model.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Écouter le modèle</span>';
+  model.onclick = () => speak(item.say, item.key, model);   /* real clip, TTS fallback only if missing */
+  actions.appendChild(model);
+
+  const rec = document.createElement("button"); rec.className = "sp-rec";
+  rec.innerHTML = '<span class="sp-dot"></span><span>Enregistrer</span>';
+  actions.appendChild(rec);
+  stepEl.appendChild(actions);
+
+  /* where the result lands */
+  const out = document.createElement("div"); out.className = "sp-out";
+  stepEl.appendChild(out);
+
+  nextBtn.disabled = true; nextBtn.className = "next"; nextBtn.innerHTML = "Enregistre la phrase";
+
+  rec.onclick = () => {
+    /* MOCK record: no mic, no SDK — a short fake "listening…" delay, then scores.
+       Session 3 replaces this handler body with a real mic capture + SDK call. */
+    stopSpeaking();
+    const myRun = spkRun;
+    rec.disabled = true; model.disabled = true;
+    rec.classList.add("processing");
+    rec.querySelector("span:last-child").textContent = "Analyse…";
+    out.innerHTML = "";
+    spkTimer = setTimeout(() => {
+      if (myRun !== spkRun || appMode !== "speaking") return;   /* superseded */
+      const nWords = sent.querySelectorAll(".sp-w:not(.punct)").length;
+      const r = mockAssess(nWords);
+      paintSpeakingResult(sent, r, item);
+      renderSpeakingScores(out, r, item, rec, model);
+      speaking.scores[speaking.pi] = r.pronScore;
+    }, 850);
+  };
+}
+
+/* Recolor the reference sentence IN PLACE from the (mock) per-word result, and
+   splice in any Insertion words as extra red tokens. */
+function paintSpeakingResult(sent, r, item) {
+  const wordSpans = [...sent.querySelectorAll(".sp-w:not(.punct)")];
+  let ri = 0;
+  r.words.forEach(mw => {
+    if (mw.errorType === "Insertion") {
+      const ins = document.createElement("span"); ins.className = "sp-w ins";
+      ins.textContent = mw.w || "?"; ins.title = "Mot en trop";
+      const anchor = wordSpans[ri];                 /* insert before the next real word */
+      if (anchor) sent.insertBefore(ins, anchor);
+      else sent.appendChild(ins);
+      sent.insertBefore(document.createTextNode(" "), ins.nextSibling);
+      return;
+    }
+    const span = wordSpans[ri++];
+    if (!span) return;
+    if (mw.errorType === "Omission") {
+      span.className = "sp-w omit"; span.title = "Mot oublié"; span.onclick = null; return;
+    }
+    const cls = mw.accuracyScore >= 80 ? "hi" : mw.accuracyScore >= 60 ? "mid" : "lo";
+    span.className = "sp-w " + cls;
+    span.title = Math.round(mw.accuracyScore) + " / 100 — appuie pour réécouter la phrase";
+    span.onclick = () => speak(item.say, item.key);   /* tap a word → replay the WHOLE sentence clip (decision A) */
+  });
+}
+
+function renderSpeakingScores(out, r, item, rec, model) {
+  /* the record button is spent — Réessayer (below) is the re-record path. Hide
+     it so it doesn't sit stuck on "Analyse…", and free the model button. */
+  rec.style.display = "none";
+  model.disabled = false;
+
+  const pron = document.createElement("div"); pron.className = "sp-pron " + (r.pronScore >= 80 ? "hi" : r.pronScore >= 60 ? "mid" : "lo");
+  pron.innerHTML = `<span class="sp-pron-v">${r.pronScore}</span><span class="sp-pron-l">score global</span>`;
+  out.appendChild(pron);
+
+  const dials = document.createElement("div"); dials.className = "sp-scores";
+  dials.appendChild(scoreDial("Précision", r.accuracy));
+  dials.appendChild(scoreDial("Fluidité", r.fluency));
+  dials.appendChild(scoreDial("Complétude", r.completeness));
+  out.appendChild(dials);
+
+  const legend = document.createElement("p"); legend.className = "sp-legend";
+  legend.innerHTML = "Chaque mot est coloré selon sa précision — " +
+    '<span class="sp-k hi">vert</span> bien, <span class="sp-k mid">orange</span> à revoir, ' +
+    '<span class="sp-k lo">rouge</span> à retravailler. Appuie sur un mot pour réécouter la phrase.';
+  out.appendChild(legend);
+
+  /* retry stays inline; advancing uses the bottom control, like the other runs */
+  const retry = document.createElement("button"); retry.className = "sp-retry";
+  retry.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12a8 8 0 1 1 2.3 5.6"/><path d="M4 20v-5h5"/></svg><span>Réessayer</span>';
+  retry.onclick = () => renderSpeakingItem();
+  out.appendChild(retry);
+
+  const last = speaking.pi === speaking.set.items.length - 1;
+  nextBtn.disabled = false; nextBtn.className = "next";
+  nextBtn.innerHTML = (last ? "Voir le résultat" : "Phrase suivante") +
+    ' <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  nextBtn.onclick = () => { speaking.pi++; window.scrollTo({ top: 0, behavior: "smooth" }); renderSpeakingItem(); };
+}
+
+function renderSpeakingResults() {
+  stopSpeaking();
+  const scores = speaking.scores.filter(s => typeof s === "number");
+  const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+  const lv = speaking.level;
+  readingHead("BILAN", "Résultats — " + speaking.set.title, "");
+
+  const eb = document.createElement("div"); eb.className = "eyebrow"; eb.textContent = "Lecture à voix haute · " + lv.label; stepEl.appendChild(eb);
+  const h = document.createElement("h3"); h.textContent = `Score moyen : ${avg} / 100`; stepEl.appendChild(h);
+
+  const msg = document.createElement("p"); msg.className = "lede";
+  msg.textContent = avg >= 80 ? "Très bien — ta prononciation est claire et régulière sur ces phrases."
+                  : avg >= 60 ? "Bien. Reprends les mots en orange et rouge, écoute le modèle, puis recommence."
+                              : "Continue — réécoute le modèle mot à mot et répète à voix haute, sans te presser.";
+  stepEl.appendChild(msg);
+
+  const note = document.createElement("p"); note.className = "bk-note";
+  note.textContent = "Rappel : le score porte sur les mots (précision, fluidité), pas sur chaque son. Ce n'est pas une préparation à l'épreuve orale du TEF.";
+  stepEl.appendChild(note);
+
+  backLink("Autres séries de " + lv.label, () => renderSpeakingSets(lv));
 
   nextBtn.disabled = false; nextBtn.className = "next done";
   nextBtn.innerHTML = "Retour à l'entraînement";

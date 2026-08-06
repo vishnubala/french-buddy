@@ -331,3 +331,68 @@ body[data-mode="entrainement"] .nav{display:none}
 .revlink{font-family:"Spline Sans Mono",monospace;font-size:11px;padding:3px 10px;border-radius:999px;
   border:1px solid var(--vert);background:var(--paper-2);color:var(--vert-deep);cursor:pointer;transition:all .12s ease}
 .revlink:hover{background:var(--vert);color:#fff}
+
+/* ---- Speaking (lecture à voix haute) ---- */
+/* needs-key entry card state */
+.pcard.locked{border-style:dashed;opacity:.92;cursor:pointer}
+.pcard.locked:hover{border-color:var(--gold);transform:none}
+.pbadge.needs{color:#8a6410;border:1px solid var(--gold);padding:1px 7px;border-radius:999px}
+
+.sp-hint{font-family:"Newsreader",serif;font-size:14px;color:var(--ink-soft);margin:2px 0 14px}
+
+/* the reference sentence + per-word coloring */
+.sp-sentence{font-family:"Newsreader",serif;font-size:22px;line-height:1.95;color:var(--ink);margin:6px 0 18px}
+.sp-w{display:inline-block;padding:0 3px;border-radius:5px;transition:background .15s ease}
+.sp-w.punct{padding:0}
+.sp-w.hi{background:#E6EFEA;color:var(--vert-deep);cursor:pointer}
+.sp-w.mid{background:#F6ECD2;color:#8a6410;cursor:pointer}
+.sp-w.lo{background:#F3DEDA;color:var(--wrong);cursor:pointer}
+.sp-w.omit{opacity:.45;text-decoration:line-through}
+.sp-w.ins{color:var(--wrong);text-decoration:underline dotted;font-style:italic}
+
+/* actions */
+.sp-actions{display:flex;gap:10px;flex-wrap:wrap;margin:2px 0 6px}
+.sp-model{display:inline-flex;align-items:center;gap:9px;font-family:"Bricolage Grotesque",sans-serif;
+  font-weight:700;font-size:14.5px;padding:11px 20px;border-radius:999px;cursor:pointer;
+  background:var(--paper-2);color:var(--vert-deep);border:1px solid var(--vert);transition:all .12s ease}
+.sp-model svg{width:18px;height:18px}
+.sp-model:hover{background:var(--vert);color:#fff}
+.sp-model.playing{background:var(--vert);color:#fff}
+.sp-model:disabled{opacity:.5;cursor:default}
+.sp-rec{display:inline-flex;align-items:center;gap:9px;font-family:"Bricolage Grotesque",sans-serif;
+  font-weight:700;font-size:14.5px;padding:11px 22px;border-radius:999px;cursor:pointer;
+  background:var(--ink);color:var(--paper);border:none;transition:all .12s ease}
+.sp-rec:hover{background:var(--ink-soft)}
+.sp-rec:disabled{cursor:default}
+.sp-dot{width:12px;height:12px;border-radius:50%;background:var(--wrong)}
+.sp-rec.processing{opacity:.75}
+.sp-rec.processing .sp-dot{animation:pulse 1s ease infinite}
+
+/* result: headline score + dials */
+.sp-out{margin-top:6px}
+.sp-pron{display:flex;align-items:baseline;gap:9px;margin:16px 0 4px}
+.sp-pron-v{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:46px;letter-spacing:-.02em;line-height:1}
+.sp-pron.hi .sp-pron-v{color:var(--vert)}
+.sp-pron.mid .sp-pron-v{color:var(--gold)}
+.sp-pron.lo .sp-pron-v{color:var(--wrong)}
+.sp-pron-l{font-family:"Spline Sans Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+.sp-scores{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 10px}
+.sp-dial{position:relative;display:flex;flex-direction:column;align-items:center;width:72px}
+.sp-dial svg{width:56px;height:56px}
+.sp-ring-bg{fill:none;stroke:var(--zinc-line);stroke-width:5}
+.sp-ring{fill:none;stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .5s ease}
+.sp-dial.hi .sp-ring{stroke:var(--vert)}
+.sp-dial.mid .sp-ring{stroke:var(--gold)}
+.sp-dial.lo .sp-ring{stroke:var(--wrong)}
+.sp-dial-v{position:absolute;top:20px;font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:15px;color:var(--ink)}
+.sp-dial-l{font-family:"Spline Sans Mono",monospace;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);margin-top:3px}
+.sp-legend{font-family:"Newsreader",serif;font-size:13.5px;color:var(--ink-soft);margin:4px 0 12px}
+.sp-k{font-weight:700}
+.sp-k.hi{color:var(--vert-deep)}
+.sp-k.mid{color:#8a6410}
+.sp-k.lo{color:var(--wrong)}
+.sp-retry{display:inline-flex;align-items:center;gap:8px;font-family:"Spline Sans Mono",monospace;font-size:12px;
+  padding:8px 16px;border-radius:999px;border:1px solid var(--zinc-line);background:var(--paper-2);
+  color:var(--ink-soft);cursor:pointer;transition:all .12s ease}
+.sp-retry svg{width:15px;height:15px}
+.sp-retry:hover{border-color:var(--ink-soft);color:var(--ink)}
