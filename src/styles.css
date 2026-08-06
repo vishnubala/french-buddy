@@ -396,3 +396,5 @@ body[data-mode="entrainement"] .nav{display:none}
   color:var(--ink-soft);cursor:pointer;transition:all .12s ease}
 .sp-retry svg{width:15px;height:15px}
 .sp-retry:hover{border-color:var(--ink-soft);color:var(--ink)}
+.sp-error{font-family:"Newsreader",serif;font-size:15px;color:var(--wrong);
+  background:#F3DEDA;border:1px solid var(--wrong);border-radius:11px;padding:11px 14px;margin:12px 0 4px}

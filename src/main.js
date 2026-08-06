@@ -12,6 +12,7 @@ import { createSession } from "./quiz/engine.mjs";
 import { READING } from "./reading/sets.mjs";
 import { LISTENING } from "./listening/sets.mjs";
 import { SPEAKING } from "./speaking/sets.mjs";
+import { assessSpeaking, stopAssessment, micSupported } from "./speaking/assess.mjs";
 
 const CURRICULUM = { totalLessons: 84, weeks: 12 };
 
@@ -1291,24 +1292,23 @@ function renderListeningResults() {
    record + score display is ITS OWN render branch, like listening's
    reveal-after — NO forked question renderer, NO if(day===N).
 
-   SESSION 2 SCOPE: the full VISUAL flow, driven by MOCK scores. There is NO
-   SDK, NO mic capture, NO Azure call yet — pressing record runs mockAssess()
-   after a short fake delay so every result state is reviewable. Session 3
-   swaps mockAssess() for the real Azure Speech SDK pronunciation-assessment
-   call (see the // MOCK seam below); nothing else in this branch should need
-   to change.
+   The record handler calls assessSpeaking() (src/speaking/assess.mjs), which
+   dynamic-imports the Azure Speech SDK (code-split out of the main bundle),
+   does key-direct mic capture + pronunciation assessment, and returns a
+   { pronScore, accuracy, fluency, completeness, words:[…] } object that the
+   paint/scores code below renders. Errors reject with a typed { kind, message }
+   surfaced via showSpeakingError().
 
    fr-FR SCOPE (honest): word-level feedback only — accuracy / fluency /
    completeness + a per-word error type. Phoneme drilldown and prosody are
    en-US-only, so this UI never promises phoneme-by-phoneme coaching.
    ===================================================================== */
 
-let spkTimer = null;   /* pending mock-assessment timer */
-let spkRun = 0;        /* run token — a nav-away / retry supersedes a pending mock */
+let spkRun = 0;        /* run token — a nav-away / retry supersedes an in-flight assessment */
 
 function stopSpeaking() {
   spkRun++;
-  if (spkTimer) { clearTimeout(spkTimer); spkTimer = null; }
+  stopAssessment();                                             /* close the recognizer → releases the mic */
   if ("speechSynthesis" in window) speechSynthesis.cancel();   /* kill any TTS-fallback playback */
   document.querySelectorAll(".sp-model.playing").forEach(b => b.classList.remove("playing"));
 }
@@ -1376,36 +1376,6 @@ function launchSpeakingSet(lv, set) {
   renderSpeakingItem();
 }
 
-/* MOCK — replaced by the real Azure Speech SDK pronunciation-assessment call in
-   session 3. Returns the SAME shape the real call will map to, so the swap is a
-   drop-in: { pronScore, accuracy, fluency, completeness,
-     words:[{ accuracyScore, errorType:"None"|"Mispronunciation"|"Omission"|"Insertion", w? }] }.
-   `words` is in spoken order; an Insertion is an EXTRA entry (carries its own
-   `w`), an Omission is a reference word left unspoken. Values are seeded (not
-   pure random) so every UI state — green / amber / red / omission / insertion —
-   is guaranteed visible for review. */
-function mockAssess(nWords) {
-  const words = [];
-  for (let i = 0; i < nWords; i++) {
-    let acc;
-    if (i === 1) acc = 54;                        /* one clearly weak → red + Mispronunciation */
-    else if (i === 2) acc = 67;                   /* amber */
-    else if (i === 3 && nWords > 4) acc = 74;     /* amber */
-    else acc = 88 + ((i * 7) % 12);               /* greens 88–99, varied */
-    words.push({ accuracyScore: acc, errorType: acc < 60 ? "Mispronunciation" : "None" });
-  }
-  if (nWords >= 6) words[nWords - 2] = { accuracyScore: 0, errorType: "Omission" };   /* skipped a word */
-  if (nWords >= 4) words.splice(2, 0, { w: "euh", accuracyScore: 42, errorType: "Insertion" });  /* filler */
-
-  const spoken = words.filter(x => x.errorType !== "Insertion" && x.errorType !== "Omission");
-  const accuracy = Math.round(spoken.reduce((s, x) => s + x.accuracyScore, 0) / Math.max(1, spoken.length));
-  const completeness = Math.round(100 * spoken.length / nWords);
-  const fluency = 82;
-  const arr = [accuracy, fluency, completeness].sort((a, b) => a - b);   /* Azure reading weighting: lowest weighs most */
-  const pronScore = Math.round(0.6 * arr[0] + 0.2 * arr[1] + 0.2 * arr[2]);
-  return { pronScore, accuracy, fluency, completeness, words };
-}
-
 /* An inline-SVG ring gauge (no charting dep, §3). */
 function scoreDial(label, val) {
   const R = 20, C = 2 * Math.PI * R, off = C * (1 - Math.max(0, Math.min(100, val)) / 100);
@@ -1462,30 +1432,57 @@ function renderSpeakingItem() {
   actions.appendChild(rec);
   stepEl.appendChild(actions);
 
-  /* where the result lands */
+  /* where the result (or an error) lands */
   const out = document.createElement("div"); out.className = "sp-out";
   stepEl.appendChild(out);
 
   nextBtn.disabled = true; nextBtn.className = "next"; nextBtn.innerHTML = "Enregistre la phrase";
 
-  rec.onclick = () => {
-    /* MOCK record: no mic, no SDK — a short fake "listening…" delay, then scores.
-       Session 3 replaces this handler body with a real mic capture + SDK call. */
+  /* no microphone at all → disable recording up front with an honest message */
+  if (!micSupported()) {
+    rec.disabled = true;
+    rec.querySelector("span:last-child").textContent = "Micro indisponible";
+    showSpeakingError(out, "Ton navigateur ne permet pas l'enregistrement audio. Essaie un autre navigateur (Chrome, Edge, Safari récent).");
+    return;
+  }
+
+  rec.onclick = async () => {
+    /* REAL assessment — Azure Speech SDK (dynamic-imported in
+       src/speaking/assess.mjs, key-direct auth, fr-FR, word-level). The result
+       shape matches the old mock exactly, so paint/scores below are unchanged. */
     stopSpeaking();
     const myRun = spkRun;
     rec.disabled = true; model.disabled = true;
     rec.classList.add("processing");
-    rec.querySelector("span:last-child").textContent = "Analyse…";
+    rec.querySelector("span:last-child").textContent = "J'écoute…";
     out.innerHTML = "";
-    spkTimer = setTimeout(() => {
-      if (myRun !== spkRun || appMode !== "speaking") return;   /* superseded */
-      const nWords = sent.querySelectorAll(".sp-w:not(.punct)").length;
-      const r = mockAssess(nWords);
+    try {
+      const r = await assessSpeaking(item, getAzureCreds());
+      if (myRun !== spkRun || appMode !== "speaking") return;   /* superseded by nav-away / retry */
       paintSpeakingResult(sent, r, item);
       renderSpeakingScores(out, r, item, rec, model);
       speaking.scores[speaking.pi] = r.pronScore;
-    }, 850);
+    } catch (err) {
+      if (myRun !== spkRun || appMode !== "speaking") return;   /* superseded — don't paint a stale error */
+      resetRecordButton(rec, model);
+      showSpeakingError(out, (err && err.message) || "Une erreur est survenue. Réessaie.");
+    }
   };
+}
+
+/* Put the record button back to its idle, pressable state (used after an error —
+   the sentence stays ready to re-record, nothing destructive). */
+function resetRecordButton(rec, model) {
+  rec.disabled = false; model.disabled = false;
+  rec.classList.remove("processing");
+  rec.style.display = "";
+  const lbl = rec.querySelector("span:last-child"); if (lbl) lbl.textContent = "Enregistrer";
+}
+
+function showSpeakingError(out, msg) {
+  out.innerHTML = "";
+  const p = document.createElement("p"); p.className = "sp-error"; p.textContent = msg;
+  out.appendChild(p);
 }
 
 /* Recolor the reference sentence IN PLACE from the (mock) per-word result, and
