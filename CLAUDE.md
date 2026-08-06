@@ -115,9 +115,29 @@ french-buddy/
   Tailwind, no CSS framework.
 - **Fonts**: Bricolage Grotesque (display), Newsreader (body), Spline Sans Mono
   (labels/eyebrows) — loaded via Google Fonts `<link>` in `index.html`.
-- **No dependencies beyond Vite itself** in `package.json`. Keep it that way
-  unless there's a concrete need — this is a static, no-backend app and every
-  added dependency is a thing that can go stale.
+- **One runtime dependency beyond Vite, scoped and justified: the Azure Speech
+  SDK** (`microsoft-cognitiveservices-speech-sdk`), used *only* by the Speaking
+  module (`src/speaking/`) and *only* via a dynamic `import()` so Vite
+  code-splits it into a chunk that loads solely when a learner opens read-aloud
+  practice — the main bundle and every other surface (Le Cours, all other
+  L'Entraînement modules) stay dependency-free. This is the first and only
+  runtime dependency, added deliberately against the default "no deps" rule. The
+  concrete wall that justifies it (from the live-docs investigation, 2026-08):
+  browser pronunciation assessment needs (a) mic capture encoded to 16 kHz mono
+  WAV/PCM or OGG/Opus, which browsers don't natively produce, and (b) a
+  recognition endpoint Microsoft does **not** document as CORS-enabled for
+  `fetch`. The SDK solves both by streaming over a WebSocket (not subject to
+  CORS) and handling mic capture + token refresh. A hand-rolled REST path would
+  mean writing our own WAV encoder and gambling on undocumented CORS — the wall
+  this rule anticipates. Auth is **key-direct** with the learner's own BYO key
+  from Settings (`getAzureCreds()`); no backend, still static-host compatible.
+  fr-FR assessment is **word-level only** (accuracy/fluency/completeness +
+  per-word error) — prosody and phoneme-name labeling are en-US-only, so the
+  Speaking UI never promises phoneme coaching.
+- **No OTHER dependencies beyond Vite + the scoped Speech SDK above.** Keep it
+  that way unless there's a concrete need — this is a static, no-backend app and
+  every added dependency is a thing that can go stale. A new dependency needs the
+  same bar the Speech SDK cleared: a real wall, not convenience.
 
 ---
 
@@ -248,6 +268,14 @@ No action taken either way — flagged in `STATE.md` under Open Decisions.
   to the source project's bulk-generation failure mode (§8.1) — this is a
   standing process decision, re-affirm it if a future session considers
   batching multiple weeks.
+- **Azure Speech SDK adopted for the Speaking module (2026-08), lazy-loaded and
+  scoped** — the FIRST runtime dependency beyond Vite (see §3 for the full
+  rule). Chosen over a no-dep REST path because browser mic-encoding +
+  undocumented recognition-endpoint CORS is a concrete wall (the live-docs
+  investigation is the evidence). Dynamic-`import()`ed inside `src/speaking/`
+  only, so it code-splits out of the main bundle. Auth is key-direct with the
+  learner's BYO key; fr-FR gives word-level scoring only, so the module is
+  designed for word-level feedback, never phoneme coaching.
 
 ---
 
